@@ -524,6 +524,8 @@ Migrating to Grimoire CSS is simple, thanks to the Grimoire CSS Transmute utilit
 
 By simplifying the migration process, gcsst helps you move to Grimoire CSS without hassle, and you can instantly start leveraging the power of spells.
 
+Explore the [gcsst](https://github.com/persevie/grimoire-css-transmute) repository or try it online.
+
 ## Usage and Distribution
 
 Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. It’s distributed in three ways to give you maximum flexibility:
@@ -535,10 +537,6 @@ Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. I
 The core of Grimoire CSS is architected entirely in Rust, ensuring top-notch performance and scalability. The main repository compiles both into a standalone executable (SEA) and a Rust crate, meaning you can use it in different environments with ease.
 
 The `grimoire-css-js` takes the core crate and wraps it into a Node.js-compatible interface, which is then compiled into an npm package. Whether you’re working with Rust, Node.js, or need a direct CLI, Grimoire CSS is ready to integrate into your workflow and bring powerful CSS management wherever you need it.
-
-This version highlights the ease of migration with gcsst and the flexibility of Grimoire CSS’s distribution, making the text engaging while staying technical and informative.
-
-Here’s the updated version with your requested changes, including installation and usage commands, followed by a React demo project using Grimoire CSS.
 
 ### Installation
 
