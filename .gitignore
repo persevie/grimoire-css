@@ -1,0 +1,14 @@
+.env
+*.log
+*.tmp
+*.swp
+target
+**/*.rs.bk
+.idea
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+*.bak
+*.bk
+*.patch

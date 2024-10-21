@@ -1,0 +1,221 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GrimoireCSSConfigJSON",
+  "description": "Schema for the GrimoireCSS configuration file",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to the JSON schema",
+      "format": "uri"
+    },
+    "variables": {
+      "type": "object",
+      "description": "Optional framework-level variables used during compilation",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "string",
+          "description": "A key-value pair for variables, where the key is the variable name and the value is the variable's value."
+        }
+      },
+      "additionalProperties": false
+    },
+    "scrolls": {
+      "type": "array",
+      "description": "Optional scrolls configuration containing external or combined CSS rules",
+      "items": {
+        "$ref": "#/definitions/ScrollJSON"
+      }
+    },
+    "projects": {
+      "type": "array",
+      "description": "A list of projects within the configuration. Each project corresponds to specific input/output settings.",
+      "items": {
+        "$ref": "#/definitions/ProjectJSON"
+      }
+    },
+    "shared": {
+      "type": "array",
+      "description": "Optional shared configuration settings used across multiple projects",
+      "items": {
+        "$ref": "#/definitions/GrimoireConfigSharedJSON"
+      }
+    },
+    "critical": {
+      "type": "array",
+      "description": "Optional critical styles configuration for inlining into HTML files",
+      "items": {
+        "$ref": "#/definitions/GrimoireConfigCriticalJSON"
+      }
+    }
+  },
+  "required": [
+    "projects"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "ScrollJSON": {
+      "type": "object",
+      "description": "A scroll is a reusable collection of CSS rules",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the scroll"
+        },
+        "spells": {
+          "type": "array",
+          "description": "A list of CSS spells within the scroll",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extends": {
+          "type": "array",
+          "description": "Optional list of other scrolls this one extends",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "spells"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectJSON": {
+      "type": "object",
+      "description": "Represents a project configuration within GrimoireCSS. Supports glob patterns in input paths.",
+      "properties": {
+        "projectName": {
+          "type": "string",
+          "description": "The name of the project, following the pattern `^[a-zA-Z0-9_-]+$`.",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "inputPaths": {
+          "type": "array",
+          "description": "List of input paths for the project. Supports glob patterns.",
+          "items": {
+            "type": "string",
+            "description": "A file path or glob pattern used to locate project files."
+          }
+        },
+        "outputDirPath": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional output directory path for the project's CSS"
+        },
+        "singleOutputFileName": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional file name for a single output file"
+        }
+      },
+      "required": [
+        "projectName",
+        "inputPaths"
+      ],
+      "additionalProperties": false
+    },
+    "GrimoireConfigSharedJSON": {
+      "type": "object",
+      "description": "Represents shared configuration across multiple projects",
+      "properties": {
+        "outputPath": {
+          "type": "string",
+          "description": "Output path for the shared configuration"
+        },
+        "styles": {
+          "type": "array",
+          "description": "Optional list of styles used in the shared configuration",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cssCustomProperties": {
+          "type": "array",
+          "description": "Optional list of CSS custom properties",
+          "items": {
+            "$ref": "#/definitions/CSSCustomPropertiesItemJSON"
+          }
+        }
+      },
+      "required": [
+        "outputPath"
+      ],
+      "additionalProperties": false
+    },
+    "GrimoireConfigCriticalJSON": {
+      "type": "object",
+      "description": "Configuration for critical CSS styles to be inlined. Supports glob patterns in file paths.",
+      "properties": {
+        "fileToInlinePaths": {
+          "type": "array",
+          "description": "List of file paths or glob patterns where critical styles should be inlined",
+          "items": {
+            "type": "string",
+            "description": "A file path or glob pattern used to locate files for critical CSS inlining."
+          }
+        },
+        "styles": {
+          "type": "array",
+          "description": "Optional list of styles to be inlined",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cssCustomProperties": {
+          "type": "array",
+          "description": "Optional list of CSS custom properties used in critical styles",
+          "items": {
+            "$ref": "#/definitions/CSSCustomPropertiesItemJSON"
+          }
+        }
+      },
+      "required": [
+        "fileToInlinePaths"
+      ],
+      "additionalProperties": false
+    },
+    "CSSCustomPropertiesItemJSON": {
+      "type": "object",
+      "description": "Represents a custom CSS property item, including associated variables",
+      "properties": {
+        "element": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional DOM element associated with the CSS variables (e.g., `tag`, `class`, `id`, `:root`)"
+        },
+        "dataParam": {
+          "type": "string",
+          "description": "Parameter name used in the CSS configuration"
+        },
+        "dataValue": {
+          "type": "string",
+          "description": "Value corresponding to the data parameter"
+        },
+        "cssVariables": {
+          "type": "object",
+          "description": "A set of associated CSS variables and their values",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": [
+        "dataParam",
+        "dataValue",
+        "cssVariables"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

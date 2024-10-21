@@ -1,0 +1,15 @@
+@keyframes rotate-out-up-left {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    transform: rotate3d(0, 0, 1, -45deg);
+    opacity: 0;
+  }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-out-up-left;
+  transform-origin: left bottom;
+}

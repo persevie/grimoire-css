@@ -1,0 +1,13 @@
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: fade-out;
+}

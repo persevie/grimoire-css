@@ -1,0 +1,15 @@
+@keyframes rotate-out-up-right {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    transform: rotate3d(0, 0, 1, 90deg);
+    opacity: 0;
+  }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-out-up-right;
+  transform-origin: right bottom;
+}

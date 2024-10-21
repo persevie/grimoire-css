@@ -1,0 +1,158 @@
+name: build_and_release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    name: build
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        include:
+          - name: linux_x86_64
+            runs-on: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: grimoire_css-linux-x86_64
+            artifact_path: target/x86_64-unknown-linux-gnu/release/grimoire_css
+          - name: macos_x86_64
+            runs-on: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: grimoire_css-macos-x86_64
+            artifact_path: target/x86_64-apple-darwin/release/grimoire_css
+          - name: macos_arm64
+            runs-on: macos-12
+            target: aarch64-apple-darwin
+            artifact_name: grimoire_css-macos-arm64
+            artifact_path: target/aarch64-apple-darwin/release/grimoire_css
+          - name: windows_x86_64
+            runs-on: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: grimoire_css-windows-x86_64.exe
+            artifact_path: target/x86_64-pc-windows-msvc/release/grimoire_css.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set_up_rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: cache_cargo_registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: cache_cargo_git
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-
+
+      - name: cache_cargo_build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-build-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ matrix.target }}-
+
+      - name: build_project
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: prepare_artifact
+        run: |
+          mkdir -p artifacts
+          cp "${{ matrix.artifact_path }}" "artifacts/${{ matrix.artifact_name }}"
+
+      - name: upload_artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: artifacts/${{ matrix.artifact_name }}
+
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: download_artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: grimoire_css-linux-x86_64
+          path: ./artifacts/linux
+
+      - name: download_macos_artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: grimoire_css-macos-x86_64
+          path: ./artifacts/macos-x86_64
+
+      - name: download_macos_arm64_artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: grimoire_css-macos-arm64
+          path: ./artifacts/macos-arm64
+
+      - name: download_windows_artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: grimoire_css-windows-x86_64.exe
+          path: ./artifacts/windows
+
+      - name: create_github_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./artifacts/**/*
+          body: "Release of Grimoire CSS version ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: publish_to_crates_io
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set_up_rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: cache_cargo_registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: cache_cargo_git
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-
+
+      - name: login_to_crates_io
+        run: cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: publish_to_crates_io
+        run: cargo publish

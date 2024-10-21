@@ -1,0 +1,14 @@
+@keyframes fade-out-down-big {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    transform: translate3d(0, 2000px, 0);
+  }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: fade-out-down-big;
+}

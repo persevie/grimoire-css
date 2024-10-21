@@ -1,0 +1,42 @@
+[package]
+name = "grimoire_css"
+version = "1.0.0"
+edition = "2021"
+authors = ["Dmitrii Shatokhin <dmtrshatokhin@gmail.com>"]
+description = "A magical CSS system engine for all environments"
+license = "MIT"
+keywords = ["css", "css-compiler", "styling", "web", "system"]
+categories = ["web-programming", "development-tools"]
+homepage = "https://github.com/persevie/grimoire-css"
+documentation = "https://docs.rs/grimoire-css"
+repository = "https://github.com/persevie/grimoire-css"
+include = [
+    "src/**",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE",
+    "assets/grimoire-css-logo.png",
+]
+
+[lib]
+name = "grimoire_css_lib"
+crate-type = ["lib"]
+
+[language.rust]
+lsp = { command = "rust-analyzer", args = [] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[dependencies]
+console = "0.15.8"
+glob = "0.3.1"
+indicatif = "0.17.8"
+lazy_static = "1.5.0"
+lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
+once_cell = "1.20"
+rayon = "1.10.0"
+regex = "1.11.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

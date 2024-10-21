@@ -1,0 +1,14 @@
+@keyframes slide-in-left {
+  from {
+    transform: translate3d(-100%, 0, 0);
+    visibility: visible;
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-in-left;
+}
