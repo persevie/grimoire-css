@@ -9,76 +9,64 @@ permissions:
   contents: write
 
 jobs:
-  build_and_release:
-    runs-on: ${{ matrix.os }}
+  build:
+    name: Build
+    runs-on: ${{ matrix.runs-on }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        target:
-          - x86_64-unknown-linux-gnu
-          - x86_64-apple-darwin
-          - aarch64-apple-darwin
-          - x86_64-pc-windows-msvc
         include:
-          - os: ubuntu-latest
+          - name: linux_x86_64
+            runs-on: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact_name: grimoire_css-linux-x86_64
-          - os: macos-latest
+            artifact_path: target/x86_64-unknown-linux-gnu/release/grimoire_css
+          - name: macos_x86_64
+            runs-on: macos-latest
             target: x86_64-apple-darwin
             artifact_name: grimoire_css-macos-x86_64
-          - os: macos-latest
+            artifact_path: target/x86_64-apple-darwin/release/grimoire_css
+          - name: macos_arm64
+            runs-on: macos-12
             target: aarch64-apple-darwin
             artifact_name: grimoire_css-macos-arm64
-          - os: windows-latest
+            artifact_path: target/aarch64-apple-darwin/release/grimoire_css
+          - name: windows_x86_64
+            runs-on: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: grimoire_css-windows-x86_64.exe
+            artifact_path: target/x86_64-pc-windows-msvc/release/grimoire_css.exe
 
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Determine if release is needed
         id: release_check
+        shell: bash
         run: |
-          echo "Last commit message: ${{ github.event.head_commit.message }}"
-          BRANCH_NAME=$(git log -1 --pretty=%B | grep 'Merge pull request' | sed 's/.*from .*\/\(.*\)/\1/')
-          echo "Merged branch: $BRANCH_NAME"
-
-          if [[ "$BRANCH_NAME" == rc/* ]]; then
-            VERSION="${BRANCH_NAME#rc/}"
-            TAG="v$VERSION"
-            echo "::set-output name=should_release::true"
-            echo "::set-output name=tag::$TAG"
-          elif [[ "$BRANCH_NAME" == hotfix/* ]]; then
-            # Fetch tags
-            git fetch --tags
-            # Get the latest tag
-            LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
-            if [ -z "$LATEST_TAG" ]; then
-              echo "No existing tags found. Cannot proceed with hotfix tagging."
-              exit 1
-            fi
-            echo "Latest tag: $LATEST_TAG"
-            # Extract major, minor, and patch versions
-            IFS='.' read -r -a VERSION_PARTS <<< "${LATEST_TAG#v}"
-            MAJOR="${VERSION_PARTS[0]}"
-            MINOR="${VERSION_PARTS[1]}"
-            PATCH="${VERSION_PARTS[2]}"
-            # Increment the patch version
-            PATCH=$((PATCH + 1))
-            TAG="v${MAJOR}.${MINOR}.${PATCH}"
-            echo "::set-output name=should_release::true"
-            echo "::set-output name=tag::$TAG"
+          git fetch --tags
+          # Get the latest tag (if any)
+          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
+          echo "Latest tag: $LATEST_TAG"
+          # Get current version from Cargo.toml
+          CURRENT_VERSION=$(grep '^version = ' Cargo.toml | head -n1 | awk -F\" '{print $2}')
+          echo "Current version: $CURRENT_VERSION"
+          # Remove 'v' from LATEST_TAG
+          LATEST_VERSION="${LATEST_TAG#v}"
+          if [ "$CURRENT_VERSION" == "$LATEST_VERSION" ]; then
+            echo "No new version. Current version ($CURRENT_VERSION) is the same as the latest tag ($LATEST_VERSION)."
+            echo "should_release=false" >> $GITHUB_ENV
           else
-            echo "::set-output name=should_release::false"
+            echo "New version detected."
+            echo "should_release=true" >> $GITHUB_ENV
+            echo "NEW_TAG=v$CURRENT_VERSION" >> $GITHUB_ENV
           fi
 
       - name: Stop if no release is needed
-        if: steps.release_check.outputs.should_release != 'true'
+        if: env.should_release == 'false'
         run: |
-          echo "No release needed for this push."
+          echo "No release needed."
           exit 0
 
       - name: Set up Rust
@@ -118,7 +106,7 @@ jobs:
       - name: Prepare artifact
         run: |
           mkdir -p artifacts
-          cp target/${{ matrix.target }}/release/grimoire_css${{ matrix.os == 'windows-latest' && '.exe' || '' }} artifacts/${{ matrix.artifact_name }}
+          cp "${{ matrix.artifact_path }}" "artifacts/${{ matrix.artifact_name }}"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -126,31 +114,70 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: artifacts/${{ matrix.artifact_name }}
 
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.build.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
       - name: Create and push tag
-        if: ${{ matrix.os == 'ubuntu-latest' && steps.release_check.outputs.should_release == 'true' }}
-        env:
-          TAG: ${{ steps.release_check.outputs.tag }}
         run: |
-          echo "Creating tag $TAG"
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git tag -a "$TAG" -m "Release $TAG"
-          git push origin "$TAG"
+          git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
+          git push origin "$NEW_TAG"
 
       - name: Create GitHub Release
-        if: ${{ matrix.os == 'ubuntu-latest' && steps.release_check.outputs.should_release == 'true' }}
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.release_check.outputs.tag }}
-          files: artifacts/**/*
-          body: "Release of Grimoire CSS version ${{ steps.release_check.outputs.tag }}"
+          tag_name: $NEW_TAG
+          files: ./artifacts/**/*
+          body: "Release of Grimoire CSS version $NEW_TAG"
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: release
+    if: needs.build.outputs.should_release == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo git
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-git-
+
       - name: Publish to crates.io
-        if: ${{ matrix.os == 'ubuntu-latest' && steps.release_check.outputs.should_release == 'true' }}
         run: |
           cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
           cargo publish
