@@ -25,12 +25,4 @@ if [[ "$1" == "--upload" ]]; then
 
     echo "Uploading report to Codecov..."
     bash <(curl -s https://codecov.io/bash) -t "$CODECOV_TOKEN" -f lcov.info
-
-    # Check if the upload was successful and delete lcov.info
-    if [[ $? -eq 0 ]]; then
-        echo "Report successfully uploaded to Codecov. Deleting lcov.info..."
-        rm lcov.info
-    else
-        echo "Failed to upload report to Codecov."
-    fi
 fi
