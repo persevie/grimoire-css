@@ -1,26 +1,26 @@
-name: quality
+name: Quality
 
 on:
   pull_request:
     branches:
-      - develop
-      - main
+      - 'main'
+      - 'rc/**'
 
 jobs:
   lint_and_test:
-    name: lint_and_test
+    name: Lint and test
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: set_up_rust
+      - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
 
-      - name: cache_cargo_registry
+      - name: Cache cargo registry
         uses: actions/cache@v4
         with:
           path: ~/.cargo/registry
@@ -28,7 +28,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
-      - name: cache_cargo_index
+      - name: Cache cargo index
         uses: actions/cache@v4
         with:
           path: ~/.cargo/git
@@ -36,7 +36,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-git-
 
-      - name: cache_cargo_build
+      - name: Cache cargo build
         uses: actions/cache@v4
         with:
           path: target
@@ -44,11 +44,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-build-
 
-      - name: check_formatting_with_rustfmt
+      - name: Check formatting with rustfmt
         run: cargo fmt -- --check
 
-      - name: run_clippy
+      - name: Run clippy
         run: cargo clippy -- -D warnings
 
-      - name: run_tests
-        run: cargo test --verbose
+      - name: Run tests with coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: ./scripts/coverage.sh --upload
