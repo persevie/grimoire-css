@@ -46,25 +46,19 @@ jobs:
         shell: bash
         run: |
           git fetch --tags
-          # Get the latest tag (if any)
-          LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1) 2>/dev/null || echo "")
-          echo "Latest tag: $LATEST_TAG"
-          # Get current version from Cargo.toml
           CURRENT_VERSION=$(grep '^version = ' Cargo.toml | head -n1 | awk -F\" '{print $2}')
           echo "Current version: $CURRENT_VERSION"
-          # Remove 'v' from LATEST_TAG
-          LATEST_VERSION="${LATEST_TAG#v}"
-          if [ "$CURRENT_VERSION" == "$LATEST_VERSION" ]; then
-            echo "No new version. Current version ($CURRENT_VERSION) is the same as the latest tag ($LATEST_VERSION)."
-            echo "should_release=false" >> $GITHUB_ENV
+          if git rev-parse "v$CURRENT_VERSION" >/dev/null 2>&1; then
+            echo "Tag v$CURRENT_VERSION already exists. No release needed."
+            echo "SHOULD_RELEASE=false" >> $GITHUB_OUTPUT
           else
-            echo "New version detected."
-            echo "should_release=true" >> $GITHUB_ENV
-            echo "NEW_TAG=v$CURRENT_VERSION" >> $GITHUB_ENV
+            echo "No existing tag for version $CURRENT_VERSION. Release is needed."
+            echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
+            echo "NEW_TAG=v$CURRENT_VERSION" >> $GITHUB_OUTPUT
           fi
 
       - name: Stop if no release is needed
-        if: env.should_release == 'false'
+        if: steps.release_check.outputs.SHOULD_RELEASE == 'false'
         run: |
           echo "No release needed."
           exit 0
@@ -114,44 +108,15 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: artifacts/${{ matrix.artifact_name }}
 
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    needs: build
-    if: needs.build.outputs.should_release == 'true'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts
-
-      - name: Create and push tag
-        run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
-          git push origin "$NEW_TAG"
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: $NEW_TAG
-          files: ./artifacts/**/*
-          body: "Release of Grimoire CSS version $NEW_TAG"
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      SHOULD_RELEASE: ${{ steps.release_check.outputs.SHOULD_RELEASE }}
+      NEW_TAG: ${{ steps.release_check.outputs.NEW_TAG }}
 
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
-    needs: release
-    if: needs.build.outputs.should_release == 'true'
+    needs: build
+    if: needs.build.outputs.SHOULD_RELEASE == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -178,6 +143,41 @@ jobs:
             ${{ runner.os }}-cargo-git-
 
       - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
           cargo publish
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [publish]
+    if: needs.build.outputs.SHOULD_RELEASE == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create and push tag
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git tag -a "${{ needs.build.outputs.NEW_TAG }}" -m "Release ${{ needs.build.outputs.NEW_TAG }}"
+          git push origin "${{ needs.build.outputs.NEW_TAG }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.build.outputs.NEW_TAG }}
+          files: ./artifacts/**/*
+          body: "Release of Grimoire CSS version ${{ needs.build.outputs.NEW_TAG }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
