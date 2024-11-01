@@ -1,8 +1,17 @@
-<p align="center">
-<img height="60" alt="Grimoire CSS logo" src="./assets/grimoire-css-logo.png">
-</p>
+<div align="center">
+<img height="128" alt="Grimoire CSS logo" src="./assets/grimoire-css-logo.png">
+
+[![Current Crates.io Version](https://img.shields.io/crates/v/grimoire_css.svg)](https://crates.io/crates/grimoire_css)
+[![Test Status](https://github.com/persevie/grimoire-css/actions/workflows/quality.yml/badge.svg)](https://github.com/persevie/grimoire-css/actions/workflows/quality.yml)
+[![codecov](https://codecov.io/github/persevie/grimoire-css/graph/badge.svg?token=3QE08UYS3S)](https://codecov.io/github/persevie/grimoire-css)
+![license](https://shields.io/badge/license-MIT-blue)
 
 ---
+
+**Grimoire CSS** is a comprehensive CSS system engine crafted in Rust, <br /> focusing on unmatched flexibility, reusable dynamic styling, and optimized performance for every environment.
+
+<br/>
+</div>
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -12,7 +21,7 @@
 - [Welcome to the Circle: Unlock the Magic of CSS with Grimoire](#welcome-to-the-circle-unlock-the-magic-of-css-with-grimoire) - [
   Craft Your Code, Cast Your Spells
   ](#craft-your-code-cast-your-spells)
-  - [A Spell System That Unleashes the Full Power of CSS — With No Limits, No Extra Learning](#a-spell-system-that-unleashes-the-full-power-of-css--with-no-limits-no-extra-learning)
+  - [A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning](#a-spell-system-that-unleashes-the-full-power-of-css--with-no-limits-no-extra-learning)
     - [Recap](#recap)
   - [Scroll: Crafting Reusable, Dynamic CSS with Infinite Flexibility](#scroll-crafting-reusable-dynamic-css-with-infinite-flexibility)
     - [Inheritance with `Scrolls`: The Power of Composition](#inheritance-with-scrolls-the-power-of-composition)
@@ -38,7 +47,7 @@
       - [`mrs`: Make Responsive Size](#mrs-make-responsive-size)
       - [Example Usage](#example-usage)
     - [The Power of Grimoire’s Variables and Functions](#the-power-of-grimoires-variables-and-functions)
-  - [CSS Optimization: Minification, Vendor Prefixes, and Deduplication — All with CSS Cascade in Mind](#css-optimization-minification-vendor-prefixes-and-deduplication--all-with-css-cascade-in-mind)
+  - [CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind](#css-optimization-minification-vendor-prefixes-and-deduplication--all-with-css-cascade-in-mind)
   - [Performance-Driven by Rust: Parallel Processing and Auto-Scaling Built In](#performance-driven-by-rust-parallel-processing-and-auto-scaling-built-in)
   - [Language-Agnostic Parser: Extracting Spells from Any File, Any Format](#language-agnostic-parser-extracting-spells-from-any-file-any-format)
     - [Spells in Plain Text with Template Syntax](#spells-in-plain-text-with-template-syntax)
@@ -54,19 +63,19 @@
 
 # Welcome to the Circle: Unlock the Magic of CSS with Grimoire
 
-Grimoire CSS is more than just a framework—it’s your entry into a circle of developers who wield the true power of CSS. By mastering Spells and Scrolls, you’ll craft styles with precision, control, and a touch of magic. Whether you’re building responsive interfaces or optimizing for performance, Grimoire empowers you to write CSS in a way that feels both natural and powerful. Welcome to the circle, where the limits of traditional styling fade away, and the full potential of CSS is revealed.
+Grimoire CSS is more than just a framework - it’s your entry into a circle of developers who wield the true power of CSS. By mastering Spells and Scrolls, you’ll craft styles with precision, control, and a touch of magic. Whether you’re building responsive interfaces or optimizing for performance, Grimoire empowers you to write CSS in a way that feels both natural and powerful. Welcome to the circle, where the limits of traditional styling fade away, and the full potential of CSS is revealed.
 
-## A Spell System That Unleashes the Full Power of CSS — With No Limits, No Extra Learning
+## A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning
 
-At the heart of Grimoire CSS lies the `Spell`, the foundational entity of the system. `Spell` takes a different approach from traditional utility classes, like those you’d find in Tailwind. While utilities in Tailwind feel like slightly enhanced Bootstrap classes, Grimoire CSS takes things to a new level. In Tailwind, you’re expected to memorize arbitrary names like `rounded-md` for `border-radius: 0.375rem` — which doesn’t even make things look rounded. And then there’s `tracking-tight` for `letter-spacing: -0.025em`. How are you supposed to know that’s related to letter spacing?
+At the heart of Grimoire CSS lies the `Spell`, the foundational entity of the system. `Spell` takes a different approach from traditional utility classes, like those you’d find in Tailwind. While utilities in Tailwind feel like slightly enhanced Bootstrap classes, Grimoire CSS takes things to a new level. In Tailwind, you’re expected to memorize arbitrary names like `rounded-md` for `border-radius: 0.375rem` - which doesn’t even make things look rounded. And then there’s `tracking-tight` for `letter-spacing: -0.025em`. How are you supposed to know that’s related to letter spacing?
 
-Grimoire CSS cuts through that confusion by introducing `Spell`—an approach that is both simple and infinitely flexible. At its core, a `Spell` is just a CSS declaration, written in a format everyone understands: `property=value`. For example, `border-radius: 0.375rem` in Grimoire CSS becomes `border-radius=0.375rem`. If you prefer something shorter, `br=0.375rem` works too, or even `br=.375rem` (yes, Grimoire CSS respects CSS's own shorthand capabilities). Unlike pre-baked utility classes, `Spells` follow the natural structure of CSS: `property: value` becomes `component=target`.
+Grimoire CSS cuts through that confusion by introducing `Spell` - an approach that is both simple and infinitely flexible. At its core, a `Spell` is just a CSS declaration, written in a format everyone understands: `property=value`. For example, `border-radius: 0.375rem` in Grimoire CSS becomes `border-radius=0.375rem`. If you prefer something shorter, `br=0.375rem` works too, or even `br=.375rem` (yes, Grimoire CSS respects CSS's own shorthand capabilities). Unlike pre-baked utility classes, `Spells` follow the natural structure of CSS: `property: value` becomes `component=target`.
 
 This isn't just another syntax. It’s the whole system reimagined. You’re free to write any value in the target, whether it's custom units, functions, or even complex animations. Everything CSS supports is fair game, and all you need to do is escape spaces with underscores (`_`). That’s it. Of course, we didn't stop at the basics. Spells also introduce **optional enhancements**: `area`, `focus`, and `effects`, which give you deeper control over media queries, pseudo-classes, attributes, and more.
 
 1. **`area`**: You know those media queries that clutter your CSS? In Grimoire CSS, they’re handled elegantly by `area`. The `area` defines conditions like screen size and sits at the start of your spell, separated from the rest by double underscores (`__`). For example, `(width>=768px)__br=0.375rem` will activate the rule only for screens wider than 768px. Prefer a shorthand? You can use built-in names like `md__br=0.375rem`. It’s still valid CSS, but with all the magic of `Spell`.
 
-2. **`focus`**: Sometimes, you need more than a class or a media query. `focus` lets you wrap anything—attributes, pseudo-classes, or nested selectors—inside your spell. Placed as the second part of the spell (or first if there's no `area`), it’s enclosed in curly brackets. For example: `{[hidden]_>_p:hover:active}color=red` becomes this CSS:
+2. **`focus`**: Sometimes, you need more than a class or a media query. `focus` lets you wrap anything - attributes, pseudo-classes, or nested selectors - inside your spell. Placed as the second part of the spell (or first if there's no `area`), it’s enclosed in curly brackets. For example: `{[hidden]_>_p:hover:active}color=red` becomes this CSS:
 
    ```css
    ... [hidden] > p: hover:active {
@@ -74,13 +83,13 @@ This isn't just another syntax. It’s the whole system reimagined. You’re fre
    }
    ```
 
-   It’s not just readable—it’s intuitive. What you see is exactly what you get.
+   It’s not just readable - it’s intuitive. What you see is exactly what you get.
 
 3. **`effects`**: Sometimes, you need quick pseudo-classes without the full complexity of `focus`. That’s where `effects` come in. Just add pseudo-classes directly in the spell like this: `hover,active:color=blue`. With `effect`, you keep it compact without losing any power. Simply separate it from the `component` and `target` with a colon (`:`).
 
-The entire `Spell` system is built on clarity and explicitness. There are no magical, arbitrary strings for targets like you find in other systems. And we don’t compromise on clarity for the sake of brevity. Targets are full, valid CSS values—because that’s how it should be. Components mirror actual CSS properties, but they can be shortened to your liking. In this way, Grimoire CSS is both a **CSS declaration** and a **methodology**. It’s so powerful because every `Spell` is valid CSS—there’s no abstraction that gets in the way of what you need to achieve.
+The entire `Spell` system is built on clarity and explicitness. There are no magical, arbitrary strings for targets like you find in other systems. And we don’t compromise on clarity for the sake of brevity. Targets are full, valid CSS values - because that’s how it should be. Components mirror actual CSS properties, but they can be shortened to your liking. In this way, Grimoire CSS is both a **CSS declaration** and a **methodology**. It’s so powerful because every `Spell` is valid CSS - there’s no abstraction that gets in the way of what you need to achieve.
 
-So, why call it a `Spell`? Because, like magic, it’s composed of multiple elements: `area`, `focus`, `effect`, `component`, and `target`. And each of these pieces works together to create something far greater than the sum of its parts. With Grimoire CSS, you’re not just writing styles—you’re casting spells. The name ‘Grimoire’ comes from ancient magical texts. Just as those books hold the knowledge to perform spells, Grimoire CSS provides you the knowledge and tools to perform CSS magic—without relying on pre-baked solutions. You’re in full control.
+So, why call it a `Spell`? Because, like magic, it’s composed of multiple elements: `area`, `focus`, `effect`, `component`, and `target`. And each of these pieces works together to create something far greater than the sum of its parts. With Grimoire CSS, you’re not just writing styles - you’re casting spells. The name ‘Grimoire’ comes from ancient magical texts. Just as those books hold the knowledge to perform spells, Grimoire CSS provides you the knowledge and tools to perform CSS magic - without relying on pre-baked solutions. You’re in full control.
 
 ### Recap
 
@@ -89,9 +98,9 @@ So, why call it a `Spell`? Because, like magic, it’s composed of multiple elem
 
 ## Scroll: Crafting Reusable, Dynamic CSS with Infinite Flexibility
 
-A `Scroll` is like a `Spell`, but with one crucial difference—it’s something you build from scratch. Think of it as a customized collection of styles, bundled into one reusable class. Sometimes, you need to combine multiple styles into a single class for consistency, reusability, or just to make your life easier. With `Scroll`, you can do just that. Combine spells, give your new creation a name, and you’ve got a `Scroll` ready to use across your projects.
+A `Scroll` is like a `Spell`, but with one crucial difference - it’s something you build from scratch. Think of it as a customized collection of styles, bundled into one reusable class. Sometimes, you need to combine multiple styles into a single class for consistency, reusability, or just to make your life easier. With `Scroll`, you can do just that. Combine spells, give your new creation a name, and you’ve got a `Scroll` ready to use across your projects.
 
-And here's the best part: everything you love about `Spells` works seamlessly with `Scrolls` too—`area`, `focus`, `effect`, and even `target`. But there’s even more: when you define a `Scroll`, you can introduce **variables** to make your styles dynamic. Just use the `$` symbol, and the `target` becomes a placeholder, waiting for the actual value to be filled in. Want to create a button class that accepts variable values? No problem. Here’s an example:
+And here's the best part: everything you love about `Spells` works seamlessly with `Scrolls` too - `area`, `focus`, `effect`, and even `target`. But there’s even more: when you define a `Scroll`, you can introduce **variables** to make your styles dynamic. Just use the `$` symbol, and the `target` becomes a placeholder, waiting for the actual value to be filled in. Want to create a button class that accepts variable values? No problem. Here’s an example:
 
 ```json
 "scrolls": [
@@ -170,13 +179,13 @@ One of the most exciting aspects of `Scrolls` is **inheritance**. Yes, you can e
 
 In this example, `danger-btn` extends `btn`, meaning it inherits all of `btn`'s spells plus its own. So, `danger-btn.spells` will look like `btn.spells` + `danger-btn.spells`, with the parent scroll's styles taking priority at the top.
 
-But the fun doesn’t stop there—`danger-btn-rnd` extends both `danger-btn` and `round`. This means that `danger-btn-rnd.spells` equals `btn.spells` + `danger-btn.spells` + `round.spells`, combined in the correct order. And yes, the order matters. This layered inheritance allows you to build complex style structures effortlessly.
+But the fun doesn’t stop there - `danger-btn-rnd` extends both `danger-btn` and `round`. This means that `danger-btn-rnd.spells` equals `btn.spells` + `danger-btn.spells` + `round.spells`, combined in the correct order. And yes, the order matters. This layered inheritance allows you to build complex style structures effortlessly.
 
 ### Why Scrolls Matter: Unlimited Possibilities
 
 The real magic of `Scrolls` lies in their **unlimited possibilities**. You can chain styles together, extend them endlessly, and define variables as placeholders to create flexible, reusable patterns across your entire project. With `Scrolls`, Grimoire CSS goes far beyond being Yet Another CSS Framework. In fact, you could even recreate the entire structure of Tailwind or Bootstrap using nothing but the flexibility of Spells and Scrolls.
 
-It’s pure, beautiful madness—without limits.
+It’s pure, beautiful madness - without limits.
 
 ## Projects: Organizing and Compiling Your CSS with Flexibility and Control
 
@@ -233,11 +242,11 @@ Grimoire CSS makes it easy to define **shared** and **critical** CSS alongside y
 
 ### Shared CSS: One File, Multiple Uses
 
-Shared CSS is exactly what it sounds like—a set of styles that you can build into a separate file and reuse across multiple projects or pages in your application. By defining shared styles, you ensure consistency and reduce repetition, improving performance and maintainability.
+Shared CSS is exactly what it sounds like - a set of styles that you can build into a separate file and reuse across multiple projects or pages in your application. By defining shared styles, you ensure consistency and reduce repetition, improving performance and maintainability.
 
 ### Critical CSS: Inline for Faster Rendering
 
-Critical CSS goes a step further. It automatically inlines essential styles directly into your HTML files, ensuring that key styles are loaded instantly. And here’s the clever part: if some spells are already used in your components or files, Grimoire won’t regenerate them—because they’re now part of your critical CSS. No duplicates, no unnecessary bloat—just efficient, fast-loading styles.
+Critical CSS goes a step further. It automatically inlines essential styles directly into your HTML files, ensuring that key styles are loaded instantly. And here’s the clever part: if some spells are already used in your components or files, Grimoire won’t regenerate them - because they’re now part of your critical CSS. No duplicates, no unnecessary bloat - just efficient, fast-loading styles.
 
 ### How It Works
 
@@ -246,7 +255,7 @@ Both the `shared` and `critical` sections of the config are similar in structure
 - **`styles`**: An optional list of styles that are used in the shared or critical configuration. You can include any spells, scrolls, or even paths to existing CSS files. Grimoire will extract and optimize the content during compilation.
 - **`cssCustomProperties`**: An optional list of custom CSS properties, which gives you the flexibility to define your own properties and pair them with specific elements or themes.
 
-For **shared CSS**, you’ll define an `outputPath`—the file where your shared styles will be stored. For **critical CSS**, you’ll define `fileToInlinePaths`—a list of HTML files (or glob patterns) where these essential styles should be inlined.
+For **shared CSS**, you’ll define an `outputPath` - the file where your shared styles will be stored. For **critical CSS**, you’ll define `fileToInlinePaths` - a list of HTML files (or glob patterns) where these essential styles should be inlined.
 
 Let’s take a look at some examples:
 
@@ -339,17 +348,17 @@ In this example:
 
 ### Efficiency at Its Core
 
-Grimoire CSS doesn’t just help you manage your styles—it ensures that only the CSS you actually need is generated. No duplicates, no wasted space. Whether it’s shared across multiple projects or inlined for critical loading, Grimoire makes sure your CSS is lean, efficient, and optimized for performance.
+Grimoire CSS doesn’t just help you manage your styles - it ensures that only the CSS you actually need is generated. No duplicates, no wasted space. Whether it’s shared across multiple projects or inlined for critical loading, Grimoire makes sure your CSS is lean, efficient, and optimized for performance.
 
 ## Predefined Scrolls and Built-In Animations: Flexibility at Your Fingertips
 
-Grimoire CSS doesn’t just give you the tools to build powerful styles from scratch—it also comes with a set of **predefined scrolls** to help you get started right away. All predefined scrolls follow the same convention: they begin with the prefix `g-`. This makes it easy to distinguish built-in scrolls from the ones you define yourself.
+Grimoire CSS doesn’t just give you the tools to build powerful styles from scratch - it also comes with a set of **predefined scrolls** to help you get started right away. All predefined scrolls follow the same convention: they begin with the prefix `g-`. This makes it easy to distinguish built-in scrolls from the ones you define yourself.
 
 ### Built-In Animations: Ready When You Are
 
-Grimoire CSS comes loaded with **hundreds of built-in animations**. These animations are lightweight and efficient—they are only compiled if you actually use them. To trigger one, simply use its name in either the `animation-name` or `animation` CSS rule. But Grimoire CSS doesn’t stop at just applying animations; it also simplifies the process of adding associated rules.
+Grimoire CSS comes loaded with **hundreds of built-in animations**. These animations are lightweight and efficient - they are only compiled if you actually use them. To trigger one, simply use its name in either the `animation-name` or `animation` CSS rule. But Grimoire CSS doesn’t stop at just applying animations; it also simplifies the process of adding associated rules.
 
-For example, the predefined scroll `g-anim` allows you to apply an animation and its associated rules at the same time. Here, `g-` is the prefix, and `anim` is a short version of the spell `animation`. With this scroll, you can quickly inject an animation along with the necessary rules—saving time and keeping your styles clean and organized.
+For example, the predefined scroll `g-anim` allows you to apply an animation and its associated rules at the same time. Here, `g-` is the prefix, and `anim` is a short version of the spell `animation`. With this scroll, you can quickly inject an animation along with the necessary rules - saving time and keeping your styles clean and organized.
 
 ### Create Your Own Animations
 
@@ -382,11 +391,11 @@ In this example, you’ve defined the pulse animation and set it up with ease us
 
 ## Variables and Built-in Functions: Total Control Over Styles and Sizes
 
-Grimoire CSS allows you to define your own variables within its settings, making your styling even more dynamic and customizable. Unlike custom properties, these variables don’t compile into shared or critical CSS. Instead, they remain in your settings and are only compiled when used—keeping your CSS clean and efficient.
+Grimoire CSS allows you to define your own variables within its settings, making your styling even more dynamic and customizable. Unlike custom properties, these variables don’t compile into shared or critical CSS. Instead, they remain in your settings and are only compiled when used - keeping your CSS clean and efficient.
 
 ### How to Use Variables
 
-You can define **any value** as a variable—font sizes, colors, dimensions, anything. To reference them in your styles, just add the `$` symbol before the variable name (you’ll remember this from the `Scroll` section). Here’s how you define and use a variable:
+You can define **any value** as a variable - font sizes, colors, dimensions, anything. To reference them in your styles, just add the `$` symbol before the variable name (you’ll remember this from the `Scroll` section). Here’s how you define and use a variable:
 
 #### Defining a Variable
 
@@ -446,9 +455,9 @@ In this example, the font size will automatically adjust between 12px and 36px, 
 
 ### The Power of Grimoire’s Variables and Functions
 
-With Grimoire CSS, you don’t just write styles—you take control of them. By leveraging variables, responsive areas, and adaptive size functions, you can make your CSS dynamic, scalable, and ready for any device or screen size. It’s flexibility without the fuss, and it’s all built right in.
+With Grimoire CSS, you don’t just write styles - you take control of them. By leveraging variables, responsive areas, and adaptive size functions, you can make your CSS dynamic, scalable, and ready for any device or screen size. It’s flexibility without the fuss, and it’s all built right in.
 
-## CSS Optimization: Minification, Vendor Prefixes, and Deduplication — All with CSS Cascade in Mind
+## CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind
 
 Grimoire CSS takes optimization seriously. It generates only the CSS that’s actually used, and it monitors for duplicates right from the start, ensuring no unnecessary styles sneak through. This happens at the very **early stages** of generation, so by the time the process finishes, you’ve got a lean, clean stylesheet.
 
@@ -458,13 +467,13 @@ But it doesn’t stop there. Grimoire CSS integrates **LightningCSS** to take yo
 - **Vendor Prefixes**: Automatically adds necessary prefixes for cross-browser compatibility, and even generates a `.browserlistrc` file using 'defaults' if you don’t already have one.
 - **Deduplication**: Duplicate CSS? Not here. Grimoire keeps a close watch and ensures that only the needed CSS is generated.
 
-All of this happens while preserving the **CSS cascade**—no unintentional overwrites, no broken styles. Just clean, optimized CSS that’s ready for any environment.
+All of this happens while preserving the **CSS cascade** - no unintentional overwrites, no broken styles. Just clean, optimized CSS that’s ready for any environment.
 
 ## Performance-Driven by Rust: Parallel Processing and Auto-Scaling Built In
 
 Grimoire CSS is written entirely in **Rust**, a language designed for high performance. But we didn’t stop at Rust’s natural speed. Grimoire CSS is built with a commitment to efficiency, ensuring your CSS generation is fast, scalable, and precise.
 
-One of the key features is **parallel processing**. Grimoire CSS knows when to scale—automatically. For projects with more than 10 files to process (whether parsing, writing, or injecting), Grimoire kicks into **parallel mode**, running tasks simultaneously to save time. For smaller projects with fewer than 10 files, it sticks to the classic execution method, ensuring order is maintained without sacrificing performance.
+One of the key features is **parallel processing**. Grimoire CSS knows when to scale - automatically. For projects with more than 10 files to process (whether parsing, writing, or injecting), Grimoire kicks into **parallel mode**, running tasks simultaneously to save time. For smaller projects with fewer than 10 files, it sticks to the classic execution method, ensuring order is maintained without sacrificing performance.
 
 This **auto-scaler** ensures that whether you're working on a large-scale project or a small, focused application, Grimoire CSS adapts to meet your needs, processing your CSS efficiently and reliably.
 
@@ -472,15 +481,15 @@ Here’s the polished version of your next two sections, maintaining the technic
 
 ## Language-Agnostic Parser: Extracting Spells from Any File, Any Format
 
-Grimoire CSS isn’t just tied to traditional CSS, JavaScript, or HTML files. The beauty of its **language-agnostic parser** is that it can parse spells from virtually any file or extension. Whether you’re working with `.html`, `.tsx`, `.mdx`, or something else entirely, Grimoire CSS can handle it.
+Grimoire CSS isn’t just tied to traditional CSS, JavaScript, or HTML files. The beauty of its **language-agnostic parser** is that it can parse spells from any file or extension. Whether you’re working with `.html`, `.tsx`, `.mdx`, or something else entirely, Grimoire CSS can handle it.
 
-This means you’re not limited by file types or formats—you define the `inputPaths`, and Grimoire CSS takes care of the rest. Whether your project is built with React, Vue, or something entirely different, Grimoire CSS seamlessly integrates and extracts the styles you need.
+This means you’re not limited by file types or formats - you define the `inputPaths`, and Grimoire CSS takes care of the rest. Whether your project is built with React, Vue, or something entirely different, Grimoire CSS seamlessly integrates and extracts the styles you need.
 
 ### Spells in Plain Text with Template Syntax
 
 If you want to use spells outside the traditional `class` or `className` attributes, Grimoire CSS provides a clever solution with its **template syntax**: `g!<spell>;`. This syntax lets you wrap your spell in a template, enabling the parser to collect spells from any text-based content.
 
-Let’s say you have both a classic spell and a templated spell that are essentially the same. Don’t worry—Grimoire CSS is smart enough to combine them into one, as long as it doesn’t affect the CSS cascade. The result? Clean, efficient CSS output like this:
+Let’s say you have both a classic spell and a templated spell that are essentially the same. Don’t worry - Grimoire CSS is smart enough to combine them into one, as long as it doesn’t affect the CSS cascade. The result? Clean, efficient CSS output like this:
 
 ```css
 .classic,
@@ -489,7 +498,7 @@ Let’s say you have both a classic spell and a templated spell that are essenti
 }
 ```
 
-This flexibility means you can integrate Grimoire CSS in non-traditional environments, using it across various file types and even in plain text. It's not just tied to the web—it’s ready for any project, anywhere.
+This flexibility means you can integrate Grimoire CSS in non-traditional environments, using it across various file types and even in plain text. It's not just tied to the web - it’s ready for any project, anywhere.
 
 ## A Streamlined CLI with a Strict and Straightforward API
 
@@ -520,11 +529,11 @@ Migrating to Grimoire CSS is simple, thanks to the Grimoire CSS Transmute utilit
 }
 ```
 
-`gcsst` parses the existing CSS using cssparser and automatically generates corresponding spells for each class. One of the standout features of gcsst is the structure of the transmuted.json file, particularly the classes property. It’s designed to look like the structure of a scroll, except for the oneliner property. This makes it incredibly easy to create a scroll or copy-paste the single-line class into your component with minimal effort.
+`gcsst` parses the existing CSS and automatically generates corresponding spells for each class. One of the standout features of **gcsst** is the structure of the **transmuted.json** file, particularly the classes property. It’s designed to look like the structure of a scroll, except for the `oneliner` property. This makes it incredibly easy to create a scroll or copy-paste the single-line class into your component with minimal effort.
 
-By simplifying the migration process, gcsst helps you move to Grimoire CSS without hassle, and you can instantly start leveraging the power of spells.
+By simplifying the migration process, **gcsst** helps you move to Grimoire CSS without hassle, and you can instantly start leveraging the power of spells.
 
-Explore the [gcsst](https://github.com/persevie/grimoire-css-transmute) repository or try it online.
+Explore the [gcsst](https://github.com/persevie/grimoire-css-transmute) repository or try it [online](https://gcsst-ui-zocg.shuttle.app).
 
 ## Usage and Distribution
 
@@ -536,13 +545,13 @@ Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. I
 
 The core of Grimoire CSS is architected entirely in Rust, ensuring top-notch performance and scalability. The main repository compiles both into a standalone executable (SEA) and a Rust crate, meaning you can use it in different environments with ease.
 
-The `grimoire-css-js` takes the core crate and wraps it into a Node.js-compatible interface, which is then compiled into an npm package. Whether you’re working with Rust, Node.js, or need a direct CLI, Grimoire CSS is ready to integrate into your workflow and bring powerful CSS management wherever you need it.
+The `grimoire-css-js` _(WIP)_ takes the core crate and wraps it into a Node.js-compatible interface, which is then compiled into an npm package. Whether you’re working with Rust, Node.js, or need a direct CLI, Grimoire CSS is ready to integrate into your workflow and bring powerful CSS management wherever you need it.
 
 ### Installation
 
 **Single Executable Application (SEA):**
 
-1. Download the binary for your operating system from the [releases page]().
+1. Download the binary for your operating system from the [releases page](https://github.com/persevie/grimoire-css/releases).
 2. Add the binary to your system’s $PATH (optional for easier usage).
 
 **NPM Library:**
@@ -579,13 +588,13 @@ grimoire-css-js build
 
 **Rust Crate:**
 
-If you’re using Rust, simply add Grimoire CSS to your Cargo.toml, and follow the link for documentation about crate: []().
+If you’re using Rust, simply add Grimoire CSS to your Cargo.toml, and follow the link for documentation about crate: [docs.rs](https://docs.rs/grimoire_css/1.0.0).
 
 ## The Arcane Circle
 
-Grimoire CSS gives you the freedom to create styles that work exactly the way you want them to—no rigid rules or constraints. Whether you’re crafting dynamic interactions or fine-tuning layouts, Grimoire adapts to your needs, making each step straightforward and rewarding.
+Grimoire CSS gives you the freedom to create styles that work exactly the way you want them to - no rigid rules or constraints. Whether you’re crafting dynamic interactions or fine-tuning layouts, Grimoire adapts to your needs, making each step straightforward and rewarding.
 
-So, come join us. Share your work, exchange your thoughts, and help us keep pushing CSS to be more flexible and enjoyable. Together, we’re creating a space where writing styles is about mastery and craftsmanship, not about memorizing classes. Let’s see what we can build—one spell at a time.
+So, come join us. Share your work, exchange your thoughts, and help us keep pushing CSS to be more flexible and enjoyable. Together, we’re creating a space where writing styles is about mastery and craftsmanship, not about memorizing classes. Let’s see what we can build - one spell at a time.
 
 <h3 align="center">
 Craft Your Code, Cast Your Spells

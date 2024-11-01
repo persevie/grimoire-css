@@ -1,49 +1,94 @@
-name: build_and_release
+name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    name: build
-    runs-on: ${{ matrix.runs-on }}
+  build_and_release:
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        target:
+          - x86_64-unknown-linux-gnu
+          - x86_64-apple-darwin
+          - aarch64-apple-darwin
+          - x86_64-pc-windows-msvc
         include:
-          - name: linux_x86_64
-            runs-on: ubuntu-latest
+          - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact_name: grimoire_css-linux-x86_64
-            artifact_path: target/x86_64-unknown-linux-gnu/release/grimoire_css
-          - name: macos_x86_64
-            runs-on: macos-latest
+          - os: macos-latest
             target: x86_64-apple-darwin
             artifact_name: grimoire_css-macos-x86_64
-            artifact_path: target/x86_64-apple-darwin/release/grimoire_css
-          - name: macos_arm64
-            runs-on: macos-12
+          - os: macos-latest
             target: aarch64-apple-darwin
             artifact_name: grimoire_css-macos-arm64
-            artifact_path: target/aarch64-apple-darwin/release/grimoire_css
-          - name: windows_x86_64
-            runs-on: windows-latest
+          - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: grimoire_css-windows-x86_64.exe
-            artifact_path: target/x86_64-pc-windows-msvc/release/grimoire_css.exe
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: set_up_rust
+      - name: Determine if release is needed
+        id: release_check
+        run: |
+          echo "Last commit message: ${{ github.event.head_commit.message }}"
+          BRANCH_NAME=$(git log -1 --pretty=%B | grep 'Merge pull request' | sed 's/.*from .*\/\(.*\)/\1/')
+          echo "Merged branch: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" == rc/* ]]; then
+            VERSION="${BRANCH_NAME#rc/}"
+            TAG="v$VERSION"
+            echo "::set-output name=should_release::true"
+            echo "::set-output name=tag::$TAG"
+          elif [[ "$BRANCH_NAME" == hotfix/* ]]; then
+            # Fetch tags
+            git fetch --tags
+            # Get the latest tag
+            LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
+            if [ -z "$LATEST_TAG" ]; then
+              echo "No existing tags found. Cannot proceed with hotfix tagging."
+              exit 1
+            fi
+            echo "Latest tag: $LATEST_TAG"
+            # Extract major, minor, and patch versions
+            IFS='.' read -r -a VERSION_PARTS <<< "${LATEST_TAG#v}"
+            MAJOR="${VERSION_PARTS[0]}"
+            MINOR="${VERSION_PARTS[1]}"
+            PATCH="${VERSION_PARTS[2]}"
+            # Increment the patch version
+            PATCH=$((PATCH + 1))
+            TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            echo "::set-output name=should_release::true"
+            echo "::set-output name=tag::$TAG"
+          else
+            echo "::set-output name=should_release::false"
+          fi
+
+      - name: Stop if no release is needed
+        if: steps.release_check.outputs.should_release != 'true'
+        run: |
+          echo "No release needed for this push."
+          exit 0
+
+      - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
           target: ${{ matrix.target }}
 
-      - name: cache_cargo_registry
+      - name: Cache Cargo registry
         uses: actions/cache@v4
         with:
           path: ~/.cargo/registry
@@ -51,7 +96,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-registry-
 
-      - name: cache_cargo_git
+      - name: Cache Cargo git
         uses: actions/cache@v4
         with:
           path: ~/.cargo/git
@@ -59,7 +104,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-git-
 
-      - name: cache_cargo_build
+      - name: Cache Cargo build
         uses: actions/cache@v4
         with:
           path: target
@@ -67,92 +112,45 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-${{ matrix.target }}-
 
-      - name: build_project
+      - name: Build project
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: prepare_artifact
+      - name: Prepare artifact
         run: |
           mkdir -p artifacts
-          cp "${{ matrix.artifact_path }}" "artifacts/${{ matrix.artifact_name }}"
+          cp target/${{ matrix.target }}/release/grimoire_css${{ matrix.os == 'windows-latest' && '.exe' || '' }} artifacts/${{ matrix.artifact_name }}
 
-      - name: upload_artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: artifacts/${{ matrix.artifact_name }}
 
-  release:
-    name: release
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
+      - name: Create and push tag
+        if: ${{ matrix.os == 'ubuntu-latest' && steps.release_check.outputs.should_release == 'true' }}
+        env:
+          TAG: ${{ steps.release_check.outputs.tag }}
+        run: |
+          echo "Creating tag $TAG"
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
 
-      - name: download_artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: grimoire_css-linux-x86_64
-          path: ./artifacts/linux
-
-      - name: download_macos_artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: grimoire_css-macos-x86_64
-          path: ./artifacts/macos-x86_64
-
-      - name: download_macos_arm64_artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: grimoire_css-macos-arm64
-          path: ./artifacts/macos-arm64
-
-      - name: download_windows_artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: grimoire_css-windows-x86_64.exe
-          path: ./artifacts/windows
-
-      - name: create_github_release
+      - name: Create GitHub Release
+        if: ${{ matrix.os == 'ubuntu-latest' && steps.release_check.outputs.should_release == 'true' }}
         uses: softprops/action-gh-release@v1
         with:
-          files: ./artifacts/**/*
-          body: "Release of Grimoire CSS version ${{ github.ref_name }}"
+          tag_name: ${{ steps.release_check.outputs.tag }}
+          files: artifacts/**/*
+          body: "Release of Grimoire CSS version ${{ steps.release_check.outputs.tag }}"
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish:
-    name: publish_to_crates_io
-    runs-on: ubuntu-latest
-    needs: release
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: set_up_rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-
-      - name: cache_cargo_registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-
-      - name: cache_cargo_git
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-git-
-
-      - name: login_to_crates_io
-        run: cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-      - name: publish_to_crates_io
-        run: cargo publish
+      - name: Publish to crates.io
+        if: ${{ matrix.os == 'ubuntu-latest' && steps.release_check.outputs.should_release == 'true' }}
+        run: |
+          cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          cargo publish
