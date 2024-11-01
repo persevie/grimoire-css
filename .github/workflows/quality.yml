@@ -63,7 +63,5 @@ jobs:
       - name: Run clippy
         run: cargo clippy -- -D warnings
 
-      - name: Run tests with coverage
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: ./scripts/coverage.sh --upload
+      - name: Run tests
+        run: cargo test
