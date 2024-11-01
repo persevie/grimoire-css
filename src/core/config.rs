@@ -591,3 +591,106 @@ impl Config {
         paths
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::File;
+    use std::io::Write;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_default_config() {
+        let config = Config::default();
+        assert!(config.variables.is_none());
+        assert!(config.scrolls.is_none());
+        assert!(config.shared.is_none());
+        assert!(config.critical.is_none());
+        assert_eq!(config.projects.len(), 1);
+        assert_eq!(config.projects[0].project_name, "main");
+    }
+
+    #[test]
+    fn test_load_nonexistent_config() {
+        let dir = tempdir().unwrap();
+        let result = Config::load(dir.path());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_save_and_load_config() {
+        let dir = tempdir().unwrap();
+        let config = Config::default();
+        config.save(dir.path()).expect("Failed to save config");
+
+        let loaded_config = Config::load(dir.path()).expect("Failed to load config");
+        assert_eq!(
+            config.projects[0].project_name,
+            loaded_config.projects[0].project_name
+        );
+    }
+
+    #[test]
+    fn test_expand_glob_patterns() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("test.txt");
+        File::create(&file_path).unwrap();
+
+        let patterns = vec![format!("{}/**/*.txt", dir.path().to_str().unwrap())];
+        let expanded = Config::expand_glob_patterns(patterns);
+        assert_eq!(expanded.len(), 1);
+        assert!(expanded[0].ends_with("test.txt"));
+    }
+
+    #[test]
+    fn test_find_custom_animations_empty() {
+        let dir = tempdir().unwrap();
+        let animations = Config::find_custom_animations(dir.path()).unwrap();
+        assert!(animations.is_empty());
+    }
+
+    #[test]
+    fn test_find_custom_animations_with_files() {
+        let dir = tempdir().unwrap();
+        let animations_dir = dir.path().join("grimoire").join("animations");
+        fs::create_dir_all(&animations_dir).unwrap();
+
+        let animation_file = animations_dir.join("fade_in.css");
+        let mut file = File::create(&animation_file).unwrap();
+        writeln!(
+            file,
+            "@keyframes fade_in {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}"
+        )
+        .unwrap();
+
+        let animations = Config::find_custom_animations(dir.path()).unwrap();
+        assert_eq!(animations.len(), 1);
+        assert!(animations.contains_key("fade_in"));
+    }
+
+    #[test]
+    fn test_get_common_spells_set() {
+        let json = ConfigJSON {
+            schema: None,
+            variables: None,
+            scrolls: None,
+            projects: vec![],
+            shared: Some(vec![ConfigSharedJSON {
+                output_path: "styles.css".to_string(),
+                styles: Some(vec!["spell1".to_string(), "spell2".to_string()]),
+                css_custom_properties: None,
+            }]),
+            critical: Some(vec![ConfigCriticalJSON {
+                file_to_inline_paths: vec!["index.html".to_string()],
+                styles: Some(vec!["spell3".to_string()]),
+                css_custom_properties: None,
+            }]),
+        };
+
+        let common_spells = Config::get_common_spells_set(&json);
+        assert_eq!(common_spells.len(), 3);
+        assert!(common_spells.contains("spell1"));
+        assert!(common_spells.contains("spell2"));
+        assert!(common_spells.contains("spell3"));
+    }
+}
