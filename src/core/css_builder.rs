@@ -1,12 +1,10 @@
 //! Provides the `CSSBuilder` struct and its associated methods for compiling and building CSS files based on a configuration.
 
-use crate::buffer::add_message;
-
 use super::{
     build_info::BuildInfo, css_generator::CSSGenerator, css_optimizer::CSSOptimizer,
     parser::Parser, spell::Spell, Config, ConfigCSSCustomProperties, GrimoireCSSError,
 };
-use rayon::prelude::*;
+use crate::buffer::add_message;
 use regex::Regex;
 use std::{
     collections::HashSet,
@@ -166,18 +164,9 @@ impl<'a> CSSBuilder<'a> {
     ///
     /// Returns a `GrimoireCSSError` if writing to files fails.
     fn write_compiled_css(compiled_css: Vec<(PathBuf, String)>) -> Result<(), GrimoireCSSError> {
-        if compiled_css.len() > 10 {
-            // Use parallelism if there are multiple files
-            compiled_css.par_iter().try_for_each(|(file_path, css)| {
-                Self::create_output_directory_if_needed(file_path)?;
-                fs::write(file_path, css).map_err(GrimoireCSSError::from)
-            })?;
-        } else {
-            // Process sequentially if there's only one file
-            for (file_path, css) in compiled_css {
-                Self::create_output_directory_if_needed(&file_path)?;
-                fs::write(file_path, css)?;
-            }
+        for (file_path, css) in compiled_css {
+            Self::create_output_directory_if_needed(&file_path)?;
+            fs::write(file_path, css)?;
         }
 
         Ok(())
@@ -481,20 +470,9 @@ impl<'a> CSSBuilder<'a> {
         &self,
         inline_shared_css: &Vec<(PathBuf, String)>,
     ) -> Result<(), GrimoireCSSError> {
-        if inline_shared_css.len() > 10 {
-            // Use parallelism if there are multiple HTML files
-            inline_shared_css
-                .par_iter()
-                .try_for_each(|(file_path, css)| {
-                    let path = self.current_dir.join(file_path);
-                    self.embed_critical_css(&path, css)
-                })?;
-        } else {
-            // Process sequentially if there's only one HTML file
-            for (file_path, css) in inline_shared_css {
-                let path = self.current_dir.join(file_path);
-                self.embed_critical_css(&path, css)?;
-            }
+        for (file_path, css) in inline_shared_css {
+            let path = self.current_dir.join(file_path);
+            self.embed_critical_css(&path, css)?;
         }
 
         Ok(())

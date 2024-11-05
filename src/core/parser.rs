@@ -2,17 +2,14 @@
 //! and templated spells from HTML or other input files. It can traverse directories, parse files,
 //! and extract class names based on specific patterns, using regular expressions.
 
+use super::GrimoireCSSError;
+use crate::buffer::add_message;
+use regex::Regex;
 use std::{
     collections::HashSet,
     fs,
     path::{Path, PathBuf},
 };
-
-use regex::Regex;
-
-use crate::buffer::add_message;
-
-use super::GrimoireCSSError;
 
 /// `Parser` is responsible for extracting CSS class names and templated spells from HTML or other
 /// files. It uses regular expressions to find class names and spell-like patterns, and supports
