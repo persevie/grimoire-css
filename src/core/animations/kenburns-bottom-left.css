@@ -1,0 +1,14 @@
+@keyframes kenburns-bottom-left {
+    0% {
+        transform: scale(1) translate(0, 0);
+        transform-origin: 16% 84%
+    }
+    to {
+        transform: scale(1.25) translate(-20px, 15px);
+        transform-origin: left bottom
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: kenburns-bottom-left;
+}

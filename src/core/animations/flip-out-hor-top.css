@@ -1,0 +1,14 @@
+@keyframes flip-out-hor-top {
+    0% {
+        transform: rotateX(0);
+        opacity: 1
+    }
+    to {
+        transform: rotateX(70deg);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-out-hor-top;
+}

@@ -1,0 +1,14 @@
+@keyframes flip-out-diag-1-tr {
+    0% {
+        transform: rotate3d(1, 1, 0, 0deg);
+        opacity: 1
+    }
+    to {
+        transform: rotate3d(1, 1, 0, 70deg);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-out-diag-1-tr;
+}

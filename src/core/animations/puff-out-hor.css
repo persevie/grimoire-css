@@ -1,0 +1,16 @@
+@keyframes puff-out-hor {
+    0% {
+        transform: scaleX(1);
+        filter: blur(0);
+        opacity: 1
+    }
+    to {
+        transform: scaleX(2);
+        filter: blur(2px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: puff-out-hor;
+}

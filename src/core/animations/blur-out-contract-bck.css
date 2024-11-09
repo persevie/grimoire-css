@@ -1,0 +1,15 @@
+@keyframes blur-out-contract-bck {
+    0% {
+        transform: translateZ(0);
+        filter: blur(.01)
+    }
+    to {
+        letter-spacing: -.5em;
+        transform: translateZ(-500px);
+        filter: blur(12px) opacity(0%)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: blur-out-contract-bck;
+}

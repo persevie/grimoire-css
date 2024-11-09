@@ -1,0 +1,18 @@
+@keyframes color-change-4x {
+    0% {
+        background: #19dcea
+    }
+    33.3333% {
+        background: #b22cff
+    }
+    66.666% {
+        background: #ea2222
+    }
+    to {
+        background: #f5be10
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: color-change-4x;
+}

@@ -1,0 +1,12 @@
+@keyframes slide-rotate-hor-top {
+    0% {
+        transform: translateY(0) rotateX(0deg)
+    }
+    to {
+        transform: translateY(-150px) rotateX(-90deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-rotate-hor-top;
+}

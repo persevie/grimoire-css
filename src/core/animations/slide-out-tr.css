@@ -1,0 +1,14 @@
+@keyframes slide-out-tr {
+    0% {
+        transform: translateY(0) translateX(0);
+        opacity: 1
+    }
+    to {
+        transform: translateY(-1000px) translateX(1000px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-out-tr;
+}

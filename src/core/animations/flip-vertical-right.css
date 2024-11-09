@@ -1,0 +1,12 @@
+@keyframes flip-vertical-right {
+    0% {
+        transform: rotateY(0)
+    }
+    to {
+        transform: rotateY(180deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-vertical-right;
+}

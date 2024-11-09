@@ -1,0 +1,16 @@
+@keyframes swing-in-right-bck {
+    0% {
+        transform: rotateY(70deg);
+        transform-origin: right;
+        opacity: 0
+    }
+    to {
+        transform: rotateY(0);
+        transform-origin: right;
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: swing-in-right-bck;
+}

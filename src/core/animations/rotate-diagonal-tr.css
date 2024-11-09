@@ -1,0 +1,18 @@
+@keyframes rotate-diagonal-tr {
+    0% {
+        transform: rotate3d(1, 1, 0, 0deg);
+        transform-origin: 100% 0%
+    }
+    50% {
+        transform: rotate3d(1, 1, 0, -180deg);
+        transform-origin: 100% 0%
+    }
+    to {
+        transform: rotate3d(1, 1, 0, -360deg);
+        transform-origin: 100% 0%
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-diagonal-tr;
+}

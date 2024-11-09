@@ -1,0 +1,16 @@
+@keyframes swing-in-top-fwd {
+    0% {
+        transform: rotateX(-100deg);
+        transform-origin: top;
+        opacity: 0
+    }
+    to {
+        transform: rotateX(0deg);
+        transform-origin: top;
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: swing-in-top-fwd;
+}

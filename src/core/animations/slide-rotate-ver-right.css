@@ -1,0 +1,12 @@
+@keyframes slide-rotate-ver-right {
+    0% {
+        transform: translateX(0) rotateY(0)
+    }
+    to {
+        transform: translateX(150px) rotateY(-90deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-rotate-ver-right;
+}

@@ -1,0 +1,14 @@
+@keyframes swirl-out-bck {
+    0% {
+        transform: rotate(0) scale(1);
+        opacity: 1
+    }
+    to {
+        transform: rotate(-540deg) scale(0);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: swirl-out-bck;
+}

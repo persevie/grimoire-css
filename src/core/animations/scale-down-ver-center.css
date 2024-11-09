@@ -1,0 +1,12 @@
+@keyframes scale-down-ver-center {
+    0% {
+        transform: scaleY(1)
+    }
+    to {
+        transform: scaleY(.3)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: scale-down-ver-center;
+}

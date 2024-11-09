@@ -1,0 +1,12 @@
+@keyframes slide-top {
+    0% {
+        transform: translateY(0)
+    }
+    to {
+        transform: translateY(-100px)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-top;
+}

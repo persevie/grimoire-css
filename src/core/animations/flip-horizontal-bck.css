@@ -1,0 +1,12 @@
+@keyframes flip-horizontal-bck {
+    0% {
+        transform: translateZ(0) rotateX(0)
+    }
+    to {
+        transform: translateZ(-260px) rotateX(180deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-horizontal-bck;
+}

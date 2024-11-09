@@ -1,0 +1,20 @@
+@keyframes slit-in-diagonal-2 {
+    0% {
+        transform: translateZ(-800px) rotate3d(-1, 1, 0, -90deg);
+        animation-timing-function: ease-in;
+        opacity: 0
+    }
+    54% {
+        transform: translateZ(-160px) rotate3d(-1, 1, 0, -87deg);
+        animation-timing-function: ease-in-out;
+        opacity: 1
+    }
+    to {
+        transform: translateZ(0) rotate3d(-1, 1, 0, 0);
+        animation-timing-function: ease-out
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slit-in-diagonal-2;
+}

@@ -1,0 +1,14 @@
+@keyframes scale-in-ver-center {
+    0% {
+        transform: scaleY(0);
+        opacity: 1
+    }
+    to {
+        transform: scaleY(1);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: scale-in-ver-center;
+}

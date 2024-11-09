@@ -1,0 +1,14 @@
+@keyframes slide-in-bck-tr {
+    0% {
+        transform: translateZ(700px) translateY(-300px) translateX(400px);
+        opacity: 0
+    }
+    to {
+        transform: translateZ(0) translateY(0) translateX(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-in-bck-tr;
+}

@@ -1,0 +1,27 @@
+@keyframes vibrate-3 {
+    0%,
+    to {
+        transform: translate(0)
+    }
+    10%,
+    50%,
+    80% {
+        transform: translate(-2px, -2px)
+    }
+    20%,
+    60%,
+    90% {
+        transform: translate(2px, -2px)
+    }
+    30%,
+    70% {
+        transform: translate(-2px, 2px)
+    }
+    40% {
+        transform: translate(2px, 2px)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: vibrate-3;
+}

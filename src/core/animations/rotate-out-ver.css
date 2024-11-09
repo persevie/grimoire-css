@@ -1,0 +1,14 @@
+@keyframes rotate-out-ver {
+    0% {
+        transform: rotateY(360deg);
+        opacity: 1
+    }
+    to {
+        transform: rotateY(0deg);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-out-ver;
+}

@@ -1,0 +1,18 @@
+@keyframes slide-out-blurred-tl {
+    0% {
+        transform: translate(0, 0) skew(0deg, 0deg);
+        transform-origin: 50% 50%;
+        filter: blur(0);
+        opacity: 1
+    }
+    to {
+        transform: translate(-1000px, -1000px) skew(80deg, 10deg);
+        transform-origin: 100% 0%;
+        filter: blur(40px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-out-blurred-tl;
+}

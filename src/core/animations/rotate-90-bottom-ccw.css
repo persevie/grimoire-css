@@ -1,0 +1,14 @@
+@keyframes rotate-90-bottom-ccw {
+    0% {
+        transform: rotate(0);
+        transform-origin: bottom
+    }
+    to {
+        transform: rotate(-90deg);
+        transform-origin: bottom
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-90-bottom-ccw;
+}

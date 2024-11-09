@@ -1,0 +1,20 @@
+@keyframes flicker-1 {
+    0%,
+    41.99%,
+    43.01%,
+    47.99%,
+    49.01%,
+    to {
+        opacity: 1
+    }
+    42%,
+    43%,
+    48%,
+    49% {
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flicker-1;
+}

@@ -1,0 +1,12 @@
+@keyframes scale-up-center {
+    0% {
+        transform: scale(.5)
+    }
+    to {
+        transform: scale(1)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: scale-up-center;
+}

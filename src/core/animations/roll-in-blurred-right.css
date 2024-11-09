@@ -1,0 +1,16 @@
+@keyframes roll-in-blurred-right {
+    0% {
+        transform: translateX(1000px) rotate(720deg);
+        filter: blur(50px);
+        opacity: 0
+    }
+    to {
+        transform: translateX(0) rotate(0deg);
+        filter: blur(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: roll-in-blurred-right;
+}

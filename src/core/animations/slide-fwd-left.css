@@ -1,0 +1,12 @@
+@keyframes slide-fwd-left {
+    0% {
+        transform: translateZ(0) translateX(0)
+    }
+    to {
+        transform: translateZ(160px) translateX(-100px)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-fwd-left;
+}
