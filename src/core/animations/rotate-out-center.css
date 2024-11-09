@@ -1,0 +1,14 @@
+@keyframes rotate-out-center {
+    0% {
+        transform: rotate(0);
+        opacity: 1
+    }
+    to {
+        transform: rotate(-360deg);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-out-center;
+}

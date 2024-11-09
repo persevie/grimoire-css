@@ -1,0 +1,14 @@
+@keyframes slide-out-fwd-bl {
+    0% {
+        transform: translateZ(0) translateY(0) translateX(0);
+        opacity: 1
+    }
+    to {
+        transform: translateZ(600px) translateY(300px) translateX(-400px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-out-fwd-bl;
+}

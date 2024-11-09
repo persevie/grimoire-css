@@ -1,0 +1,34 @@
+@keyframes bounce-in-bck {
+    0% {
+        transform: scale(7);
+        animation-timing-function: ease-in;
+        opacity: 0
+    }
+    38% {
+        transform: scale(1);
+        animation-timing-function: ease-out;
+        opacity: 1
+    }
+    55% {
+        transform: scale(1.5);
+        animation-timing-function: ease-in
+    }
+    72%,
+    89%,
+    to {
+        transform: scale(1);
+        animation-timing-function: ease-out
+    }
+    81% {
+        transform: scale(1.24);
+        animation-timing-function: ease-in
+    }
+    95% {
+        transform: scale(1.04);
+        animation-timing-function: ease-in
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: bounce-in-bck;
+}

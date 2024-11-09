@@ -1,0 +1,14 @@
+@keyframes rotate-top {
+    0% {
+        transform: rotate(0);
+        transform-origin: top
+    }
+    to {
+        transform: rotate(360deg);
+        transform-origin: top
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-top;
+}

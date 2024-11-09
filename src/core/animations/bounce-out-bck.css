@@ -1,0 +1,36 @@
+@keyframes bounce-out-bck {
+    0%,
+    15%,
+    38% {
+        transform: translateZ(0);
+        animation-timing-function: ease-out
+    }
+    5% {
+        transform: translateZ(-100px);
+        animation-timing-function: ease-in
+    }
+    25% {
+        transform: translateZ(-110px);
+        animation-timing-function: ease-in
+    }
+    52% {
+        transform: translateZ(-200px);
+        animation-timing-function: ease-in
+    }
+    70% {
+        transform: translateZ(0) scale(1);
+        animation-timing-function: ease-out
+    }
+    85% {
+        opacity: 1
+    }
+    to {
+        transform: translateZ(-900px) scale(0);
+        animation-timing-function: ease-in;
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: bounce-out-bck;
+}

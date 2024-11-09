@@ -1,0 +1,12 @@
+@keyframes shadow-drop-tb {
+    0% {
+        box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent
+    }
+    to {
+        box-shadow: 0 -12px 20px -12px rgba(0, 0, 0, .35), 0 12px 20px -12px rgba(0, 0, 0, .35)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: shadow-drop-tb;
+}

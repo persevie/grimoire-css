@@ -1,0 +1,14 @@
+@keyframes shadow-drop-2-right {
+    0% {
+        transform: translateZ(0) translateX(0);
+        box-shadow: 0 0 0 0 transparent
+    }
+    to {
+        transform: translateZ(50px) translateX(-12px);
+        box-shadow: 12px 0 20px -12px rgba(0, 0, 0, .35)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: shadow-drop-2-right;
+}

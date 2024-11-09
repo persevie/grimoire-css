@@ -1,0 +1,12 @@
+@keyframes flip-vertical-fwd {
+    0% {
+        transform: translateZ(0) rotateY(0)
+    }
+    to {
+        transform: translateZ(160px) rotateY(180deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-vertical-fwd;
+}

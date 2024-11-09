@@ -1,0 +1,12 @@
+@keyframes rotate-center {
+    0% {
+        transform: rotate(0)
+    }
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-center;
+}

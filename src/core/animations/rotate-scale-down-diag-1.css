@@ -1,0 +1,15 @@
+@keyframes rotate-scale-down-diag-1 {
+    0% {
+        transform: scale(1) rotate3d(1, 1, 0, 0deg)
+    }
+    50% {
+        transform: scale(.5) rotate3d(1, 1, 0, -180deg)
+    }
+    to {
+        transform: scale(1) rotate3d(1, 1, 0, -360deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-scale-down-diag-1;
+}

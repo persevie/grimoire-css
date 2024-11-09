@@ -1,0 +1,12 @@
+@keyframes bg-pan-top {
+    0% {
+        background-position: 50% 100%
+    }
+    to {
+        background-position: 50% 0%
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: bg-pan-top;
+}

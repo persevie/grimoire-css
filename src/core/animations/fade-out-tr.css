@@ -1,0 +1,14 @@
+@keyframes fade-out-tr {
+    0% {
+        transform: translateX(0) translateY(0);
+        opacity: 1
+    }
+    to {
+        transform: translateX(50px) translateY(-50px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: fade-out-tr;
+}

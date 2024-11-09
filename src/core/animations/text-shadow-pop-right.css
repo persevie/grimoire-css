@@ -1,0 +1,14 @@
+@keyframes text-shadow-pop-right {
+    0% {
+        text-shadow: 0 0 #555, 0 0 #555, 0 0 #555, 0 0 #555, 0 0 #555, 0 0 #555, 0 0 #555, 0 0 #555;
+        transform: translateX(0)
+    }
+    to {
+        text-shadow: 1px 0 #555, 2px 0 #555, 3px 0 #555, 4px 0 #555, 5px 0 #555, 6px 0 #555, 7px 0 #555, 8px 0 #555;
+        transform: translateX(-8px)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: text-shadow-pop-right;
+}

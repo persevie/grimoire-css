@@ -1,0 +1,14 @@
+@keyframes slide-in-fwd-br {
+    0% {
+        transform: translateZ(-1400px) translateY(800px) translateX(1000px);
+        opacity: 0
+    }
+    to {
+        transform: translateZ(0) translateY(0) translateX(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-in-fwd-br;
+}

@@ -1,0 +1,18 @@
+@keyframes tracking-out-contract-bck {
+    0% {
+        transform: translateZ(0);
+        opacity: 1
+    }
+    60% {
+        opacity: 1
+    }
+    to {
+        letter-spacing: -.5em;
+        transform: translateZ(-500px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: tracking-out-contract-bck;
+}

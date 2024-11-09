@@ -1,0 +1,16 @@
+@keyframes roll-in-blurred-top {
+    0% {
+        transform: translateY(-800px) rotate(-720deg);
+        filter: blur(50px);
+        opacity: 0
+    }
+    to {
+        transform: translateY(0) rotate(0deg);
+        filter: blur(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: roll-in-blurred-top;
+}

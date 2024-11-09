@@ -1,0 +1,14 @@
+@keyframes rotate-vert-left {
+    0% {
+        transform: rotateY(0);
+        transform-origin: left
+    }
+    to {
+        transform: rotateY(360deg);
+        transform-origin: left
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-vert-left;
+}

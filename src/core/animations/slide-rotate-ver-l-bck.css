@@ -1,0 +1,14 @@
+@keyframes slide-rotate-ver-l-bck {
+    0% {
+        transform: translateX(0) translateZ(0) rotateY(0);
+        transform-origin: center left
+    }
+    to {
+        transform: translateX(-150px) translateZ(-230px) rotateY(90deg);
+        transform-origin: center left
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-rotate-ver-l-bck;
+}

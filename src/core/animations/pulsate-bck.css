@@ -1,0 +1,13 @@
+@keyframes pulsate-bck {
+    0%,
+    to {
+        transform: scale(1)
+    }
+    50% {
+        transform: scale(.9)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: pulsate-bck;
+}

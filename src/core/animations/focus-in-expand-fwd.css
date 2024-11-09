@@ -1,0 +1,17 @@
+@keyframes focus-in-expand-fwd {
+    0% {
+        letter-spacing: -.5em;
+        transform: translateZ(-800px);
+        filter: blur(12px);
+        opacity: 0
+    }
+    to {
+        transform: translateZ(0);
+        filter: blur(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: focus-in-expand-fwd;
+}

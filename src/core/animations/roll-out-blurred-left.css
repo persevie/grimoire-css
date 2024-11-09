@@ -1,0 +1,16 @@
+@keyframes roll-out-blurred-left {
+    0% {
+        transform: translateX(0) rotate(0deg);
+        filter: blur(0);
+        opacity: 1
+    }
+    to {
+        transform: translateX(-1000px) rotate(-720deg);
+        filter: blur(50px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: roll-out-blurred-left;
+}

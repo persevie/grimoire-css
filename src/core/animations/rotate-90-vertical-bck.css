@@ -1,0 +1,12 @@
+@keyframes rotate-90-vertical-bck {
+    0% {
+        transform: rotateY(0)
+    }
+    to {
+        transform: rotateY(-90deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-90-vertical-bck;
+}

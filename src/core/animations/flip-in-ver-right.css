@@ -1,0 +1,14 @@
+@keyframes flip-in-ver-right {
+    0% {
+        transform: rotateY(-80deg);
+        opacity: 0
+    }
+    to {
+        transform: rotateY(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-in-ver-right;
+}

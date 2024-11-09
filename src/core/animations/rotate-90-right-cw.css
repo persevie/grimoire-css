@@ -1,0 +1,14 @@
+@keyframes rotate-90-right-cw {
+    0% {
+        transform: rotate(0);
+        transform-origin: right
+    }
+    to {
+        transform: rotate(90deg);
+        transform-origin: right
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-90-right-cw;
+}

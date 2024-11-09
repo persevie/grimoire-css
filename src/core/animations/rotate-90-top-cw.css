@@ -1,0 +1,14 @@
+@keyframes rotate-90-top-cw {
+    0% {
+        transform: rotate(0);
+        transform-origin: top
+    }
+    to {
+        transform: rotate(90deg);
+        transform-origin: top
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-90-top-cw;
+}

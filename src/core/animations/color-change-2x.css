@@ -1,0 +1,12 @@
+@keyframes color-change-2x {
+    0% {
+        background: #19dcea
+    }
+    to {
+        background: #b22cff
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: color-change-2x;
+}

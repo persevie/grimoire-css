@@ -1,0 +1,12 @@
+@keyframes text-blur-out {
+    0% {
+        filter: blur(.01)
+    }
+    to {
+        filter: blur(12px) opacity(0%)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: text-blur-out;
+}

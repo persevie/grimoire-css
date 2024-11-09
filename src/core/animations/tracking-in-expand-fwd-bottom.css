@@ -1,0 +1,18 @@
+@keyframes tracking-in-expand-fwd-bottom {
+    0% {
+        letter-spacing: -.5em;
+        transform: translateZ(-700px) translateY(500px);
+        opacity: 0
+    }
+    40% {
+        opacity: .6
+    }
+    to {
+        transform: translateZ(0) translateY(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: tracking-in-expand-fwd-bottom;
+}

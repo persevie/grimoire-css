@@ -1,0 +1,14 @@
+@keyframes swing-left-fwd {
+    0% {
+        transform: rotateY(0);
+        transform-origin: left bottom
+    }
+    to {
+        transform: rotateY(-180deg);
+        transform-origin: left bottom
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: swing-left-fwd;
+}

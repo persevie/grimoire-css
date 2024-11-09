@@ -1,0 +1,12 @@
+@keyframes shadow-inset-right {
+    0% {
+        box-shadow: inset 0 0 0 0 transparent
+    }
+    to {
+        box-shadow: inset -6px 0 14px -6px rgba(0, 0, 0, .5)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: shadow-inset-right;
+}

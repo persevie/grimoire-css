@@ -1,0 +1,14 @@
+@keyframes scale-out-center {
+    0% {
+        transform: scale(1);
+        opacity: 1
+    }
+    to {
+        transform: scale(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: scale-out-center;
+}
