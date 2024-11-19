@@ -36,8 +36,8 @@ impl<'a> Parser<'a> {
     ///
     /// * `current_dir` - A reference to the base directory where the parser will operate.
     pub fn new(current_dir: &'a Path) -> Self {
-        let class_name_regex = Regex::new(r#"className="([^"]*)""#).unwrap();
-        let class_regex = Regex::new(r#"class="([^"]*)""#).unwrap();
+        let class_name_regex = Regex::new(r#"className=["|'|`](.*)["|'|`]"#).unwrap();
+        let class_regex = Regex::new(r#"class=["|'|`](.*)["|'|`]"#).unwrap();
         let tepmplated_spell_regex = Regex::new(r#"(g!\S*?;)"#).unwrap();
 
         Self {
