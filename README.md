@@ -16,11 +16,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-    - [
-
-Craft Your Code, Cast Your Spells
-](#craft-your-code-cast-your-spells)
-
 - [Welcome to the Circle: Unlock the Magic of CSS with Grimoire](#welcome-to-the-circle-unlock-the-magic-of-css-with-grimoire)
   - [A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning](#a-spell-system-that-unleashes-the-full-power-of-css---with-no-limits-no-extra-learning)
     - [Recap](#recap)
@@ -597,6 +592,6 @@ Grimoire CSS gives you the freedom to create styles that work exactly the way yo
 
 So, come join us. Share your work, exchange your thoughts, and help us keep pushing CSS to be more flexible and enjoyable. Together, we’re creating a space where writing styles is about mastery and craftsmanship, not about memorizing classes. Let’s see what we can build - one spell at a time.
 
-<h3 align="center">
+---
+
 Craft Your Code, Cast Your Spells
-</h3>
