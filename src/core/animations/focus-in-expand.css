@@ -1,0 +1,15 @@
+@keyframes focus-in-expand {
+    0% {
+        letter-spacing: -.5em;
+        filter: blur(12px);
+        opacity: 0
+    }
+    to {
+        filter: blur(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: focus-in-expand;
+}

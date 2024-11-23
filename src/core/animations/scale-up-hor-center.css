@@ -1,0 +1,12 @@
+@keyframes scale-up-hor-center {
+    0% {
+        transform: scaleX(.4)
+    }
+    to {
+        transform: scaleX(1)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: scale-up-hor-center;
+}

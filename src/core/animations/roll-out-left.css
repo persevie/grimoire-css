@@ -1,0 +1,14 @@
+@keyframes roll-out-left {
+    0% {
+        transform: translateX(0) rotate(0deg);
+        opacity: 1
+    }
+    to {
+        transform: translateX(-1000px) rotate(-540deg);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: roll-out-left;
+}

@@ -1,0 +1,12 @@
+@keyframes text-shadow-drop-top {
+    0% {
+        text-shadow: 0 0 0 transparent
+    }
+    to {
+        text-shadow: 0 -6px 18px rgba(0, 0, 0, .35)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: text-shadow-drop-top;
+}

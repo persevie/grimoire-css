@@ -1,0 +1,16 @@
+@keyframes rotate-in-2-tl-cw {
+    0% {
+        transform: rotate(-45deg);
+        transform-origin: 0 0;
+        opacity: 0
+    }
+    to {
+        transform: rotate(0);
+        transform-origin: 0 0;
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-in-2-tl-cw;
+}

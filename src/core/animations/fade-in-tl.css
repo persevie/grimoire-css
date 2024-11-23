@@ -1,0 +1,14 @@
+@keyframes fade-in-tl {
+    0% {
+        transform: translateX(-50px) translateY(-50px);
+        opacity: 0
+    }
+    to {
+        transform: translateX(0) translateY(0);
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: fade-in-tl;
+}

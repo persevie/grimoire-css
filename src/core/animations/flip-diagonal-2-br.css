@@ -1,0 +1,12 @@
+@keyframes flip-diagonal-2-br {
+    0% {
+        transform: rotate3d(-1, 1, 0, 0deg)
+    }
+    to {
+        transform: rotate3d(-1, 1, 0, 180deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-diagonal-2-br;
+}

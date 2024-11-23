@@ -1,0 +1,15 @@
+@keyframes color-change-3x {
+    0% {
+        background: #19dcea
+    }
+    50% {
+        background: #b22cff
+    }
+    to {
+        background: #ea2222
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: color-change-3x;
+}

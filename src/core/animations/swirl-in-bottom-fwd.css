@@ -1,0 +1,16 @@
+@keyframes swirl-in-bottom-fwd {
+    0% {
+        transform: rotate(-540deg) scale(0);
+        transform-origin: 50% 100%;
+        opacity: 0
+    }
+    to {
+        transform: rotate(0) scale(1);
+        transform-origin: 50% 100%;
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: swirl-in-bottom-fwd;
+}

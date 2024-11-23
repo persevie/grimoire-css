@@ -1,6 +1,6 @@
 [package]
 name = "grimoire_css"
-version = "1.0.1"
+version = "1.1.0"
 edition = "2021"
 authors = ["Dmitrii Shatokhin <dmtrshatokhin@gmail.com>"]
 description = "A magical CSS system engine for all environments"
@@ -33,7 +33,6 @@ indicatif = "0.17.8"
 lazy_static = "1.5.0"
 lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }
 once_cell = "1.20"
-rayon = "1.10.0"
 regex = "1.11.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

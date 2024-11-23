@@ -1,0 +1,16 @@
+@keyframes swing-out-bottom-bck {
+    0% {
+        transform: rotateX(0);
+        transform-origin: bottom;
+        opacity: 1
+    }
+    to {
+        transform: rotateX(100deg);
+        transform-origin: bottom;
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: swing-out-bottom-bck;
+}

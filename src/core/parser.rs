@@ -2,17 +2,14 @@
 //! and templated spells from HTML or other input files. It can traverse directories, parse files,
 //! and extract class names based on specific patterns, using regular expressions.
 
+use super::GrimoireCSSError;
+use crate::buffer::add_message;
+use regex::Regex;
 use std::{
     collections::HashSet,
     fs,
     path::{Path, PathBuf},
 };
-
-use regex::Regex;
-
-use crate::buffer::add_message;
-
-use super::GrimoireCSSError;
 
 /// `Parser` is responsible for extracting CSS class names and templated spells from HTML or other
 /// files. It uses regular expressions to find class names and spell-like patterns, and supports
@@ -39,8 +36,8 @@ impl<'a> Parser<'a> {
     ///
     /// * `current_dir` - A reference to the base directory where the parser will operate.
     pub fn new(current_dir: &'a Path) -> Self {
-        let class_name_regex = Regex::new(r#"className="([^"]*)""#).unwrap();
-        let class_regex = Regex::new(r#"class="([^"]*)""#).unwrap();
+        let class_name_regex = Regex::new(r#"className=["|'|`](.*)["|'|`]"#).unwrap();
+        let class_regex = Regex::new(r#"class=["|'|`](.*)["|'|`]"#).unwrap();
         let tepmplated_spell_regex = Regex::new(r#"(g!\S*?;)"#).unwrap();
 
         Self {

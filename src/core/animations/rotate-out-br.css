@@ -1,0 +1,16 @@
+@keyframes rotate-out-br {
+    0% {
+        transform: rotate(0);
+        transform-origin: bottom right;
+        opacity: 1
+    }
+    to {
+        transform: rotate(-360deg);
+        transform-origin: bottom right;
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-out-br;
+}

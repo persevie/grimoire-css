@@ -1,0 +1,15 @@
+@keyframes rotate-scale-down-hor {
+    0% {
+        transform: scale(1) rotateX(0)
+    }
+    50% {
+        transform: scale(.5) rotateX(-180deg)
+    }
+    to {
+        transform: scale(1) rotateX(-360deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-scale-down-hor;
+}

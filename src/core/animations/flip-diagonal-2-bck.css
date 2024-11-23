@@ -1,0 +1,12 @@
+@keyframes flip-diagonal-2-bck {
+    0% {
+        transform: translateZ(0) rotate3d(-1, 1, 0, 0deg)
+    }
+    to {
+        transform: translateZ(-260px) rotate3d(-1, 1, 0, -180deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-diagonal-2-bck;
+}

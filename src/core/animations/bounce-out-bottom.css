@@ -1,0 +1,32 @@
+@keyframes bounce-out-bottom {
+    0%,
+    15%,
+    38%,
+    70% {
+        transform: translateY(0);
+        animation-timing-function: ease-out
+    }
+    5% {
+        transform: translateY(30px);
+        animation-timing-function: ease-in
+    }
+    25% {
+        transform: translateY(38px);
+        animation-timing-function: ease-in
+    }
+    52% {
+        transform: translateY(75px);
+        animation-timing-function: ease-in
+    }
+    85% {
+        opacity: 1
+    }
+    to {
+        transform: translateY(800px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: bounce-out-bottom;
+}

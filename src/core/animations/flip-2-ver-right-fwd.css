@@ -1,0 +1,14 @@
+@keyframes flip-2-ver-right-fwd {
+    0% {
+        transform: translateX(0) translateZ(0) rotateY(0);
+        transform-origin: 100% 50%
+    }
+    to {
+        transform: translateX(100%) translateZ(160px) rotateY(-180deg);
+        transform-origin: 0% 50%
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-2-ver-right-fwd;
+}

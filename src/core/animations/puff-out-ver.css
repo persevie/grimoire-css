@@ -1,0 +1,16 @@
+@keyframes puff-out-ver {
+    0% {
+        transform: scaleY(1);
+        filter: blur(0);
+        opacity: 1
+    }
+    to {
+        transform: scaleY(2);
+        filter: blur(2px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: puff-out-ver;
+}

@@ -1,0 +1,14 @@
+@keyframes slide-rotate-hor-t-fwd {
+    0% {
+        transform: translateY(0) translateZ(0) rotateX(0deg);
+        transform-origin: bottom center
+    }
+    to {
+        transform: translateY(-150px) translateZ(130px) rotateX(-90deg);
+        transform-origin: bottom center
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-rotate-hor-t-fwd;
+}

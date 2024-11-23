@@ -1,0 +1,14 @@
+@keyframes fade-out-bck {
+    0% {
+        transform: translateZ(0);
+        opacity: 1
+    }
+    to {
+        transform: translateZ(-80px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: fade-out-bck;
+}

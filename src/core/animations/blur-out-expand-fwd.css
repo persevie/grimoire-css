@@ -1,0 +1,15 @@
+@keyframes blur-out-expand-fwd {
+    0% {
+        transform: translateZ(0);
+        filter: blur(.01)
+    }
+    to {
+        letter-spacing: 1em;
+        transform: translateZ(300px);
+        filter: blur(12px) opacity(0%)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: blur-out-expand-fwd;
+}

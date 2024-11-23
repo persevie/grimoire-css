@@ -1,0 +1,18 @@
+@keyframes slit-out-horizontal {
+    0% {
+        transform: translateZ(0) rotateX(0);
+        opacity: 1
+    }
+    54% {
+        transform: translateZ(-160px) rotateX(87deg);
+        opacity: 1
+    }
+    to {
+        transform: translateZ(-800px) rotateX(90deg);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slit-out-horizontal;
+}

@@ -1,0 +1,14 @@
+@keyframes rotate-90-tr-ccw {
+    0% {
+        transform: rotate(0);
+        transform-origin: top right
+    }
+    to {
+        transform: rotate(-90deg);
+        transform-origin: top right
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-90-tr-ccw;
+}

@@ -1,0 +1,14 @@
+@keyframes swing-bottom-left-bck {
+    0% {
+        transform: rotate3d(1, 1, 0, 0deg);
+        transform-origin: 0% 100%
+    }
+    to {
+        transform: rotate3d(1, 1, 0, 180deg);
+        transform-origin: 0% 100%
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: swing-bottom-left-bck;
+}

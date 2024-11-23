@@ -1,0 +1,18 @@
+@keyframes slit-out-diagonal-2 {
+    0% {
+        transform: translateZ(0) rotate3d(-1, 1, 0, 0);
+        opacity: 1
+    }
+    54% {
+        transform: translateZ(-160px) rotate3d(-1, 1, 0, -87deg);
+        opacity: 1
+    }
+    to {
+        transform: translateZ(-800px) rotate3d(-1, 1, 0, -90deg);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slit-out-diagonal-2;
+}

@@ -1,0 +1,12 @@
+@keyframes rotate-90-horizontal-bck {
+    0% {
+        transform: rotateX(0)
+    }
+    to {
+        transform: rotateX(-90deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-90-horizontal-bck;
+}

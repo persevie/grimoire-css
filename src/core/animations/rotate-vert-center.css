@@ -1,0 +1,12 @@
+@keyframes rotate-vert-center {
+    0% {
+        transform: rotateY(0)
+    }
+    to {
+        transform: rotateY(360deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-vert-center;
+}

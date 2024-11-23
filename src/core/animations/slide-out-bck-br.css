@@ -1,0 +1,14 @@
+@keyframes slide-out-bck-br {
+    0% {
+        transform: translateZ(0) translateY(0) translateX(0);
+        opacity: 1
+    }
+    to {
+        transform: translateZ(-1100px) translateY(1000px) translateX(1000px);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-out-bck-br;
+}

@@ -1,0 +1,12 @@
+@keyframes flip-horizontal-top {
+    0% {
+        transform: rotateX(0)
+    }
+    to {
+        transform: rotateX(180deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-horizontal-top;
+}

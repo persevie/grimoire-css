@@ -1,0 +1,12 @@
+@keyframes flip-horizontal-fwd {
+    0% {
+        transform: translateZ(0) rotateX(0)
+    }
+    to {
+        transform: translateZ(160px) rotateX(-180deg)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-horizontal-fwd;
+}

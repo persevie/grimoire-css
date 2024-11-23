@@ -1,0 +1,12 @@
+@keyframes slide-bck-top {
+    0% {
+        transform: translateZ(0) translateY(0)
+    }
+    to {
+        transform: translateZ(-400px) translateY(-200px)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-bck-top;
+}

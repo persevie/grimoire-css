@@ -1,5 +1,5 @@
 <div align="center">
-<img height="128" alt="Grimoire CSS logo" src="./assets/grimoire-css-logo.png">
+<img height="128" alt="Grimoire CSS logo" src="./assets/grimoire-css-logo.svg">
 
 [![Current Crates.io Version](https://img.shields.io/crates/v/grimoire_css.svg)](https://crates.io/crates/grimoire_css)
 [![Test Status](https://github.com/persevie/grimoire-css/actions/workflows/quality.yml/badge.svg)](https://github.com/persevie/grimoire-css/actions/workflows/quality.yml)
@@ -16,12 +16,8 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-**Table of Contents**
-
-- [Welcome to the Circle: Unlock the Magic of CSS with Grimoire](#welcome-to-the-circle-unlock-the-magic-of-css-with-grimoire) - [
-  Craft Your Code, Cast Your Spells
-  ](#craft-your-code-cast-your-spells)
-  - [A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning](#a-spell-system-that-unleashes-the-full-power-of-css--with-no-limits-no-extra-learning)
+- [Welcome to the Circle: Unlock the Magic of CSS with Grimoire](#welcome-to-the-circle-unlock-the-magic-of-css-with-grimoire)
+  - [A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning](#a-spell-system-that-unleashes-the-full-power-of-css---with-no-limits-no-extra-learning)
     - [Recap](#recap)
   - [Scroll: Crafting Reusable, Dynamic CSS with Infinite Flexibility](#scroll-crafting-reusable-dynamic-css-with-infinite-flexibility)
     - [Inheritance with `Scrolls`: The Power of Composition](#inheritance-with-scrolls-the-power-of-composition)
@@ -47,8 +43,8 @@
       - [`mrs`: Make Responsive Size](#mrs-make-responsive-size)
       - [Example Usage](#example-usage)
     - [The Power of Grimoire’s Variables and Functions](#the-power-of-grimoires-variables-and-functions)
-  - [CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind](#css-optimization-minification-vendor-prefixes-and-deduplication--all-with-css-cascade-in-mind)
-  - [Performance-Driven by Rust: Parallel Processing and Auto-Scaling Built In](#performance-driven-by-rust-parallel-processing-and-auto-scaling-built-in)
+  - [CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind](#css-optimization-minification-vendor-prefixes-and-deduplication---all-with-css-cascade-in-mind)
+  - [Performance-Driven by Rust](#performance-driven-by-rust)
   - [Language-Agnostic Parser: Extracting Spells from Any File, Any Format](#language-agnostic-parser-extracting-spells-from-any-file-any-format)
     - [Spells in Plain Text with Template Syntax](#spells-in-plain-text-with-template-syntax)
   - [A Streamlined CLI with a Strict and Straightforward API](#a-streamlined-cli-with-a-strict-and-straightforward-api)
@@ -59,7 +55,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-> Demo projects, contribution guides, instructions, and recipes are on the way. Stay tuned for updates!
+> Demo projects and recipes are on the way. Stay tuned for updates!
 
 # Welcome to the Circle: Unlock the Magic of CSS with Grimoire
 
@@ -356,7 +352,7 @@ Grimoire CSS doesn’t just give you the tools to build powerful styles from scr
 
 ### Built-In Animations: Ready When You Are
 
-Grimoire CSS comes loaded with **hundreds of built-in animations**. These animations are lightweight and efficient - they are only compiled if you actually use them. To trigger one, simply use its name in either the `animation-name` or `animation` CSS rule. But Grimoire CSS doesn’t stop at just applying animations; it also simplifies the process of adding associated rules.
+Grimoire CSS comes loaded with **hundreds of built-in animations** (700+ at the moment). These animations are lightweight and efficient - they are only compiled if you actually use them. To trigger one, simply use its name in either the `animation-name` or `animation` CSS rule. But Grimoire CSS doesn’t stop at just applying animations; it also simplifies the process of adding associated rules.
 
 For example, the predefined scroll `g-anim` allows you to apply an animation and its associated rules at the same time. Here, `g-` is the prefix, and `anim` is a short version of the spell `animation`. With this scroll, you can quickly inject an animation along with the necessary rules - saving time and keeping your styles clean and organized.
 
@@ -469,15 +465,9 @@ But it doesn’t stop there. Grimoire CSS integrates **LightningCSS** to take yo
 
 All of this happens while preserving the **CSS cascade** - no unintentional overwrites, no broken styles. Just clean, optimized CSS that’s ready for any environment.
 
-## Performance-Driven by Rust: Parallel Processing and Auto-Scaling Built In
+## Performance-Driven by Rust
 
 Grimoire CSS is written entirely in **Rust**, a language designed for high performance. But we didn’t stop at Rust’s natural speed. Grimoire CSS is built with a commitment to efficiency, ensuring your CSS generation is fast, scalable, and precise.
-
-One of the key features is **parallel processing**. Grimoire CSS knows when to scale - automatically. For projects with more than 10 files to process (whether parsing, writing, or injecting), Grimoire kicks into **parallel mode**, running tasks simultaneously to save time. For smaller projects with fewer than 10 files, it sticks to the classic execution method, ensuring order is maintained without sacrificing performance.
-
-This **auto-scaler** ensures that whether you're working on a large-scale project or a small, focused application, Grimoire CSS adapts to meet your needs, processing your CSS efficiently and reliably.
-
-Here’s the polished version of your next two sections, maintaining the technical depth while making it more engaging and professional:
 
 ## Language-Agnostic Parser: Extracting Spells from Any File, Any Format
 
@@ -515,7 +505,7 @@ Here’s a refined version of the remaining parts, keeping the technical depth a
 
 ## Easy Migration with Grimoire CSS Transmute (gcsst) Utility
 
-Migrating to Grimoire CSS is simple, thanks to the Grimoire CSS Transmute utility, also known as gcsst. This CLI tool takes the paths of your built CSS files (or the content of built CSS if you’re working in a web environment) and returns a transmuted.json file in the following format:
+Migrating to Grimoire CSS is simple, thanks to the Grimoire CSS Transmute utility, also known as **gcsst**. This CLI tool takes the paths of your built CSS files (or the content of built CSS if you’re working in a web environment) and returns a transmuted.json file in the following format:
 
 ```json
 {
@@ -529,7 +519,7 @@ Migrating to Grimoire CSS is simple, thanks to the Grimoire CSS Transmute utilit
 }
 ```
 
-`gcsst` parses the existing CSS and automatically generates corresponding spells for each class. One of the standout features of **gcsst** is the structure of the **transmuted.json** file, particularly the classes property. It’s designed to look like the structure of a scroll, except for the `oneliner` property. This makes it incredibly easy to create a scroll or copy-paste the single-line class into your component with minimal effort.
+**gcsst** parses the existing CSS and automatically generates corresponding spells for each class. One of the standout features of **gcsst** is the structure of the **transmuted.json** file, particularly the classes property. It’s designed to look like the structure of a scroll, except for the `oneliner` property. This makes it incredibly easy to create a scroll or copy-paste the single-line class into your component with minimal effort.
 
 By simplifying the migration process, **gcsst** helps you move to Grimoire CSS without hassle, and you can instantly start leveraging the power of spells.
 
@@ -541,13 +531,23 @@ Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. I
 
 - **Single Executable Application**: A standalone binary for those who prefer a direct, no-nonsense approach.
 - **NPM Library**: A Node.js-compatible interface, perfect for JavaScript and web developers.
+  - gcssjs - bin/cli versions [repo](https://github.com/persevie/grimoire-css-js)
+  - webpack/rollup/vite plugins [repo](https://github.com/persevie/grimoire-css-js/tree/main/plugins)
 - **Rust Crate**: For developers building in Rust or those who want to integrate Grimoire CSS at the system level.
 
 The core of Grimoire CSS is architected entirely in Rust, ensuring top-notch performance and scalability. The main repository compiles both into a standalone executable (SEA) and a Rust crate, meaning you can use it in different environments with ease.
 
-The `grimoire-css-js` _(WIP)_ takes the core crate and wraps it into a Node.js-compatible interface, which is then compiled into an npm package. Whether you’re working with Rust, Node.js, or need a direct CLI, Grimoire CSS is ready to integrate into your workflow and bring powerful CSS management wherever you need it.
+The `grimoire-css-js` takes the core crate and wraps it into a Node.js-compatible interface, which is then compiled into an npm package. Whether you’re working with Rust, Node.js, or need a direct CLI, Grimoire CSS is ready to integrate into your workflow and bring powerful CSS management wherever you need it.
 
 ### Installation
+
+**Rust crate:**
+
+If you’re using Rust, simply add Grimoire CSS to your Cargo.toml, and follow the link for documentation about crate: [docs.rs](https://docs.rs/grimoire_css/1.0.0).
+
+```bash
+cargo install grimoire_css
+```
 
 **Single Executable Application (SEA):**
 
@@ -557,7 +557,7 @@ The `grimoire-css-js` _(WIP)_ takes the core crate and wraps it into a Node.js-c
 **NPM Library:**
 
 ```bash
-npm install grimoire-css-js
+npm i @persevie/gcssjs
 ```
 
 **Once installed, you can run the following commands:**
@@ -565,30 +565,26 @@ npm install grimoire-css-js
 Initialize a Grimoire CSS config in your project:
 
 ```bash
-grimoire-css init
+grimoire_css init
 ```
 
 or if you are using NPM library:
 
 ```bash
-grimoire-css-js init
+gcssjs init
 ```
 
 Build your CSS using the Grimoire CSS config:
 
 ```bash
-grimoire-css build
+grimoire_css build
 ```
 
 or if you are using NPM library:
 
 ```bash
-grimoire-css-js build
+gcssjs build
 ```
-
-**Rust Crate:**
-
-If you’re using Rust, simply add Grimoire CSS to your Cargo.toml, and follow the link for documentation about crate: [docs.rs](https://docs.rs/grimoire_css/1.0.0).
 
 ## The Arcane Circle
 
@@ -596,6 +592,6 @@ Grimoire CSS gives you the freedom to create styles that work exactly the way yo
 
 So, come join us. Share your work, exchange your thoughts, and help us keep pushing CSS to be more flexible and enjoyable. Together, we’re creating a space where writing styles is about mastery and craftsmanship, not about memorizing classes. Let’s see what we can build - one spell at a time.
 
-<h3 align="center">
+---
+
 Craft Your Code, Cast Your Spells
-</h3>

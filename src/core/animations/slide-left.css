@@ -1,0 +1,12 @@
+@keyframes slide-left {
+    0% {
+        transform: translateX(0)
+    }
+    to {
+        transform: translateX(-100px)
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: slide-left;
+}

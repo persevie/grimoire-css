@@ -1,0 +1,17 @@
+@keyframes tracking-in-contract {
+    0% {
+        letter-spacing: 1em;
+        opacity: 0
+    }
+    40% {
+        opacity: .6
+    }
+    to {
+        letter-spacing: normal;
+        opacity: 1
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: tracking-in-contract;
+}

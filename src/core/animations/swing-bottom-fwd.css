@@ -1,0 +1,14 @@
+@keyframes swing-bottom-fwd {
+    0% {
+        transform: rotateX(0);
+        transform-origin: bottom
+    }
+    to {
+        transform: rotateX(-180deg);
+        transform-origin: bottom
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: swing-bottom-fwd;
+}

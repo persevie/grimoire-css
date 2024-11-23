@@ -7,6 +7,7 @@
 
 mod animations;
 mod build_info;
+pub mod component;
 pub mod config;
 pub mod css_builder;
 mod css_generator;

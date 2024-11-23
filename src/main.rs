@@ -41,9 +41,13 @@ fn main() {
 
     // Check if the user provided at least one argument (mode)
     if args.len() < 2 {
-        let message = format!("{} Usage: {} <mode>", FAILURE, args[0]);
-        pb.finish_with_message(message);
-        eprintln!("{} Example: {} transmute", FAILURE, args[0]);
+        let message = style(format!("{} Wrong usage!", FAILURE)).red().bold();
+        let example = style(format!("Follow: {} <mode>", args[0]))
+            .yellow()
+            .italic();
+
+        pb.finish();
+        eprintln!("{}\n    {}", message, example);
         std::process::exit(1);
     }
 
@@ -63,9 +67,11 @@ fn main() {
             );
         }
         Err(e) => {
-            let message = format!("{} Dark magic interfered: {}", FAILURE, e);
-            pb.finish_with_message(message);
-            eprintln!("{}", style(format!("Error: {}", e)).red().bold());
+            let message = style(format!("{} Dark magic interfered!\n {}", FAILURE, e))
+                .red()
+                .bold();
+            pb.finish();
+            eprintln!("{}", style(format!("{}", message)).red().bold());
             std::process::exit(1);
         }
     }

@@ -1,0 +1,16 @@
+@keyframes rotate-out-2-bl-ccw {
+    0% {
+        transform: rotate(0);
+        transform-origin: 0 100%;
+        opacity: 1
+    }
+    to {
+        transform: rotate(-45deg);
+        transform-origin: 0 100%;
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: rotate-out-2-bl-ccw;
+}

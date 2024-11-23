@@ -1,0 +1,14 @@
+@keyframes flip-out-ver-right {
+    0% {
+        transform: rotateY(0);
+        opacity: 1
+    }
+    to {
+        transform: rotateY(70deg);
+        opacity: 0
+    }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: flip-out-ver-right;
+}
