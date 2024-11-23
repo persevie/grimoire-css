@@ -531,8 +531,8 @@ Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. I
 
 - **Single Executable Application**: A standalone binary for those who prefer a direct, no-nonsense approach.
 - **NPM Library**: A Node.js-compatible interface, perfect for JavaScript and web developers.
-  - gcssjs - bin/cli versions (repo)[https://github.com/persevie/grimoire-css-js]
-  - webpack/rollup/vite plugins (repo)[https://github.com/persevie/grimoire-css-js/tree/main/plugins]
+  - gcssjs - bin/cli versions [repo](https://github.com/persevie/grimoire-css-js)
+  - webpack/rollup/vite plugins [repo](https://github.com/persevie/grimoire-css-js/tree/main/plugins)
 - **Rust Crate**: For developers building in Rust or those who want to integrate Grimoire CSS at the system level.
 
 The core of Grimoire CSS is architected entirely in Rust, ensuring top-notch performance and scalability. The main repository compiles both into a standalone executable (SEA) and a Rust crate, meaning you can use it in different environments with ease.
