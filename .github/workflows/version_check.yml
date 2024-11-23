@@ -21,10 +21,10 @@ jobs:
       - name: Determine Expected Version
         id: expected_version
         run: |
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          BRANCH_NAME="${{ github.head_ref }}"
           if [[ "$BRANCH_NAME" == rc/* ]]; then
             EXPECTED_VERSION="${BRANCH_NAME#rc/}"
-            echo "version=$EXPECTED_VERSION" >> $GITHUB_ENV
+            echo "version=$EXPECTED_VERSION" >> $GITHUB_OUTPUT
           elif [[ "$BRANCH_NAME" == hotfix/* ]]; then
             git fetch --tags
             LATEST_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
@@ -38,7 +38,7 @@ jobs:
             PATCH="${VERSION_PARTS[2]}"
             PATCH=$((PATCH + 1))
             EXPECTED_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-            echo "version=$EXPECTED_VERSION" >> $GITHUB_ENV
+            echo "version=$EXPECTED_VERSION" >> $GITHUB_OUTPUT
           else
             echo "Not an rc/* or hotfix/* branch. Skipping version check."
             exit 0
