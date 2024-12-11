@@ -836,7 +836,7 @@ impl<'a> CSSGenerator<'a> {
             let class_block = class_block_match.as_str().to_string();
             keyframes.replace_range(class_block_match.range(), "");
 
-            return Ok((keyframes.trim().to_string(), class_block));
+            Ok((keyframes.trim().to_string(), class_block))
         } else {
             Err(GrimoireCSSError::InvalidInput(format!(
                 "No keyframes found in animation: {}",
