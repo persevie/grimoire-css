@@ -466,20 +466,6 @@ impl<'a> CSSGenerator<'a> {
     /// * `Ok(Some((String, String)))` containing the base and media query CSS strings if functions are handled.
     /// * `Ok(None)` if no functions are found.
     /// * `Err(GrimoireCSSError)` if there is an error during function handling.
-    /// Handles specific grimoire functions in the target string.
-    ///
-    /// # Arguments
-    ///
-    /// * `target` - A reference to the target string.
-    /// * `captures` - A vector of regex captures from the target string.
-    /// * `property` - A reference to the CSS property string.
-    /// * `css_class_name` - A reference to the CSS class name string.
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(Some((String, String)))` containing the base and media query CSS strings if functions are handled.
-    /// * `Ok(None)` if no functions are found.
-    /// * `Err(GrimoireCSSError)` if there is an error during function handling.
     fn handle_grimoire_functions(
         &self,
         target: &str,
