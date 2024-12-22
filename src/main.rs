@@ -19,7 +19,7 @@ fn main() {
 
     // By calling `start_as_cli`, we rely on the library's built-in logging,
     // progress bar, and error-handling logic.
-    if let Err(_) = start_as_cli(args) {
+    if start_as_cli(args).is_err() {
         std::process::exit(1);
     }
 }

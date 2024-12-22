@@ -150,13 +150,9 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCSSError> {
 
             println!(
                 "{}",
-                style(format!(
-                    "{} Dark magic interfered!\n {}",
-                    FAILURE,
-                    e.to_string()
-                ))
-                .red()
-                .bold()
+                style(format!("{} Dark magic interfered!\n {}", FAILURE, e))
+                    .red()
+                    .bold()
             );
 
             Err(e)
