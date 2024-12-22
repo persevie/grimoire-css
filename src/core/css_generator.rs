@@ -18,11 +18,14 @@
 //! The module also includes internal helper functions to manage specific CSS-related tasks such as
 //! unit stripping, handling of regex patterns, and combining base CSS with media queries.
 
+mod color_functions;
+
 use crate::buffer::add_message;
 
 use super::animations::ANIMATIONS;
 use super::component::get_css_property;
 use super::{config::Config, spell::Spell, GrimoireCSSError};
+use color_functions::try_handle_color_function;
 use regex::Regex;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -276,7 +279,13 @@ impl<'a> CSSGenerator<'a> {
             "g-anim" => self.handle_g_anim(adapted_target, css_class_name),
             "animation" => self.handle_animation(adapted_target, css_class_name),
             "animation-name" => self.handle_animation_name(adapted_target, css_class_name),
-            _ => self.handle_generic_css(adapted_target, css_class_name, property),
+            _ => {
+                if let Some(css_str) = try_handle_color_function(adapted_target) {
+                    self.handle_generic_css(&css_str, css_class_name, property)
+                } else {
+                    self.handle_generic_css(adapted_target, css_class_name, property)
+                }
+            }
         }
     }
 
