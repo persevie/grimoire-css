@@ -422,7 +422,7 @@ impl Config {
         });
 
         ConfigJSON {
-            schema: Some("".to_string()),
+            schema: Some("https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config-schema.json".to_string()),
             variables: variables_hash_map,
             scrolls: Self::scrolls_to_json(self.scrolls.clone()),
             projects: Self::projects_to_json(self.projects.clone()),
