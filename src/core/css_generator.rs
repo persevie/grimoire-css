@@ -18,11 +18,14 @@
 //! The module also includes internal helper functions to manage specific CSS-related tasks such as
 //! unit stripping, handling of regex patterns, and combining base CSS with media queries.
 
+mod color_functions;
+
 use crate::buffer::add_message;
 
 use super::animations::ANIMATIONS;
 use super::component::get_css_property;
 use super::{config::Config, spell::Spell, GrimoireCSSError};
+use color_functions::try_handle_color_function;
 use regex::Regex;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -37,6 +40,18 @@ pub struct CSSGenerator<'a> {
     mrs_regex: Regex,
     unit_regex: Regex,
     animation_block_regex: Regex,
+}
+
+#[derive(Debug)]
+struct CalculationInfo {
+    calculated: String,
+    media_queries: Option<[(String, String); 2]>,
+}
+
+#[derive(Debug)]
+struct Media {
+    size: String,
+    value: Vec<String>,
 }
 
 impl<'a> CSSGenerator<'a> {
@@ -93,7 +108,7 @@ impl<'a> CSSGenerator<'a> {
             Some(css_property) => {
                 // adapt target
                 let adapted_target = self.adapt_targets(&spell.component_target, self.config)?;
-                // generate base css without any media queries (except for the mrs and mfs functions)
+                // generate base css without any media queries (except for the mrs function)
                 let (base_css, additional_css) = self.generate_base_and_additional_css(
                     &adapted_target,
                     &css_class_name.0,
@@ -276,7 +291,13 @@ impl<'a> CSSGenerator<'a> {
             "g-anim" => self.handle_g_anim(adapted_target, css_class_name),
             "animation" => self.handle_animation(adapted_target, css_class_name),
             "animation-name" => self.handle_animation_name(adapted_target, css_class_name),
-            _ => self.handle_generic_css(adapted_target, css_class_name, property),
+            _ => {
+                if let Some(css_str) = try_handle_color_function(adapted_target) {
+                    self.handle_generic_css(&css_str, css_class_name, property)
+                } else {
+                    self.handle_generic_css(adapted_target, css_class_name, property)
+                }
+            }
         }
     }
 
@@ -377,7 +398,7 @@ impl<'a> CSSGenerator<'a> {
     ///
     /// # Returns
     ///
-    /// * `Ok((String, Option<String>))` - The base CSS string and no additional CSS.
+    /// * `Ok((String, Option<String>))` - The base CSS string and an optional string containing additional keyframes CSS.
     /// * `Err(GrimoireCSSError)` - If an error occurs during processing.
     fn handle_generic_css(
         &self,
@@ -461,100 +482,115 @@ impl<'a> CSSGenerator<'a> {
         property: &str,
         css_class_name: &str,
     ) -> Result<Option<(String, String)>, GrimoireCSSError> {
-        #[derive(Debug)]
-        struct Media {
-            size: String,
-            value: Vec<String>,
-        }
-
         let mut base = target.to_owned();
-        let mut media: Vec<Media> = Vec::new();
         let mut screen_sizes_state: HashSet<String> = HashSet::with_capacity(2);
         let mut calculations_base_count = 0;
-
-        #[derive(Debug)]
-        struct CalculationInfo {
-            calculated: String,
-            media_queries: [(String, String); 2],
-        }
         let mut calculation_map: HashMap<String, CalculationInfo> = HashMap::new();
+        let mut media: Vec<Media> = Vec::new();
 
         for capture in captures {
             let function_name = &capture[1];
             let args = &capture[2];
 
-            if function_name == "mrs" {
-                if let Some((base_value, media_queries)) =
-                    self.handle_mrs(args, &mut screen_sizes_state)?
-                {
-                    let key = format!("mrs_{}", calculations_base_count);
-                    calculations_base_count += 1;
+            match function_name {
+                "mrs" => {
+                    if let Some((base_value, media_queries)) =
+                        self.handle_mrs(args, &mut screen_sizes_state)?
+                    {
+                        let key = format!("mrs_{}", calculations_base_count);
+                        calculations_base_count += 1;
 
-                    for (media_size, _) in &media_queries {
-                        if !media.iter().any(|m| m.size == *media_size) {
-                            media.push(Media {
-                                size: media_size.to_owned(),
-                                value: Vec::new(),
-                            });
+                        // Add media sizes in the order returned from handle_mrs
+                        for (media_size, _) in &media_queries {
+                            if !media.iter().any(|m| m.size == *media_size) {
+                                media.push(Media {
+                                    size: media_size.to_owned(),
+                                    value: Vec::new(),
+                                });
+                            }
                         }
+
+                        calculation_map.insert(
+                            key.to_owned(),
+                            CalculationInfo {
+                                calculated: base_value.to_owned(),
+                                media_queries: Some(media_queries),
+                            },
+                        );
+
+                        base = base.replace(&capture[0], &key);
                     }
+                }
+                "mfs" => {
+                    let clamp_value = self.handle_mfs(args)?;
+                    let key = format!("mfs_{}", calculations_base_count);
+                    calculations_base_count += 1;
 
                     calculation_map.insert(
                         key.to_owned(),
                         CalculationInfo {
-                            calculated: base_value.to_owned(),
-                            media_queries,
+                            calculated: clamp_value,
+                            media_queries: None,
                         },
                     );
 
                     base = base.replace(&capture[0], &key);
                 }
+                _ => {}
             }
         }
 
-        let binding = base.clone();
-        let parts = binding.split_whitespace().collect::<Vec<&str>>();
+        let parts = base.split_whitespace().collect::<Vec<&str>>();
 
-        base = parts
+        // Generate the base CSS, replacing keys with computed values
+        let new_base = parts
             .iter()
-            .map(|&p| {
+            .map(|p| {
                 calculation_map
-                    .get(p)
+                    .get(*p)
                     .map_or(p.to_string(), |info| info.calculated.clone())
             })
             .collect::<Vec<String>>()
             .join(" ");
 
-        for media_item in &mut media {
-            let media_value: Vec<String> = parts
-                .iter()
-                .map(|&p| {
-                    calculation_map.get(p).map_or(p.to_string(), |info| {
-                        info.media_queries
-                            .iter()
-                            .find(|(size, _)| size == &media_item.size)
-                            .map_or(p.to_string(), |(_, value)| value.clone())
-                    })
-                })
-                .collect();
-            media_item.value = media_value;
+        // If nothing has changed, return None
+        if new_base == target {
+            return Ok(None);
         }
 
-        if base != target {
-            let media_queries_str = media
-                .into_iter()
-                .map(|media_item| {
-                    let values_str = media_item.value.join(" ");
-                    format!(
-                        "@media screen and (min-width: {}) {{{}{{{}: {};}}}}",
-                        media_item.size, css_class_name, property, values_str
-                    )
-                })
-                .collect::<Vec<_>>()
-                .join("");
-            Ok(Some((base, media_queries_str)))
+        // Generate media queries, if any exist
+        if media.is_empty() {
+            //  No media queries — return only the base
+            Ok(Some((new_base, String::new())))
         } else {
-            Ok(None)
+            // Iterate over media in the order they were added
+            let mut media_queries_str = String::new();
+            for media_item in &mut media {
+                let media_value: Vec<String> = parts
+                    .iter()
+                    .map(|p| {
+                        calculation_map.get(*p).map_or(p.to_string(), |info| {
+                            if let Some(mq) = &info.media_queries {
+                                mq.iter()
+                                    .find(|(s, _)| s == &media_item.size)
+                                    .map_or(p.to_string(), |(_, value)| value.clone())
+                            } else {
+                                p.to_string()
+                            }
+                        })
+                    })
+                    .collect();
+
+                media_item.value = media_value;
+
+                let values_str = media_item.value.join(" ");
+                media_queries_str.push_str(&format!(
+                    "@media screen and (min-width: {}) {{{}{{{}: {};}}}}",
+                    media_item.size, css_class_name, property, values_str
+                ));
+            }
+
+            Ok(Some((new_base, media_queries_str)))
         }
     }
 
@@ -583,6 +619,27 @@ impl<'a> CSSGenerator<'a> {
         let max_vw = parts.next();
 
         self.make_responsive_size(min_size, max_size, min_vw, max_vw, screen_sizes_state)
+    }
+
+    /// Handles the `mfs` function for fluid sizing using CSS clamp().
+    ///
+    /// # Arguments
+    ///
+    /// * `args` - A reference to the arguments string.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(String)` containing the CSS clamp() function with calculated values.
+    /// * `Err(GrimoireCSSError)` if there is an error during fluid size handling.
+    fn handle_mfs(&self, args: &str) -> Result<String, GrimoireCSSError> {
+        let mut parts = args.split(' ');
+
+        let min_size = parts.next().unwrap_or("0px");
+        let max_size = parts.next().unwrap_or("0px");
+        let min_vw = parts.next();
+        let max_vw = parts.next();
+
+        self.make_fluid_size(min_size, max_size, min_vw, max_vw)
     }
 
     /// Generates a responsive size and corresponding media queries based on the given parameters.
@@ -679,6 +736,63 @@ impl<'a> CSSGenerator<'a> {
         }
     }
 
+    /// Generates a fluid size using CSS clamp() function based on the given parameters.
+    ///
+    /// # Arguments
+    ///
+    /// * `min_size` - A reference to the minimum size string (e.g., "100px").
+    /// * `max_size` - A reference to the maximum size string (e.g., "200px").
+    /// * `min_vw` - An optional reference to the minimum viewport width (e.g., "480px").
+    /// * `max_vw` - An optional reference to the maximum viewport width (e.g., "1280px").
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(String)` containing the CSS clamp() function with calculated values.
+    /// * `Err(GrimoireCSSError)` if there is an error in processing the sizes.
+    fn make_fluid_size(
+        &self,
+        min_size: &str,
+        max_size: &str,
+        min_vw: Option<&str>,
+        max_vw: Option<&str>,
+    ) -> Result<String, GrimoireCSSError> {
+        let min_size_value: f64 = self.strip_unit(min_size)? as f64;
+        let max_size_value: f64 = self.strip_unit(max_size)? as f64;
+        let min_vw_value: f64 = match min_vw {
+            Some(i) => self.strip_unit(i)? as f64,
+            None => 480.0,
+        };
+        let max_vw_value: f64 = match max_vw {
+            Some(i) => self.strip_unit(i)? as f64,
+            None => 1280.0,
+        };
+
+        let min_size_unit = self.mrs_regex.find(min_size).map_or("", |m| m.as_str());
+        let max_size_unit = self.mrs_regex.find(max_size).map_or("", |m| m.as_str());
+
+        if min_size_unit != max_size_unit {
+            return Err(GrimoireCSSError::InvalidInput(
+                "Units must be consistent".to_string(),
+            ));
+        }
+
+        if min_vw_value == max_vw_value {
+            return Err(GrimoireCSSError::InvalidInput(
+                "Viewport widths must differ".to_string(),
+            ));
+        }
+
+        let vw_diff = max_vw_value - min_vw_value;
+        let size_diff = max_size_value - min_size_value;
+
+        let slope = size_diff / vw_diff;
+        let intercept = min_size_value - (slope * min_vw_value);
+
+        let preferred = format!("{}vw + {}{}", slope * 100.0, intercept, min_size_unit);
+
+        Ok(format!("clamp({}, {}, {})", min_size, preferred, max_size))
+    }
+
     /// Strips the unit from a CSS size value and returns the numeric part.
     ///
     /// # Arguments
@@ -731,7 +845,7 @@ impl<'a> CSSGenerator<'a> {
             let class_block = class_block_match.as_str().to_string();
             keyframes.replace_range(class_block_match.range(), "");
 
-            return Ok((keyframes.trim().to_string(), class_block));
+            Ok((keyframes.trim().to_string(), class_block))
         } else {
             Err(GrimoireCSSError::InvalidInput(format!(
                 "No keyframes found in animation: {}",
@@ -1036,5 +1150,45 @@ mod tests {
             css,
             r".g\!\{\[data-theme\=\'light\'\]\_p\}fs\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size:14px;}@media screen and (min-width: 380px) {.g\!\{\[data-theme\=\'light\'\]\_p\}fs\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size: calc(14px + 2 * ((100vw - 380px) / 420));}}@media screen and (min-width: 800px) {.g\!\{\[data-theme\=\'light\'\]\_p\}fs\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size: 16px;}}"
         );
+    }
+
+    #[test]
+    fn test_make_fluent_size() {
+        let config = Config::default();
+        let generator = CSSGenerator::new(&config).unwrap();
+
+        // regular case
+        let result = generator.make_fluid_size("14px", "16px", Some("380px"), Some("800px"));
+        assert!(result.is_ok());
+
+        let clamp_value = result.unwrap();
+        assert_eq!(
+            clamp_value,
+            "clamp(14px, 0.4761904761904762vw + 12.19047619047619px, 16px)"
+        );
+
+        // case without min_vw и max_vw
+        let result = generator.make_fluid_size("10rem", "20rem", None, None);
+        assert!(result.is_ok());
+
+        let clamp_value = result.unwrap();
+        assert_eq!(clamp_value, "clamp(10rem, 1.25vw + 4rem, 20rem)");
+
+        // units are not consistent (error)
+        let result = generator.make_fluid_size("10px", "20rem", Some("400px"), Some("1200px"));
+        assert!(result.is_err());
+        if let Err(err) = result {
+            assert_eq!(err.to_string(), "Invalid input: Units must be consistent");
+        }
+
+        // screen width are not consistent (error)
+        let result = generator.make_fluid_size("14px", "16px", Some("400px"), Some("400px"));
+        assert!(result.is_err());
+        if let Err(err) = result {
+            assert_eq!(
+                err.to_string(),
+                "Invalid input: Viewport widths must differ"
+            );
+        }
     }
 }

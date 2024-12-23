@@ -19,6 +19,7 @@ pub enum GrimoireCSSError {
     InvalidInput(String),
     InvalidPath(String),
     GlobPatternError(String),
+    RuntimeError(String),
 }
 
 impl fmt::Display for GrimoireCSSError {
@@ -31,6 +32,7 @@ impl fmt::Display for GrimoireCSSError {
             GrimoireCSSError::InvalidInput(s) => write!(f, "Invalid input: {}", s),
             GrimoireCSSError::InvalidPath(s) => write!(f, "Invalid path: {}", s),
             GrimoireCSSError::GlobPatternError(s) => write!(f, "Glob pattern error: {}", s),
+            GrimoireCSSError::RuntimeError(s) => write!(f, "Runtime error: {}", s),
         }
     }
 }

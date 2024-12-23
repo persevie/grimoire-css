@@ -6,8 +6,10 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
     fs,
-    path::{Path, PathBuf},
+    path::Path,
 };
+
+use super::Filesystem;
 
 /// Represents the main configuration structure for GrimoireCSS.
 #[derive(Debug, Clone)]
@@ -19,6 +21,8 @@ pub struct Config {
     pub critical: Option<Vec<ConfigCritical>>,
     /// A set of shared spells used across different projects.
     pub shared_spells: HashSet<String>,
+    pub lock: Option<bool>,
+
     pub custom_animations: HashMap<String, String>,
 }
 
@@ -73,6 +77,7 @@ struct ConfigJSON {
     pub projects: Vec<ConfigProjectJSON>,
     pub shared: Option<Vec<ConfigSharedJSON>>,
     pub critical: Option<Vec<ConfigCriticalJSON>>,
+    pub lock: Option<bool>,
 }
 
 /// Represents a scrolls which may contain external or combined CSS rules.
@@ -147,6 +152,7 @@ impl Default for Config {
             variables: None,
             shared_spells: HashSet::new(),
             custom_animations: HashMap::new(),
+            lock: None,
         }
     }
 }
@@ -160,7 +166,7 @@ impl Config {
     ///
     /// Returns a `GrimoireCSSError` if reading or parsing the file fails.
     pub fn load(current_dir: &Path) -> Result<Self, GrimoireCSSError> {
-        let config_path = Self::get_config_path(current_dir)?;
+        let config_path = Filesystem::get_config_path(current_dir)?;
         let content = fs::read_to_string(&config_path)?;
         let json_config: ConfigJSON = serde_json::from_str(&content)?;
         let mut config = Self::from_json(json_config);
@@ -178,51 +184,12 @@ impl Config {
     ///
     /// Returns a `GrimoireCSSError` if writing to the file system fails.
     pub fn save(&self, current_dir: &Path) -> Result<(), GrimoireCSSError> {
-        let config_path = Self::get_config_path(current_dir)?;
+        let config_path = Filesystem::get_config_path(current_dir)?;
         let json_config: ConfigJSON = self.to_json();
         let content = serde_json::to_string_pretty(&json_config)?;
         fs::write(&config_path, &content)?;
 
         Ok(())
-    }
-
-    /// Retrieves or creates the path for the configuration file.
-    /// # Errors
-    ///
-    ///
-    /// Returns a `GrimoireCSSError` if the path cannot be accessed or created.
-    fn get_config_path(current_dir: &Path) -> Result<PathBuf, GrimoireCSSError> {
-        let grimoire_dir = Self::get_or_create_grimoire_path(current_dir)?;
-        let config_path = grimoire_dir.join("config");
-
-        if !config_path.exists() {
-            fs::create_dir(&config_path)?;
-        }
-
-        Ok(config_path.join("grimoire.config.json"))
-    }
-
-    /// Gets or creates the path for the GrimoireCSS folder.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `GrimoireCSSError` if the directory cannot be created.
-    fn get_or_create_grimoire_path(cwd: &Path) -> Result<PathBuf, GrimoireCSSError> {
-        let grimoire_path = cwd.join("grimoire");
-
-        if !grimoire_path.exists() {
-            fs::create_dir(&grimoire_path)?;
-            let config_path = grimoire_path.join("config");
-            if !config_path.exists() {
-                fs::create_dir(&config_path)?;
-            }
-            add_message(format!(
-                "Configuration and directories created successfully at `{}`",
-                "./grimoire"
-            ));
-        }
-
-        Ok(grimoire_path)
     }
 
     /// Extracts common spells from the configuration and adds them to a `HashSet`.
@@ -293,6 +260,7 @@ impl Config {
             critical,
             shared_spells,
             custom_animations: HashMap::new(),
+            lock: json_config.lock,
         }
     }
 
@@ -422,12 +390,13 @@ impl Config {
         });
 
         ConfigJSON {
-            schema: Some("".to_string()),
+            schema: Some("https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config-schema.json".to_string()),
             variables: variables_hash_map,
             scrolls: Self::scrolls_to_json(self.scrolls.clone()),
             projects: Self::projects_to_json(self.projects.clone()),
             shared: Self::shared_to_json(self.shared.as_ref()),
             critical: Self::critical_to_json(self.critical.as_ref()),
+            lock: self.lock,
         }
     }
 
@@ -535,7 +504,8 @@ impl Config {
     fn find_custom_animations(
         current_dir: &Path,
     ) -> Result<HashMap<String, String>, GrimoireCSSError> {
-        let animations_dir = Self::get_or_create_grimoire_path(current_dir)?.join("animations");
+        let animations_dir =
+            Filesystem::get_or_create_grimoire_path(current_dir)?.join("animations");
 
         if !animations_dir.exists() {
             return Ok(HashMap::new());
@@ -685,6 +655,7 @@ mod tests {
                 styles: Some(vec!["spell3".to_string()]),
                 css_custom_properties: None,
             }]),
+            lock: None,
         };
 
         let common_spells = Config::get_common_spells_set(&json);

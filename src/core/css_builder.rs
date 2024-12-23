@@ -2,7 +2,8 @@
 
 use super::{
     build_info::BuildInfo, css_generator::CSSGenerator, css_optimizer::CSSOptimizer,
-    parser::Parser, spell::Spell, Config, ConfigCSSCustomProperties, GrimoireCSSError,
+    file_tracker::FileTracker, parser::Parser, spell::Spell, Config, ConfigCSSCustomProperties,
+    GrimoireCSSError,
 };
 use crate::buffer::add_message;
 use regex::Regex;
@@ -113,11 +114,24 @@ impl<'a> CSSBuilder<'a> {
         let compiled_shared_css: Option<Vec<(PathBuf, String)>> = self.compile_shared_css()?;
         let compiled_critical_css: Option<Vec<(PathBuf, String)>> = self.compile_critical_css()?;
 
-        Self::write_compiled_css(compiled_css)?;
+        Self::write_compiled_css(&compiled_css)?;
 
-        if let Some(compiled_shared_css) = compiled_shared_css {
+        if let Some(compiled_shared_css) = &compiled_shared_css {
             Self::write_compiled_css(compiled_shared_css)?;
         }
+
+        // Track file changes if locking is enabled
+        if self.config.lock.unwrap_or(false) {
+            let all_compiled_paths = compiled_css.iter().map(|(path, _)| path.as_path()).chain(
+                compiled_shared_css
+                    .as_ref()
+                    .into_iter()
+                    .flat_map(|css| css.iter().map(|(path, _)| path.as_path())),
+            );
+
+            FileTracker::track(self.current_dir, all_compiled_paths)?;
+        }
+
         if let Some(compiled_critical_css) = compiled_critical_css {
             self.inject_critical_css_into_html(&compiled_critical_css)?;
         }
@@ -163,15 +177,14 @@ impl<'a> CSSBuilder<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if writing to files fails.
-    fn write_compiled_css(compiled_css: Vec<(PathBuf, String)>) -> Result<(), GrimoireCSSError> {
+    fn write_compiled_css(compiled_css: &Vec<(PathBuf, String)>) -> Result<(), GrimoireCSSError> {
         for (file_path, css) in compiled_css {
-            Self::create_output_directory_if_needed(&file_path)?;
+            Self::create_output_directory_if_needed(file_path)?;
             fs::write(file_path, css)?;
         }
 
         Ok(())
     }
-
     /// Combines spells into CSS strings.
     ///
     /// # Arguments
@@ -601,7 +614,7 @@ mod tests {
         let file_path = PathBuf::from("test_output.css");
         let css = vec![(file_path.clone(), ".d\\=grid{display:grid;}".to_string())];
 
-        let result = CSSBuilder::write_compiled_css(css);
+        let result = CSSBuilder::write_compiled_css(&css);
         assert!(result.is_ok());
 
         let written_content = std::fs::read_to_string(&file_path).unwrap();
