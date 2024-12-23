@@ -30,6 +30,7 @@
     - [How It Works](#how-it-works)
     - [Defining Custom Properties](#defining-custom-properties)
     - [Real-World Example](#real-world-example)
+      - [Organizing and Compiling Your CSS with Flexibility and Control](#organizing-and-compiling-your-css-with-flexibility-and-control)
     - [Efficiency at Its Core](#efficiency-at-its-core)
   - [Predefined Scrolls and Built-In Animations: Flexibility at Your Fingertips](#predefined-scrolls-and-built-in-animations-flexibility-at-your-fingertips)
     - [Built-In Animations: Ready When You Are](#built-in-animations-ready-when-you-are)
@@ -41,6 +42,10 @@
     - [Built-in Areas: Responsive Design, Simplified](#built-in-areas-responsive-design-simplified)
     - [Adaptive Size Functions: `mrs` and `mfs`](#adaptive-size-functions-mrs-and-mfs)
       - [`mrs`: Make Responsive Size](#mrs-make-responsive-size)
+        - [Example Usage of `mrs`](#example-usage-of-mrs)
+      - [`mfs`: Make Fluid Size – Creates fully fluid sizes without media queries for seamless scaling](#mfs-make-fluid-size--creates-fully-fluid-sizes-without-media-queries-for-seamless-scaling)
+        - [Example Usage of `mfs`](#example-usage-of-mfs)
+    - [Color Manipulation](#color-manipulation)
       - [Example Usage](#example-usage)
     - [The Power of Grimoire’s Variables and Functions](#the-power-of-grimoires-variables-and-functions)
   - [CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind](#css-optimization-minification-vendor-prefixes-and-deduplication---all-with-css-cascade-in-mind)
@@ -342,6 +347,22 @@ In this example:
 - **Shared CSS** includes a simple style (`font-size=20px`) and outputs to `shared.css`.
 - **Critical CSS** will be inlined into all HTML files under the `about` and `blog` directories, ensuring essential styles like `reset.css`, padding, colors, and animations load immediately.
 
+#### Organizing and Compiling Your CSS with Flexibility and Control
+
+Grimoire CSS supports a **project locking** mechanism for efficient builds. By enabling the `lock` option in `grimoire.config.json`, you can automatically track and clean up outdated built files
+
+```json
+{
+  "projects": [
+    {
+      "projectName": "main",
+      "inputPaths": []
+    }
+  ],
+  "lock": true
+}
+```
+
 ### Efficiency at Its Core
 
 Grimoire CSS doesn’t just help you manage your styles - it ensures that only the CSS you actually need is generated. No duplicates, no wasted space. Whether it’s shared across multiple projects or inlined for critical loading, Grimoire makes sure your CSS is lean, efficient, and optimized for performance.
@@ -439,7 +460,7 @@ This function dynamically adjusts the size of an element between a minimum and m
 - `min_vw`: (Optional) The minimum viewport width.
 - `max_vw`: (Optional) The maximum viewport width.
 
-#### Example Usage
+##### Example Usage of `mrs`
 
 ```html
 <p class="fs=mrs(12px_36px_480px_1280px)">
@@ -448,6 +469,83 @@ This function dynamically adjusts the size of an element between a minimum and m
 ```
 
 In this example, the font size will automatically adjust between 12px and 36px, depending on the screen size, with fluid adjustments in between. This makes responsive design not only easier but more precise, without the need for complex calculations or multiple breakpoints.
+
+#### `mfs`: Make Fluid Size – Creates fully fluid sizes without media queries for seamless scaling
+
+##### Example Usage of `mfs`
+
+```html
+<p class="fs=mfs(12px_36px)">
+  Font size smoothly scales between 12px and 36px based on the viewport size.
+</p>
+```
+
+### Color Manipulation
+
+Grimoire CSS introduces a comprehensive suite of built-in color manipulation functions, compliant with the CSS Color Module Level 4 specification. These functions enable precise and dynamic color transformations:
+
+- **`g-grayscale(color)`**: Converts a color to grayscale by setting its saturation to 0%.
+- **`g-complement(color)`**: Generates the complementary color by adding 180° to the hue.
+- **`g-invert(color_weight?)`**: Inverts a color. Optionally, the `weight` parameter controls the intensity of the inversion (default: 100%).
+- **`g-mix(color1_color2_weight)`**: Blends two colors based on a specified weight (0% - 100%).
+- **`g-adjust-hue(color_degrees)`**: Rotates the hue of a color by a specified number of degrees (positive or negative).
+- **`g-adjust-color(color_red?_green?_blue?_hue-val?_sat-val?_light-val?_alpha-val?)`**: Adjusts individual components of a color using delta values for RGB or HSL channels.
+- **`g-change-color(color_red?_green?_blue?_hue-val?_sat-val?_light-val?_alpha-val?)`**: Sets absolute values for RGB or HSL components.
+- **`g-scale-color(color_red?_green?_blue?_sat-val?_light-val?_alpha-val?)`**: Scales RGB or HSL components by percentage values (positive to increase, negative to decrease).
+- **`g-rgba(color_alpha)`**: Updates the alpha (opacity) of a color.
+- **`g-lighten(color_amount)`**: Increases the lightness of a color by a specified percentage.
+- **`g-darken(color_amount)`**: Decreases the lightness of a color by a specified percentage.
+- **`g-saturate(color_amount)`**: Increases the saturation of a color by a specified percentage.
+- **`g-desaturate(color_amount)`**: Decreases the saturation of a color by a specified percentage.
+- **`g-opacify(color_amount)`** (Alias: `g-fade-in`): Increases the opacity of a color by a specified amount.
+- **`g-transparentize(color_amount)`** (Alias: `g-fade-out`): Decreases the opacity of a color by a specified amount.
+
+#### Example Usage
+
+**Usage Rules:**
+
+1. All arguments are positional, and any optional arguments can be omitted if they are not being changed.
+2. Do not include `%`, `deg`, or other units in the values — Grimoire handles these internally.
+
+```html
+<div class="bg=g-grayscale(#ff0000)">Grayscale Red Background</div>
+
+<div class="bg=g-complement(#00ff00)">Complementary Green Background</div>
+
+<div class="bg=g-invert(#123456)">Fully Inverted Background</div>
+<div class="bg=g-invert(#123456_50)">Partially Inverted Background</div>
+
+<div class="bg=g-mix(#ff0000_#0000ff_50)">Purple Background</div>
+
+<div class="bg=g-adjust-hue(#ffcc00_45)">Hue Adjusted Background</div>
+
+<div class="bg=g-adjust-color(#123456_0_0_12)">Adjust Blue Component</div>
+<div class="bg=g-adjust-color(#123456_0_0_12_5)">
+  Adjust Blue and Saturation
+</div>
+
+<div class="bg=g-change-color(#123456_255_0)">Set Red and Green Components</div>
+<div class="bg=g-change-color(#123456_0_0_0_180)">Set Hue Only</div>
+
+<div class="bg=g-scale-color(#123456_10_-10)">Scale Red Up, Green Down</div>
+<div class="bg=g-scale-color(#123456_0_0_0_20)">Scale Saturation Up</div>
+
+<div class="bg=g-rgba(#123456_0.5)">Half Transparent Background</div>
+
+<div class="bg=g-lighten(#123456_10)">Lightened Background</div>
+
+<div class="bg=g-darken(#123456_10)">Darkened Background</div>
+
+<div class="bg=g-saturate(#123456_20)">More Saturated Background</div>
+
+<div class="bg=g-desaturate(#123456_20)">Less Saturated Background</div>
+
+<div class="bg=g-opacify(#123456_0.2)">More Opaque Background</div>
+
+<div class="bg=g-transparentize(#123456_0.2)">More Transparent Background</div>
+```
+
+These functions provide developers with an extensive toolkit for creating vibrant, dynamic, and flexible styles with ease.
 
 ### The Power of Grimoire’s Variables and Functions
 
