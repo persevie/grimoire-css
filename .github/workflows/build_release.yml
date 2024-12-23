@@ -112,7 +112,7 @@ jobs:
             artifact_name: grimoire_css-macos-x86_64
             artifact_path: target/x86_64-apple-darwin/release/grimoire_css
           - name: macos_arm64
-            runs-on: macos-12
+            runs-on: macos-latest
             target: aarch64-apple-darwin
             artifact_name: grimoire_css-macos-arm64
             artifact_path: target/aarch64-apple-darwin/release/grimoire_css
