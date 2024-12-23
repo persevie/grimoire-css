@@ -1,6 +1,6 @@
 [package]
 name = "grimoire_css"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2021"
 authors = ["Dmitrii Shatokhin <dmtrshatokhin@gmail.com>"]
 description = "A magical CSS system engine for all environments"
