@@ -2,7 +2,10 @@ use std::path::Path;
 
 use crate::{
     commands::init::init,
-    core::{CSSBuilder, CSSOptimizer, GrimoireCSSError},
+    core::{
+        CompiledCssInMemory, ConfigInMemory, CssBuilderFs, CssBuilderInMemory, CssOptimizer,
+        GrimoireCssError,
+    },
 };
 
 /// Initiates the CSS build process using the provided optimizer and configuration.
@@ -24,14 +27,19 @@ use crate::{
 /// # Errors
 ///
 /// Returns a `GrimoireCSSError` if the initialization of the configuration or the CSS build process fails.
-pub fn build<O: CSSOptimizer>(
+pub fn build<O: CssOptimizer>(
     current_dir: &Path,
     css_optimizer: &O,
     mode: &str,
-) -> Result<(), GrimoireCSSError> {
+) -> Result<(), GrimoireCssError> {
     let config = init(current_dir, mode)?;
 
-    CSSBuilder::new(&config, current_dir, css_optimizer)?.build()?;
+    CssBuilderFs::new(&config, current_dir, css_optimizer)?.build()
+}
 
-    Ok(())
+pub fn build_in_memory<O: CssOptimizer>(
+    css_optimizer: &O,
+    config_in_memory: &ConfigInMemory,
+) -> Result<Vec<CompiledCssInMemory>, GrimoireCssError> {
+    CssBuilderInMemory::new(config_in_memory, css_optimizer)?.build()
 }

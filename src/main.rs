@@ -15,11 +15,9 @@ use std::env;
 ///   logging, error styling, spinners, and time measurements.
 /// - If an error is encountered, it exits with a non-zero status code.
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let args: Vec<_> = env::args().skip(1).collect();
 
-    // By calling `start_as_cli`, we rely on the library's built-in logging,
-    // progress bar, and error-handling logic.
-    if start_as_cli(args).is_err() {
+    if start_as_cli(&args).is_err() {
         std::process::exit(1);
     }
 }
