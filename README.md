@@ -58,6 +58,10 @@
     - [Working Modes](#working-modes)
     - [Installation](#installation)
   - [The Arcane Circle](#the-arcane-circle)
+- [Additional Resources](#additional-resources)
+  - [Release Information](#release-information)
+    - [Release Notes](#release-notes)
+    - [Changelog](#changelog)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -521,9 +525,7 @@ Grimoire CSS introduces a comprehensive suite of built-in color manipulation fun
 <div class="bg=g-adjust-hue(#ffcc00_45)">Hue Adjusted Background</div>
 
 <div class="bg=g-adjust-color(#123456_0_0_12)">Adjust Blue Component</div>
-<div class="bg=g-adjust-color(#123456_0_0_12_5)">
-  Adjust Blue and Saturation
-</div>
+<div class="bg=g-adjust-color(#123456_0_0_12_5)">Adjust Blue and Saturation</div>
 
 <div class="bg=g-change-color(#123456_255_0)">Set Red and Green Components</div>
 <div class="bg=g-change-color(#123456_0_0_0_180)">Set Hue Only</div>
@@ -738,3 +740,15 @@ So, come join us. Share your work, exchange your thoughts, and help us keep push
 ---
 
 Craft Your Code, Cast Your Spells
+
+# Additional Resources
+
+## Release Information
+
+### Release Notes
+
+For detailed information about each release, including new features, improvements, and breaking changes, see our [Release Notes](./RELEASES.md).
+
+### Changelog
+
+A concise list of version-specific changes can be found in our [Changelog](./CHANGELOG.md).

@@ -1,5 +1,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
 **Table of Contents**
 
 - [Contributing to Grimoire CSS](#contributing-to-grimoire-css)
@@ -46,15 +47,19 @@ We follow a structured Git workflow to manage the lifecycle of code and contribu
 - **`main`**: The stable branch where production-ready code resides. Only thoroughly tested and approved code is merged here via pull requests.
 
 - **Feature Branches**: Branches for developing individual features or enhancements.
+
   - Naming convention: `feature/{feature-name}`
 
 - **Fix Branches**: Branches for regular bug fixes intended for the next release.
+
   - Naming convention: `fix/{fix-description}`
 
 - **Release Candidate Branches**: Branches for preparing specific releases.
+
   - Naming convention: `rc/{version}` (e.g., `rc/1.2.0`)
 
 - **Hotfix Branches**: Branches for urgent fixes to production code that cannot wait for the next release.
+
   - Naming convention: `hotfix/{hotfix-description}`
 
 - **Chore Branches**: Branches for maintenance tasks such as updating documentation, CI configurations, or other non-feature/non-fix changes.
@@ -74,6 +79,7 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 #### 2. Development
 
 - **Create a Branch from `main`**:
+
   - For features:
     ```bash
     git checkout -b feature/{feature-name} main
@@ -92,10 +98,12 @@ We encourage contributors to propose new features, fixes, or chores, even if the
     ```
 
 - **Implement Your Changes**:
+
   - Follow the code quality and style guidelines outlined below.
   - Include tests and documentation updates as necessary.
 
 - **Open a Pull Request**:
+
   - **Target Branch**:
     - For features and regular fixes:
       - Open a PR against the appropriate `rc/{version}` branch.
@@ -113,6 +121,7 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 #### 3. Preparing a Release
 
 - **Creating a Release Candidate Branch**:
+
   - **Branch from `main`**:
     ```bash
     git checkout -b rc/{version} main
@@ -123,6 +132,7 @@ We encourage contributors to propose new features, fixes, or chores, even if the
     ```
 
 - **Merging Feature and Fix Branches**:
+
   - Maintainers will merge feature (`feature/**`) and fix (`fix/**`) branches intended for the release into the `rc/{version}` branch via pull requests.
 
 - **Testing and Stabilization**:
@@ -133,11 +143,13 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 #### 4. Finalizing a Release
 
 - **Merge into `main` via Pull Request**:
+
   - Open a pull request from `rc/{version}` into `main`.
   - Ensure all CI checks pass and that the code is reviewed.
   - Once approved, merge the PR into `main`.
 
 - **Automated Tagging and Publishing**:
+
   - When a release candidate branch is merged into `main`, our GitHub Actions workflow automatically creates a tag (e.g., `v1.2.0`) based on the `rc/{version}` branch name.
   - The CI/CD pipeline then builds, releases, and publishes the new version.
   - **Note**: Do not manually create or push tags; the CI/CD pipeline handles tagging.
@@ -151,24 +163,29 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 #### 5. Handling Hotfixes
 
 - **Creating a Hotfix Branch**:
+
   - **Branch from `main`**:
     ```bash
     git checkout -b hotfix/{hotfix-description} main
     ```
 
 - **Implementing the Hotfix**:
+
   - Develop and commit the hotfix.
   - Ensure all tests pass and code quality standards are met.
 
 - **Open a Pull Request to `main`**:
+
   - Open a PR from `hotfix/{hotfix-description}` to `main`.
   - Reference the related issue and provide a clear description.
 
 - **Review and Merge**:
+
   - Ensure the PR passes all CI checks and undergoes code review.
   - Upon approval, merge the PR into `main`.
 
 - **Automated Tagging and Publishing**:
+
   - When the hotfix PR is merged into `main`, the CI/CD pipeline automatically increments the patch version and creates a new tag (e.g., from `v1.2.0` to `v1.2.1`).
   - The pipeline then builds, releases, and publishes the hotfix.
   - **Note**: Do not manually create or push tags; the CI/CD pipeline handles tagging.
@@ -184,19 +201,23 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 #### 6. Handling Chores
 
 - **Creating a Chore Branch**:
+
   - **Branch from `main`**:
     ```bash
     git checkout -b chore/{chore-description} main
     ```
 
 - **Implementing the Chore**:
+
   - Make the necessary changes (e.g., updating documentation, CI configurations).
 
 - **Open a Pull Request to `main`**:
+
   - Open a PR from `chore/{chore-description}` to `main`.
   - Provide a clear description of the changes.
 
 - **Review and Merge**:
+
   - Ensure the PR passes all CI checks and undergoes code review.
   - Upon approval, merge the PR into `main`.
 
@@ -218,12 +239,14 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 Our CI/CD pipeline automates the tagging and publishing process:
 
 - **Automated Tagging**:
+
   - When a release candidate (`rc/{version}`) or hotfix (`hotfix/**`) branch is merged into `main`, the GitHub Actions workflow automatically creates a tag:
     - For releases: `v{version}` (e.g., `v1.2.0`)
     - For hotfixes: Increments the patch version (e.g., from `v1.2.0` to `v1.2.1`)
   - **Important**: Do not manually create or push tags; the CI/CD pipeline handles tagging.
 
 - **Build and Release**:
+
   - The pipeline builds the project for multiple platforms and creates a GitHub release with the compiled artifacts.
 
 - **Publishing**:
@@ -232,6 +255,7 @@ Our CI/CD pipeline automates the tagging and publishing process:
 ### Repository Security and Permissions
 
 - **Branch Protection**:
+
   - The `main` branch is protected to ensure code quality and security.
   - All changes must be submitted via pull requests and reviewed before merging.
   - Direct pushes to `main` are not allowed.
@@ -246,15 +270,18 @@ Our CI/CD pipeline automates the tagging and publishing process:
 We use GitHub Projects to maintain development and planning. Our project management process includes:
 
 - **Issues**:
+
   - All tasks, features, bugs, and discussions are tracked using [GitHub Issues](https://github.com/persevie/grimoire-css/issues).
   - Issues are labeled appropriately (e.g., `feature`, `bug`, `documentation`, `good first issue`, `chore`).
   - **Issue Templates**: We provide issue templates to guide you in providing the necessary information.
 
 - **Milestones**:
+
   - Issues are organized into milestones corresponding to planned releases.
   - Milestones help track progress toward release goals.
 
 - **Project Board**:
+
   - We maintain a [GitHub Project board](https://github.com/orgs/persevie/projects/4/views/1) that visualizes the progress of tasks across different stages (e.g., Backlog, In Progress, Review, Done).
   - The board provides transparency and helps coordinate work among contributors.
 
@@ -264,10 +291,12 @@ We use GitHub Projects to maintain development and planning. Our project managem
 ### Contribution Opportunities
 
 - **Find an Issue**:
+
   - Browse the [Issues](https://github.com/persevie/grimoire-css/issues) to find tasks labeled as `help wanted` or `good first issue`.
   - Comment on the issue to express your interest in working on it.
 
 - **Propose a New Idea**:
+
   - If you have an idea that's not already listed, feel free to open a new issue using the appropriate template.
   - Engage in discussions to refine your proposal.
 
@@ -363,6 +392,7 @@ We follow the **[Conventional Commits](https://www.conventionalcommits.org/)** s
 ```
 
 - **type**: The type of the change, such as:
+
   - `feat`: A new feature
   - `fix`: A bug fix
   - `docs`: Documentation only changes
@@ -447,11 +477,13 @@ Before submitting your pull request, please ensure you have completed the follow
 Issues are used to track **bugs**, **enhancements**, and **tasks** that need attention.
 
 - **When to Open an Issue**:
+
   - Reporting a bug or unexpected behavior.
   - Proposing a new feature or enhancement.
   - Noting a task or improvement needed in the project.
 
 - **Using Issue Templates**:
+
   - We provide issue templates to guide you in providing the necessary information.
   - Select the appropriate template when creating a new issue:
     - **Bug Report**
@@ -468,11 +500,13 @@ Issues are used to track **bugs**, **enhancements**, and **tasks** that need att
 For **questions**, **ideas**, or **general discussions** that are not directly related to a specific issue, please use [GitHub Discussions](https://github.com/persevie/grimoire-css/discussions).
 
 - **When to Use Discussions**:
+
   - Asking for help or clarification on using Grimoire CSS.
   - Sharing ideas or suggestions that are not yet fully formed as issues.
   - Engaging with the community and maintainers in open-ended conversations.
 
 - **Benefits of Using Discussions**:
+
   - Keeps issues focused on actionable tasks.
   - Fosters a collaborative and inclusive community.
   - Provides a space for knowledge sharing and collective problem-solving.
