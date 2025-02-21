@@ -1,5 +1,22 @@
 # Changelog
 
+## [v1.3.0] - 2025-02-21
+
+> Full release notes: [releases/v1.3.0.md](./releases/v1.3.0.md)
+
+### Added
+
+- **In-Memory Processing**: CSS processing without filesystem dependencies
+- **ConfigInMemory**: New configuration system for in-memory operations
+- **Enhanced Logging**: More comprehensive build progress feedback
+
+### Improved
+
+- Performance optimizations with thread-local message handling
+- Configuration management with better browserslist support
+- CLI user experience with clearer feedback
+- Code architecture with `CssBuilderBase` introduction
+
 ## [v1.2.0] - 2024-12-23
 
 > Full release notes: [releases/v1.2.0.md](./releases/v1.2.0.md)
