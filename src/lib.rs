@@ -27,7 +27,11 @@ pub static SUCCESS: Emoji<'_, '_> = Emoji("🪄", "✔️");
 pub static FAILURE: Emoji<'_, '_> = Emoji("☠️", "X");
 pub static INFO: Emoji<'_, '_> = Emoji("📖", "i");
 
-pub static SPINNER: [&str; 10] = ["🜁", "🜂", "🜃", "🜄", "✷", "☽", "☾", "🜇", "✶", ""];
+pub static SPINNER: [&str; 39] = [
+    "🜁", "🜂", "🜃", "🜄", "🜇", "☽", "☾", "⚯", "⚮", "⚭", "✷", "✶", "⛦", "◈", "❖", "ᚠ", "ᚹ", "ᚻ", "ᛃ",
+    "ᛉ", "ᛊ", "ᛗ", "ᛘ", "ᛚ", "ᛜ", "ᛝ", "ᛞ", "ᛟ", "ᛠ", "ᛡ", "ᛢ", "ᛣ", "ᛤ", "ᛥ", "ᛦ", "ᛧ", "ᛨ", "ᛩ",
+    " ",
+];
 
 /// Starts the Grimoire CSS system based on the given mode,
 /// **without** performing any CLI-specific side effects.
@@ -117,13 +121,12 @@ pub fn get_logged_messages() -> Vec<String> {
 ///     eprintln!("Failed: {err}");
 /// }
 /// ```
-pub fn start_as_cli(args: &[String]) -> Result<(), GrimoireCssError> {
-    let start_time = Instant::now();
-
+pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
     // print empty line for better readability
     println!();
 
-    if args.is_empty() {
+    // Check if the user provided at least one argument (mode)
+    if args.len() < 2 {
         let message = format!(
             "{}\n    {} ",
             style(format!("{} Wrong usage!", FAILURE)).red().bold(),
@@ -150,8 +153,10 @@ pub fn start_as_cli(args: &[String]) -> Result<(), GrimoireCssError> {
             .unwrap(),
     );
 
+    let start_time = Instant::now();
+
     // Proceed with the main function, passing the first argument (mode)
-    match start(&args[0]) {
+    match start(args[1].as_str()) {
         Ok(_) => {
             pb.finish_and_clear();
 
