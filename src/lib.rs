@@ -1,24 +1,26 @@
-//! The main library module that orchestrates the core functionality of the Grimoire CSS system.
+//! Core library module that orchestrates the core functionality of the Grimoire CSS system engine.
 //!
-//! This module provides:
-//! - A **pure** function `start` that executes the core logic of Grimoire CSS without
-//!   printing or side effects.
-//! - A **convenience** function [`start_as_cli`] for CLI usage. It includes logging,
-//!   timing, and user-facing output (spinners, styled text), but is _not idiomatic_
+//! This module provides two main functions:
+//! - [`start`] - Pure function that executes core CSS processing logic
+//! - [`start_in_memory`] - Function for processing CSS in memory without file I/O
+//! - [`start_as_cli`] - CLI wrapper with logging and user feedback (spinners, colors), it is _not idiomatic_
 //!   for a typical Rust library because it introduces side effects and depends on
 //!   console/UI crates. Use it only if you specifically want the same CLI behavior
-//!   outside of the main binary (e.g. in a Node.js wrapper).
+//!   outside of the main binary (e.g. in a Node.js wrapper or CLI application).
+//!
+//! Choose [`start`] for library usage and [`start_as_cli`] for CLI applications.
 
 mod buffer;
 mod commands;
 pub mod core;
 mod infrastructure;
 
-use crate::core::GrimoireCSSError;
-use commands::process_mode_and_handle;
+use crate::core::GrimoireCssError;
+use commands::{handle_in_memory, process_mode_and_handle};
 use console::{style, Emoji};
+use core::{CompiledCssInMemory, ConfigInMemory};
 use indicatif::{ProgressBar, ProgressStyle};
-use infrastructure::LightningCSSOptimizer;
+use infrastructure::LightningCssOptimizer;
 use std::time::{Duration, Instant};
 
 pub static SUCCESS: Emoji<'_, '_> = Emoji("🪄", "✔️");
@@ -56,11 +58,21 @@ pub static SPINNER: [&str; 10] = ["🜁", "🜂", "🜃", "🜄", "✷", "☽", 
 ///     eprintln!("Error: {e}");
 /// }
 /// ```
-pub fn start(mode: String) -> Result<(), GrimoireCSSError> {
+pub fn start(mode: &str) -> Result<(), GrimoireCssError> {
     let current_dir = std::env::current_dir()?;
-    let css_optimizer = LightningCSSOptimizer::new(&current_dir)?;
+    let css_optimizer = LightningCssOptimizer::new(&current_dir)?;
 
-    process_mode_and_handle(&mode, &current_dir, &css_optimizer)
+    process_mode_and_handle(mode, &current_dir, &css_optimizer)
+}
+
+pub fn start_in_memory(
+    config: &ConfigInMemory,
+) -> Result<Vec<CompiledCssInMemory>, GrimoireCssError> {
+    let css_optimizer = LightningCssOptimizer::new_from(
+        config.browserslist_content.as_deref().unwrap_or_default(),
+    )?;
+
+    handle_in_memory(config, &css_optimizer)
 }
 
 /// Public function to read the saved messages from the buffer.
@@ -105,13 +117,31 @@ pub fn get_logged_messages() -> Vec<String> {
 ///     eprintln!("Failed: {err}");
 /// }
 /// ```
-pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCSSError> {
+pub fn start_as_cli(args: &[String]) -> Result<(), GrimoireCssError> {
     let start_time = Instant::now();
 
-    println!("{} {}", INFO, style("Opened the Grimoire").blue().bold());
+    // print empty line for better readability
+    println!();
+
+    if args.is_empty() {
+        let message = format!(
+            "{}\n    {} ",
+            style(format!("{} Wrong usage!", FAILURE)).red().bold(),
+            style("Follow: grimoire_css <mode> ('build' or 'init')").italic()
+        );
+        println!("{}", message);
+
+        return Err(GrimoireCssError::InvalidInput(message));
+    }
+
+    println!(
+        "{} {}",
+        INFO,
+        style("Open the Grimoire").color256(55).bold()
+    );
 
     let pb = ProgressBar::new_spinner();
-    pb.set_message(style("Casting spells...").blue().italic().to_string());
+    pb.set_message(style("Casting spells...").color256(55).italic().to_string());
     pb.enable_steady_tick(Duration::from_millis(120));
     pb.set_style(
         ProgressStyle::default_spinner()
@@ -120,29 +150,25 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCSSError> {
             .unwrap(),
     );
 
-    // Check if the user provided at least one argument (mode)
-    if args.len() < 2 {
-        pb.finish();
-        return Err(GrimoireCSSError::InvalidInput(format!(
-            "{}\n    Follow: {} <mode>",
-            style(format!("{} Wrong usage!", FAILURE)).red().bold(),
-            style(&args[0]).yellow().italic()
-        )));
-    }
-
     // Proceed with the main function, passing the first argument (mode)
-    match start(args[1].to_owned()) {
+    match start(&args[0]) {
         Ok(_) => {
             pb.finish_and_clear();
-            output_saved_messages();
 
             let duration = start_time.elapsed();
             println!(
                 "{}",
-                style(format!("✨ Magic complete in {:.2?}!", duration))
-                    .magenta()
-                    .bold()
+                style(format!(
+                    "{} {:.2?}",
+                    style("✨ Magic complete in").color256(55).bold(),
+                    style(duration).color256(55).bold().underlined(),
+                ))
             );
+
+            output_saved_messages();
+
+            // print empty line for better readability
+            println!();
             Ok(())
         }
         Err(e) => {
@@ -155,6 +181,8 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCSSError> {
                     .bold()
             );
 
+            // print empty line for better readability
+            println!();
             Err(e)
         }
     }
@@ -164,10 +192,12 @@ fn output_saved_messages() {
     let messages = get_logged_messages();
 
     if !messages.is_empty() {
-        println!("{}", style("History:").dim().bold());
-
-        for msg in messages.iter() {
-            println!("{} {}", style("    •").dim(), style(msg).dim());
+        for msg in &messages {
+            println!(
+                "{} {}",
+                style("    •").color256(53),
+                style(msg).color256(53)
+            );
         }
     }
 }

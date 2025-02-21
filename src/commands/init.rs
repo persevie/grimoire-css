@@ -1,6 +1,6 @@
 use crate::{
     buffer::add_message,
-    core::{Config, GrimoireCSSError},
+    core::{ConfigFs, GrimoireCssError},
 };
 use std::path::Path;
 
@@ -19,8 +19,8 @@ use std::path::Path;
 ///
 /// * `Ok(Config)` - If the configuration is successfully loaded or created.
 /// * `Err(GrimoireCSSError)` - If there is an error during loading or saving the configuration.
-pub fn init(current_dir: &Path, mode: &str) -> Result<Config, GrimoireCSSError> {
-    match Config::load(current_dir) {
+pub fn init(current_dir: &Path, mode: &str) -> Result<ConfigFs, GrimoireCssError> {
+    match ConfigFs::load(current_dir) {
         Ok(config) => {
             if mode == "init" {
                 add_message(format!(
@@ -31,13 +31,13 @@ pub fn init(current_dir: &Path, mode: &str) -> Result<Config, GrimoireCSSError> 
             Ok(config)
         }
         Err(err) => match err {
-            GrimoireCSSError::Serde(_) => {
+            GrimoireCssError::Serde(_) => {
                 let err_msg = format!("Failed to parse config. {}", err);
-                Err(GrimoireCSSError::InvalidInput(err_msg))
+                Err(GrimoireCssError::InvalidInput(err_msg))
             }
             _ => {
-                let config = Config::default();
-                Config::save(&config, current_dir)?;
+                let config = ConfigFs::default();
+                ConfigFs::save(&config, current_dir)?;
                 Ok(config)
             }
         },

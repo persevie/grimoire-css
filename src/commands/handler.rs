@@ -1,7 +1,10 @@
 use std::path::Path;
 
-use super::{build::build, init::init};
-use crate::core::{CSSOptimizer, GrimoireCSSError};
+use super::{
+    build::{build, build_in_memory},
+    init::init,
+};
+use crate::core::{CompiledCssInMemory, ConfigInMemory, CssOptimizer, GrimoireCssError};
 
 /// Processes the provided mode and delegates handling to the appropriate functionality.
 ///
@@ -18,11 +21,11 @@ use crate::core::{CSSOptimizer, GrimoireCSSError};
 /// # Errors
 ///
 /// Returns a `GrimoireCSSError` if an invalid mode is provided or if an underlying operation (e.g., initialization or build) fails.
-pub fn process_mode_and_handle<O: CSSOptimizer>(
+pub fn process_mode_and_handle<O: CssOptimizer>(
     mode: &str,
     current_dir: &Path,
     css_optimizer: &O,
-) -> Result<(), GrimoireCSSError> {
+) -> Result<(), GrimoireCssError> {
     match mode {
         "init" => {
             init(current_dir, mode)?;
@@ -31,9 +34,18 @@ pub fn process_mode_and_handle<O: CSSOptimizer>(
             build(current_dir, css_optimizer, mode)?;
         }
         _ => {
-            let err_msg = format!("Unknown mode: {}", mode);
-            return Err(GrimoireCSSError::InvalidInput(err_msg));
+            return Err(GrimoireCssError::InvalidInput(format!(
+                "Unknown mode: {}",
+                mode
+            )))
         }
     }
     Ok(())
+}
+
+pub fn handle_in_memory<O: CssOptimizer>(
+    config: &ConfigInMemory,
+    css_optimizer: &O,
+) -> Result<Vec<CompiledCssInMemory>, GrimoireCssError> {
+    build_in_memory(css_optimizer, config)
 }

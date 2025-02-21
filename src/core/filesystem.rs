@@ -1,37 +1,79 @@
-use super::GrimoireCSSError;
+//! File system operations for the Grimoire CSS system.
+//!
+//! This module provides a unified interface for filesystem operations such as:
+//! - Managing configuration directories and files
+//! - Creating and maintaining the Grimoire CSS directory structure
+//! - Handling path resolution for configuration and other resources
+//!
+//! The directory structure follows the convention:
+//! ```text
+//! ./grimoire/
+//!   └── config/
+//!       └── grimoire.config.json
+//! ```
+
+use super::GrimoireCssError;
 use crate::buffer::add_message;
 use std::{
     fs,
     path::{Path, PathBuf},
 };
 
+/// Provides filesystem operations for the Grimoire CSS system.
+///
+/// This struct implements methods for managing the file system structure
+/// required by Grimoire CSS, including configuration directories and files.
 pub struct Filesystem;
 
 impl Filesystem {
     /// Retrieves or creates the path for the configuration file.
+    ///
+    /// This method ensures that the necessary directory structure exists
+    /// and returns the path to the grimoire.config.json file.
+    ///
+    /// # Arguments
+    ///
+    /// * `current_dir` - The base directory path to create the configuration in
+    ///
+    /// # Returns
+    ///
+    /// Returns a `PathBuf` pointing to the configuration file location
+    ///
     /// # Errors
     ///
-    ///
-    /// Returns a `GrimoireCSSError` if the path cannot be accessed or created.
-    pub fn get_config_path(current_dir: &Path) -> Result<PathBuf, GrimoireCSSError> {
+    /// Returns a `GrimoireCSSError` if:
+    /// - The directory structure cannot be created
+    /// - File system permissions prevent access
+    pub fn get_config_path(current_dir: &Path) -> Result<PathBuf, GrimoireCssError> {
         let grimoire_dir = Self::get_or_create_grimoire_path(current_dir)?;
         let config_path = grimoire_dir.join("config");
-
         if !config_path.exists() {
             fs::create_dir(&config_path)?;
         }
-
         Ok(config_path.join("grimoire.config.json"))
     }
 
     /// Gets or creates the path for the GrimoireCSS folder.
     ///
+    /// This method ensures the existence of the Grimoire directory structure.
+    /// If the directories don't exist, it creates them and adds a success message
+    /// to the notification buffer.
+    ///
+    /// # Arguments
+    ///
+    /// * `cwd` - The current working directory where the Grimoire folder should be created
+    ///
+    /// # Returns
+    ///
+    /// Returns a `PathBuf` pointing to the Grimoire directory
+    ///
     /// # Errors
     ///
-    /// Returns a `GrimoireCSSError` if the directory cannot be created.
-    pub fn get_or_create_grimoire_path(cwd: &Path) -> Result<PathBuf, GrimoireCSSError> {
+    /// Returns a `GrimoireCSSError` if:
+    /// - Directory creation fails
+    /// - File system operations are not permitted
+    pub fn get_or_create_grimoire_path(cwd: &Path) -> Result<PathBuf, GrimoireCssError> {
         let grimoire_path = cwd.join("grimoire");
-
         if !grimoire_path.exists() {
             fs::create_dir(&grimoire_path)?;
             let config_path = grimoire_path.join("config");
@@ -39,11 +81,10 @@ impl Filesystem {
                 fs::create_dir(&config_path)?;
             }
             add_message(format!(
-                "Configuration and directories created successfully at `{}`",
+                "Configuration and directories created successfully at `{}`.",
                 "./grimoire"
             ));
         }
-
         Ok(grimoire_path)
     }
 }

@@ -1,6 +1,9 @@
 //! This module provides the configuration management for GrimoireCSS.
 
-use crate::{buffer::add_message, core::GrimoireCSSError};
+use crate::{
+    buffer::add_message,
+    core::{Filesystem, GrimoireCssError},
+};
 use glob::glob;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -9,16 +12,14 @@ use std::{
     path::Path,
 };
 
-use super::Filesystem;
-
 /// Represents the main configuration structure for GrimoireCSS.
 #[derive(Debug, Clone)]
-pub struct Config {
+pub struct ConfigFs {
     pub variables: Option<Vec<(String, String)>>,
     pub scrolls: Option<HashMap<String, Vec<String>>>,
-    pub projects: Vec<ConfigProject>,
-    pub shared: Option<Vec<ConfigShared>>,
-    pub critical: Option<Vec<ConfigCritical>>,
+    pub projects: Vec<ConfigFsProject>,
+    pub shared: Option<Vec<ConfigFsShared>>,
+    pub critical: Option<Vec<ConfigFsCritical>>,
     /// A set of shared spells used across different projects.
     pub shared_spells: HashSet<String>,
     pub lock: Option<bool>,
@@ -28,23 +29,23 @@ pub struct Config {
 
 /// Shared configuration for GrimoireCSS projects.
 #[derive(Debug, Clone)]
-pub struct ConfigShared {
+pub struct ConfigFsShared {
     pub output_path: String,
     pub styles: Option<Vec<String>>,
-    pub css_custom_properties: Option<Vec<ConfigCSSCustomProperties>>,
+    pub css_custom_properties: Option<Vec<ConfigFsCssCustomProperties>>,
 }
 
 /// Critical styles configuration to be inlined into specific HTML files.
 #[derive(Debug, Clone)]
-pub struct ConfigCritical {
+pub struct ConfigFsCritical {
     pub file_to_inline_paths: Vec<String>,
     pub styles: Option<Vec<String>>,
-    pub css_custom_properties: Option<Vec<ConfigCSSCustomProperties>>,
+    pub css_custom_properties: Option<Vec<ConfigFsCssCustomProperties>>,
 }
 
 /// Represents custom CSS properties associated with specific elements.
 #[derive(Debug, Clone)]
-pub struct ConfigCSSCustomProperties {
+pub struct ConfigFsCssCustomProperties {
     pub element: String,
     pub data_param: String,
     pub data_value: String,
@@ -53,7 +54,7 @@ pub struct ConfigCSSCustomProperties {
 
 /// Represents a project in GrimoireCSS.
 #[derive(Debug, Clone)]
-pub struct ConfigProject {
+pub struct ConfigFsProject {
     pub project_name: String,
     pub input_paths: Vec<String>,
     pub output_dir_path: Option<String>,
@@ -66,23 +67,23 @@ pub struct ConfigProject {
 ///
 /// This struct is used internally to serialize and deserialize the configuration data.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct ConfigJSON {
+struct ConfigFsJSON {
     #[serde(rename = "$schema")]
     pub schema: Option<String>,
     /// Optional framework-level variables used during compilation.
     pub variables: Option<HashMap<String, String>>,
     /// Optional shared configuration settings used across multiple projects.
-    pub scrolls: Option<Vec<ConfigScrollJSON>>,
+    pub scrolls: Option<Vec<ConfigFsScrollJSON>>,
     /// A list of projects included in the configuration.
-    pub projects: Vec<ConfigProjectJSON>,
-    pub shared: Option<Vec<ConfigSharedJSON>>,
-    pub critical: Option<Vec<ConfigCriticalJSON>>,
+    pub projects: Vec<ConfigFsProjectJSON>,
+    pub shared: Option<Vec<ConfigFsSharedJSON>>,
+    pub critical: Option<Vec<ConfigFsCriticalJSON>>,
     pub lock: Option<bool>,
 }
 
 /// Represents a scrolls which may contain external or combined CSS rules.
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ConfigScrollJSON {
+pub struct ConfigFsScrollJSON {
     pub name: String,
     pub spells: Vec<String>,
     pub extends: Option<Vec<String>>,
@@ -91,7 +92,7 @@ pub struct ConfigScrollJSON {
 /// A struct representing a project within GrimoireCSS.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-struct ConfigProjectJSON {
+struct ConfigFsProjectJSON {
     /// The name of the project.
     pub project_name: String,
     /// A list of input paths for the project.
@@ -105,25 +106,25 @@ struct ConfigProjectJSON {
 /// Represents shared configuration settings used across multiple projects.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-struct ConfigSharedJSON {
+struct ConfigFsSharedJSON {
     pub output_path: String,
     pub styles: Option<Vec<String>>,
-    pub css_custom_properties: Option<Vec<ConfigCSSCustomPropertiesJSON>>,
+    pub css_custom_properties: Option<Vec<ConfigFsCSSCustomPropertiesJSON>>,
 }
 
 /// Represents critical styles configuration for inlining into HTML files.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-struct ConfigCriticalJSON {
+struct ConfigFsCriticalJSON {
     pub file_to_inline_paths: Vec<String>,
     pub styles: Option<Vec<String>>,
-    pub css_custom_properties: Option<Vec<ConfigCSSCustomPropertiesJSON>>,
+    pub css_custom_properties: Option<Vec<ConfigFsCSSCustomPropertiesJSON>>,
 }
 
 /// Represents a custom CSS property item, including associated variables.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-struct ConfigCSSCustomPropertiesJSON {
+struct ConfigFsCSSCustomPropertiesJSON {
     /// The optional DOM element (`tag`, `class`, `id`, `:root` (default)) associated with the CSS variables.
     pub element: Option<String>,
     /// A parameter name used within the CSS configuration.
@@ -134,10 +135,10 @@ struct ConfigCSSCustomPropertiesJSON {
     pub css_variables: HashMap<String, String>,
 }
 
-impl Default for Config {
+impl Default for ConfigFs {
     /// Provides a default configuration for `Config`, initializing the `scrolls`, `projects`, and other fields.
     fn default() -> Self {
-        let projects = vec![ConfigProject {
+        let projects = vec![ConfigFsProject {
             project_name: "main".to_string(),
             input_paths: Vec::new(),
             output_dir_path: None,
@@ -157,7 +158,7 @@ impl Default for Config {
     }
 }
 
-impl Config {
+impl ConfigFs {
     /// Loads the configuration from the file system.
     ///
     /// Reads a JSON configuration file from the file system and deserializes it into a `Config` object.
@@ -165,10 +166,10 @@ impl Config {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if reading or parsing the file fails.
-    pub fn load(current_dir: &Path) -> Result<Self, GrimoireCSSError> {
+    pub fn load(current_dir: &Path) -> Result<Self, GrimoireCssError> {
         let config_path = Filesystem::get_config_path(current_dir)?;
         let content = fs::read_to_string(&config_path)?;
-        let json_config: ConfigJSON = serde_json::from_str(&content)?;
+        let json_config: ConfigFsJSON = serde_json::from_str(&content)?;
         let mut config = Self::from_json(json_config);
 
         config.custom_animations = Self::find_custom_animations(current_dir)?;
@@ -183,11 +184,11 @@ impl Config {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if writing to the file system fails.
-    pub fn save(&self, current_dir: &Path) -> Result<(), GrimoireCSSError> {
+    pub fn save(&self, current_dir: &Path) -> Result<(), GrimoireCssError> {
         let config_path = Filesystem::get_config_path(current_dir)?;
-        let json_config: ConfigJSON = self.to_json();
+        let json_config = self.to_json();
         let content = serde_json::to_string_pretty(&json_config)?;
-        fs::write(&config_path, &content)?;
+        fs::write(&config_path, content)?;
 
         Ok(())
     }
@@ -201,25 +202,21 @@ impl Config {
     /// # Returns
     ///
     /// A `HashSet` of common spell names used across projects.
-    fn get_common_spells_set(config: &ConfigJSON) -> HashSet<String> {
+    fn get_common_spells_set(config: &ConfigFsJSON) -> HashSet<String> {
         let mut common_spells = HashSet::new();
 
         if let Some(shared) = &config.shared {
             for shared_item in shared {
-                if let Some(shared_styles) = &shared_item.styles {
-                    for spell in shared_styles {
-                        common_spells.insert(spell.to_string());
-                    }
+                if let Some(styles) = &shared_item.styles {
+                    common_spells.extend(styles.iter().cloned());
                 }
             }
         }
 
         if let Some(critical) = &config.critical {
             for critical_item in critical {
-                if let Some(shared_styles) = &critical_item.styles {
-                    for spell in shared_styles {
-                        common_spells.insert(spell.to_string());
-                    }
+                if let Some(styles) = &critical_item.styles {
+                    common_spells.extend(styles.iter().cloned());
                 }
             }
         }
@@ -236,23 +233,23 @@ impl Config {
     /// # Returns
     ///
     /// A new `Config` instance.
-    fn from_json(json_config: ConfigJSON) -> Self {
-        let variables = json_config.variables.clone().map(|vars| {
+    fn from_json(json_config: ConfigFsJSON) -> Self {
+        let shared_spells = Self::get_common_spells_set(&json_config);
+
+        let variables = json_config.variables.map(|vars| {
             let mut sorted_vars: Vec<_> = vars.into_iter().collect();
-            sorted_vars.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+            sorted_vars.sort_by(|a, b| a.0.cmp(&b.0));
             sorted_vars
         });
 
-        let projects = Self::projects_from_json(json_config.projects.clone());
+        let projects = Self::projects_from_json(json_config.projects);
 
         // Expand glob patterns in shared and critical configurations
-        let shared = Self::shared_from_json(json_config.shared.clone());
-        let critical = Self::critical_from_json(json_config.critical.clone());
+        let shared = Self::shared_from_json(json_config.shared);
+        let critical = Self::critical_from_json(json_config.critical);
+        let scrolls = Self::scrolls_from_json(json_config.scrolls);
 
-        let shared_spells = Self::get_common_spells_set(&json_config);
-        let scrolls = Self::scrolls_from_json(json_config.scrolls.clone());
-
-        Config {
+        ConfigFs {
             variables,
             scrolls,
             projects,
@@ -265,11 +262,11 @@ impl Config {
     }
 
     /// Converts shared JSON configuration into internal structure.
-    fn shared_from_json(shared: Option<Vec<ConfigSharedJSON>>) -> Option<Vec<ConfigShared>> {
+    fn shared_from_json(shared: Option<Vec<ConfigFsSharedJSON>>) -> Option<Vec<ConfigFsShared>> {
         shared.map(|shared_vec| {
             shared_vec
                 .into_iter()
-                .map(|c| ConfigShared {
+                .map(|c| ConfigFsShared {
                     output_path: c.output_path,
                     styles: c.styles,
                     css_custom_properties: Self::convert_css_custom_properties_from_json(
@@ -282,12 +279,12 @@ impl Config {
 
     /// Converts critical JSON configuration into internal structure.
     fn critical_from_json(
-        critical: Option<Vec<ConfigCriticalJSON>>,
-    ) -> Option<Vec<ConfigCritical>> {
+        critical: Option<Vec<ConfigFsCriticalJSON>>,
+    ) -> Option<Vec<ConfigFsCritical>> {
         critical.map(|critical_vec| {
             critical_vec
                 .into_iter()
-                .map(|c| ConfigCritical {
+                .map(|c| ConfigFsCritical {
                     file_to_inline_paths: Self::expand_glob_patterns(c.file_to_inline_paths),
                     styles: c.styles,
                     css_custom_properties: Self::convert_css_custom_properties_from_json(
@@ -299,7 +296,7 @@ impl Config {
     }
 
     fn scrolls_from_json(
-        scrolls: Option<Vec<ConfigScrollJSON>>,
+        scrolls: Option<Vec<ConfigFsScrollJSON>>,
     ) -> Option<HashMap<String, Vec<String>>> {
         scrolls.map(|scrolls_vec| {
             let mut scrolls_map = HashMap::new();
@@ -323,8 +320,8 @@ impl Config {
 
     /// Recursively resolve spells for a given scroll, including extended scrolls
     fn resolve_spells(
-        scroll: &ConfigScrollJSON,
-        scrolls_vec: &[ConfigScrollJSON],
+        scroll: &ConfigFsScrollJSON,
+        scrolls_vec: &[ConfigFsScrollJSON],
         collected_spells: &mut Vec<String>,
     ) {
         if let Some(extends) = &scroll.extends {
@@ -343,18 +340,18 @@ impl Config {
 
     /// Converts custom CSS properties from JSON to internal structure.
     fn convert_css_custom_properties_from_json(
-        css_custom_properties_vec: Option<Vec<ConfigCSSCustomPropertiesJSON>>,
-    ) -> Option<Vec<ConfigCSSCustomProperties>> {
-        css_custom_properties_vec.map(|items: Vec<ConfigCSSCustomPropertiesJSON>| {
+        css_custom_properties_vec: Option<Vec<ConfigFsCSSCustomPropertiesJSON>>,
+    ) -> Option<Vec<ConfigFsCssCustomProperties>> {
+        css_custom_properties_vec.map(|items: Vec<ConfigFsCSSCustomPropertiesJSON>| {
             items
                 .into_iter()
-                .map(|item| ConfigCSSCustomProperties {
+                .map(|item| ConfigFsCssCustomProperties {
                     element: item.element.unwrap_or_else(|| String::from(":root")),
                     data_param: item.data_param,
                     data_value: item.data_value,
                     css_variables: {
                         let mut vars: Vec<_> = item.css_variables.into_iter().collect();
-                        vars.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+                        vars.sort_by(|a, b| a.0.cmp(&b.0));
                         vars
                     },
                 })
@@ -363,12 +360,12 @@ impl Config {
     }
 
     /// Converts a list of project JSON configurations to the internal `Project` type.
-    fn projects_from_json(projects: Vec<ConfigProjectJSON>) -> Vec<ConfigProject> {
+    fn projects_from_json(projects: Vec<ConfigFsProjectJSON>) -> Vec<ConfigFsProject> {
         projects
             .into_iter()
             .map(|p| {
                 let input_paths = Self::expand_glob_patterns(p.input_paths);
-                ConfigProject {
+                ConfigFsProject {
                     project_name: p.project_name,
                     input_paths,
                     output_dir_path: p.output_dir_path,
@@ -379,18 +376,18 @@ impl Config {
     }
 
     /// Converts the internal `Config` into its JSON representation.
-    fn to_json(&self) -> ConfigJSON {
+    fn to_json(&self) -> ConfigFsJSON {
         let variables_hash_map = self.variables.as_ref().map(|vars| {
             let mut sorted_vars: Vec<_> = vars.iter().collect();
-            sorted_vars.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+            sorted_vars.sort_by(|a, b| a.0.cmp(&b.0));
             sorted_vars
                 .into_iter()
                 .map(|(key, value)| (key.clone(), value.clone()))
                 .collect()
         });
 
-        ConfigJSON {
-            schema: Some("https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config-schema.json".to_string()),
+        ConfigFsJSON {
+            schema: Some("https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json".to_string()),
             variables: variables_hash_map,
             scrolls: Self::scrolls_to_json(self.scrolls.clone()),
             projects: Self::projects_to_json(self.projects.clone()),
@@ -401,11 +398,11 @@ impl Config {
     }
 
     /// Converts the internal list of shared configurations into JSON.
-    fn shared_to_json(shared: Option<&Vec<ConfigShared>>) -> Option<Vec<ConfigSharedJSON>> {
-        shared.map(|common_vec: &Vec<ConfigShared>| {
+    fn shared_to_json(shared: Option<&Vec<ConfigFsShared>>) -> Option<Vec<ConfigFsSharedJSON>> {
+        shared.map(|common_vec: &Vec<ConfigFsShared>| {
             common_vec
                 .iter()
-                .map(|c| ConfigSharedJSON {
+                .map(|c| ConfigFsSharedJSON {
                     output_path: c.output_path.clone(),
                     styles: c.styles.clone(),
                     css_custom_properties: Self::css_custom_properties_to_json(
@@ -417,11 +414,13 @@ impl Config {
     }
 
     /// Converts the internal list of critical configurations into JSON.
-    fn critical_to_json(critical: Option<&Vec<ConfigCritical>>) -> Option<Vec<ConfigCriticalJSON>> {
+    fn critical_to_json(
+        critical: Option<&Vec<ConfigFsCritical>>,
+    ) -> Option<Vec<ConfigFsCriticalJSON>> {
         critical.map(|common_vec| {
             common_vec
                 .iter()
-                .map(|c| ConfigCriticalJSON {
+                .map(|c| ConfigFsCriticalJSON {
                     file_to_inline_paths: c.file_to_inline_paths.clone(),
                     styles: c.styles.clone(),
                     css_custom_properties: Self::css_custom_properties_to_json(
@@ -434,12 +433,12 @@ impl Config {
 
     /// Converts custom CSS properties to JSON format.
     fn css_custom_properties_to_json(
-        css_custom_properties_vec: Option<&Vec<ConfigCSSCustomProperties>>,
-    ) -> Option<Vec<ConfigCSSCustomPropertiesJSON>> {
-        css_custom_properties_vec.map(|items: &Vec<ConfigCSSCustomProperties>| {
+        css_custom_properties_vec: Option<&Vec<ConfigFsCssCustomProperties>>,
+    ) -> Option<Vec<ConfigFsCSSCustomPropertiesJSON>> {
+        css_custom_properties_vec.map(|items: &Vec<ConfigFsCssCustomProperties>| {
             items
                 .iter()
-                .map(|item| ConfigCSSCustomPropertiesJSON {
+                .map(|item| ConfigFsCSSCustomPropertiesJSON {
                     element: Some(item.element.clone()),
                     data_param: item.data_param.clone(),
                     data_value: item.data_value.clone(),
@@ -451,11 +450,11 @@ impl Config {
 
     fn scrolls_to_json(
         config_scrolls: Option<HashMap<String, Vec<String>>>,
-    ) -> Option<Vec<ConfigScrollJSON>> {
+    ) -> Option<Vec<ConfigFsScrollJSON>> {
         config_scrolls.map(|scrolls| {
             let mut scrolls_vec = Vec::new();
             for (name, spells) in scrolls {
-                scrolls_vec.push(ConfigScrollJSON {
+                scrolls_vec.push(ConfigFsScrollJSON {
                     name,
                     spells,
                     extends: None,
@@ -466,10 +465,10 @@ impl Config {
     }
 
     /// Converts the internal list of `Project` into its JSON representation.
-    fn projects_to_json(projects: Vec<ConfigProject>) -> Vec<ConfigProjectJSON> {
+    fn projects_to_json(projects: Vec<ConfigFsProject>) -> Vec<ConfigFsProjectJSON> {
         projects
             .into_iter()
-            .map(|p| ConfigProjectJSON {
+            .map(|p| ConfigFsProjectJSON {
                 project_name: p.project_name,
                 input_paths: p.input_paths,
                 output_dir_path: p.output_dir_path,
@@ -503,7 +502,7 @@ impl Config {
     /// - File names cannot be converted to valid UTF-8 strings.
     fn find_custom_animations(
         current_dir: &Path,
-    ) -> Result<HashMap<String, String>, GrimoireCSSError> {
+    ) -> Result<HashMap<String, String>, GrimoireCssError> {
         let animations_dir =
             Filesystem::get_or_create_grimoire_path(current_dir)?.join("animations");
 
@@ -526,16 +525,24 @@ impl Config {
             let path = entry.path();
 
             if path.is_file() {
-                if path.extension().and_then(|s| s.to_str()) == Some("css") {
-                    if let Some(file_stem) = path.file_stem().and_then(|s| s.to_str()) {
-                        let content = fs::read_to_string(&path)?;
-                        map.insert(file_stem.to_string(), content);
+                if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
+                    if ext == "css" {
+                        if let Some(file_stem) = path.file_stem().and_then(|s| s.to_str()) {
+                            let content = fs::read_to_string(&path)?;
+                            map.insert(file_stem.to_owned(), content);
+                        }
+                    } else {
+                        add_message(format!(
+                            "Only CSS files are supported in the 'animations' directory. Skipping non-CSS file: {}.",
+                            path.display()
+                        ));
                     }
-                } else {
-                    add_message(format!("Only CSS files are supported in the 'animations' directory. Skipping non-CSS file: {}", path.display()));
                 }
             } else {
-                add_message(format!("Only files are supported in the 'animations' directory. Skipping directory: {}", path.display()));
+                add_message(format!(
+                    "Only files are supported in the 'animations' directory. Skipping directory: {}.",
+                    path.display()
+                ));
             }
         }
 
@@ -571,7 +578,7 @@ mod tests {
 
     #[test]
     fn test_default_config() {
-        let config = Config::default();
+        let config = ConfigFs::default();
         assert!(config.variables.is_none());
         assert!(config.scrolls.is_none());
         assert!(config.shared.is_none());
@@ -583,17 +590,17 @@ mod tests {
     #[test]
     fn test_load_nonexistent_config() {
         let dir = tempdir().unwrap();
-        let result = Config::load(dir.path());
+        let result = ConfigFs::load(dir.path());
         assert!(result.is_err());
     }
 
     #[test]
     fn test_save_and_load_config() {
         let dir = tempdir().unwrap();
-        let config = Config::default();
+        let config = ConfigFs::default();
         config.save(dir.path()).expect("Failed to save config");
 
-        let loaded_config = Config::load(dir.path()).expect("Failed to load config");
+        let loaded_config = ConfigFs::load(dir.path()).expect("Failed to load config");
         assert_eq!(
             config.projects[0].project_name,
             loaded_config.projects[0].project_name
@@ -607,7 +614,7 @@ mod tests {
         File::create(&file_path).unwrap();
 
         let patterns = vec![format!("{}/**/*.txt", dir.path().to_str().unwrap())];
-        let expanded = Config::expand_glob_patterns(patterns);
+        let expanded = ConfigFs::expand_glob_patterns(patterns);
         assert_eq!(expanded.len(), 1);
         assert!(expanded[0].ends_with("test.txt"));
     }
@@ -615,7 +622,7 @@ mod tests {
     #[test]
     fn test_find_custom_animations_empty() {
         let dir = tempdir().unwrap();
-        let animations = Config::find_custom_animations(dir.path()).unwrap();
+        let animations = ConfigFs::find_custom_animations(dir.path()).unwrap();
         assert!(animations.is_empty());
     }
 
@@ -633,24 +640,24 @@ mod tests {
         )
         .unwrap();
 
-        let animations = Config::find_custom_animations(dir.path()).unwrap();
+        let animations = ConfigFs::find_custom_animations(dir.path()).unwrap();
         assert_eq!(animations.len(), 1);
         assert!(animations.contains_key("fade_in"));
     }
 
     #[test]
     fn test_get_common_spells_set() {
-        let json = ConfigJSON {
+        let json = ConfigFsJSON {
             schema: None,
             variables: None,
             scrolls: None,
             projects: vec![],
-            shared: Some(vec![ConfigSharedJSON {
+            shared: Some(vec![ConfigFsSharedJSON {
                 output_path: "styles.css".to_string(),
                 styles: Some(vec!["spell1".to_string(), "spell2".to_string()]),
                 css_custom_properties: None,
             }]),
-            critical: Some(vec![ConfigCriticalJSON {
+            critical: Some(vec![ConfigFsCriticalJSON {
                 file_to_inline_paths: vec!["index.html".to_string()],
                 styles: Some(vec!["spell3".to_string()]),
                 css_custom_properties: None,
@@ -658,7 +665,7 @@ mod tests {
             lock: None,
         };
 
-        let common_spells = Config::get_common_spells_set(&json);
+        let common_spells = ConfigFs::get_common_spells_set(&json);
         assert_eq!(common_spells.len(), 3);
         assert!(common_spells.contains("spell1"));
         assert!(common_spells.contains("spell2"));

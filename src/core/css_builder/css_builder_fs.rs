@@ -1,29 +1,40 @@
-//! Provides the `CSSBuilder` struct and its associated methods for compiling and building CSS files based on a configuration.
+//! File system-based CSS builder with persistent storage and file tracking.
+//!
+//! This builder provides:
+//! - CSS compilation with file output
+//! - Shared CSS injection
+//! - Critical CSS inlining
+//! - File change tracking
+//! - File cleanup
+//!
+//! Use this builder for standard projects that require file output.
 
-use super::{
-    build_info::BuildInfo, css_generator::CSSGenerator, css_optimizer::CSSOptimizer,
-    file_tracker::FileTracker, parser::Parser, spell::Spell, Config, ConfigCSSCustomProperties,
-    GrimoireCSSError,
+use crate::{
+    buffer::add_message,
+    core::{
+        build_info::BuildInfo, file_tracker::FileTracker, parser::ParserFs, spell::Spell, ConfigFs,
+        ConfigFsCssCustomProperties, CssOptimizer, GrimoireCssError,
+    },
 };
-use crate::buffer::add_message;
 use regex::Regex;
 use std::{
     collections::HashSet,
-    env, fs,
+    fs,
     path::{Path, PathBuf},
 };
 
-/// Manages the process of compiling and building CSS files from a configuration.
-pub struct CSSBuilder<'a> {
-    config: &'a Config,
+use super::CssBuilder;
+
+/// Manages the process of compiling and building CSS files with filesystem persistence.
+pub struct CssBuilderFs<'a> {
+    css_builder: CssBuilder<'a>,
+    config: &'a ConfigFs,
     current_dir: &'a Path,
-    parser: Parser<'a>,
+    parser: ParserFs,
     inline_css_regex: Regex,
-    css_generator: CSSGenerator<'a>,
-    optimizer: &'a dyn CSSOptimizer,
 }
 
-impl<'a> CSSBuilder<'a> {
+impl<'a> CssBuilderFs<'a> {
     /// Creates a new `CSSBuilder` instance.
     ///
     /// # Arguments
@@ -35,35 +46,21 @@ impl<'a> CSSBuilder<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if the regex initialization fails.
-    pub fn new<O: CSSOptimizer>(
-        config: &'a Config,
+    pub fn new<O: CssOptimizer>(
+        config: &'a ConfigFs,
         current_dir: &'a Path,
         optimizer: &'a O,
-    ) -> Result<Self, GrimoireCSSError> {
-        let parser = Parser::new(current_dir);
+    ) -> Result<Self, GrimoireCssError> {
+        let css_builder = CssBuilder::new(optimizer, &config.variables, &config.custom_animations)?;
+        let parser = ParserFs::new(current_dir);
         let inline_css_regex = Regex::new(r#"(?s)<style data-grimoire-critical-css>.*?</style>"#)?;
-        let css_generator = CSSGenerator::new(config)?;
-
-        let browserslist_config_path = current_dir.join(".browserslistrc");
-        if !browserslist_config_path.exists() {
-            fs::write(&browserslist_config_path, "defaults")
-                .expect("Failed to create .browserslistrc with defaults");
-
-            add_message(
-                "'.browserslistrc' file was missing and has been created with 'defaults'."
-                    .to_string(),
-            );
-        }
-
-        env::set_var("BROWSERSLIST_CONFIG", &browserslist_config_path);
 
         Ok(Self {
+            css_builder,
             config,
             current_dir,
             parser,
             inline_css_regex,
-            css_generator,
-            optimizer,
         })
     }
 
@@ -74,7 +71,7 @@ impl<'a> CSSBuilder<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if any step in the build process fails.
-    pub fn build(&mut self) -> Result<(), GrimoireCSSError> {
+    pub fn build(&mut self) -> Result<(), GrimoireCssError> {
         let mut project_build_info = Vec::new();
 
         for project in &self.config.projects {
@@ -90,7 +87,11 @@ impl<'a> CSSBuilder<'a> {
                     .collect_classes_single_output(&project.input_paths)?;
                 let bundle_output_full_path = project_output_dir_path.join(single_output_file_name);
 
-                let spells = Spell::generate_spells_from_classes(classes, self.config)?;
+                let spells = Spell::generate_spells_from_classes(
+                    classes,
+                    &self.config.shared_spells,
+                    &self.config.scrolls,
+                )?;
 
                 project_build_info.push(BuildInfo {
                     file_path: bundle_output_full_path,
@@ -103,7 +104,11 @@ impl<'a> CSSBuilder<'a> {
                 )?;
 
                 for (file_path, classes) in classes {
-                    let spells = Spell::generate_spells_from_classes(classes, self.config)?;
+                    let spells = Spell::generate_spells_from_classes(
+                        classes,
+                        &self.config.shared_spells,
+                        &self.config.scrolls,
+                    )?;
 
                     project_build_info.push(BuildInfo { file_path, spells });
                 }
@@ -154,18 +159,24 @@ impl<'a> CSSBuilder<'a> {
     /// Returns a `GrimoireCSSError` if spell assembly or CSS optimization fails.
     fn compile_css(
         &self,
-        project_build_info: &Vec<BuildInfo>,
-    ) -> Result<Vec<(PathBuf, String)>, GrimoireCSSError> {
-        let mut compiled_css = Vec::new();
+        project_build_info: &[BuildInfo],
+    ) -> Result<Vec<(PathBuf, String)>, GrimoireCssError> {
+        let compiled_css: Result<Vec<(PathBuf, String)>, GrimoireCssError> = project_build_info
+            .iter()
+            .map(|build_info| {
+                let assembled_spells =
+                    self.css_builder.combine_spells_to_css(&build_info.spells)?;
+                let raw_css = if assembled_spells.len() == 1 {
+                    assembled_spells[0].clone()
+                } else {
+                    assembled_spells.concat()
+                };
+                let css = self.css_builder.optimize_css(&raw_css)?;
+                Ok((build_info.file_path.clone(), css))
+            })
+            .collect();
 
-        for build_info in project_build_info {
-            let assembled_spells = self.combine_spells_to_css(&build_info.spells)?;
-            let raw_css = assembled_spells.join("");
-            let css = self.optimize_css(&raw_css)?;
-            compiled_css.push((build_info.file_path.clone(), css));
-        }
-
-        Ok(compiled_css)
+        compiled_css
     }
 
     /// Writes compiled CSS to specified file paths.
@@ -177,86 +188,13 @@ impl<'a> CSSBuilder<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if writing to files fails.
-    fn write_compiled_css(compiled_css: &Vec<(PathBuf, String)>) -> Result<(), GrimoireCSSError> {
+    fn write_compiled_css(compiled_css: &[(PathBuf, String)]) -> Result<(), GrimoireCssError> {
         for (file_path, css) in compiled_css {
             Self::create_output_directory_if_needed(file_path)?;
             fs::write(file_path, css)?;
         }
 
         Ok(())
-    }
-    /// Combines spells into CSS strings.
-    ///
-    /// # Arguments
-    ///
-    /// * `spells` - Vector of `Spell` instances to convert into CSS.
-    ///
-    /// # Returns
-    ///
-    /// Vector of CSS strings corresponding to the provided spells.
-    ///
-    /// # Errors
-    ///
-    /// Returns a `GrimoireCSSError` if CSS generation fails.
-    fn combine_spells_to_css(&self, spells: &Vec<Spell>) -> Result<Vec<String>, GrimoireCSSError> {
-        let mut assembled = Vec::new();
-
-        for spell in spells {
-            match &spell.scroll_spells {
-                Some(ss) if !ss.is_empty() => {
-                    let mut local_scroll_css_vec = Vec::new();
-                    let mut local_scroll_additional_css_vec = Vec::new();
-
-                    for s in ss {
-                        if let Some(css) = self.css_generator.generate_css(s)? {
-                            let class_name = self.css_generator.generate_css_class_name(
-                                &spell.raw_spell,
-                                &spell.effects,
-                                &spell.focus,
-                                spell.with_template,
-                            )?;
-
-                            let updated_css = self.css_generator.replace_class_name(
-                                &css.1 .1,
-                                &class_name.0,
-                                &css.0,
-                            );
-
-                            local_scroll_css_vec.push(updated_css);
-
-                            if let Some(additional_css) = css.2 {
-                                local_scroll_additional_css_vec.push(additional_css);
-                            }
-                        }
-                    }
-
-                    let combined_css = local_scroll_css_vec.join("");
-                    let wrapped_css = if spell.area.is_empty() {
-                        combined_css
-                    } else {
-                        self.css_generator
-                            .wrap_base_css_with_media_query(&spell.area, &combined_css)
-                    };
-
-                    assembled.push(wrapped_css);
-
-                    if !local_scroll_additional_css_vec.is_empty() {
-                        assembled.push(local_scroll_additional_css_vec.join(""));
-                    }
-                }
-                _ => {
-                    if let Some(css) = self.css_generator.generate_css(spell)? {
-                        assembled.push(css.0);
-
-                        if let Some(additional_css) = css.2 {
-                            assembled.push(additional_css);
-                        }
-                    }
-                }
-            }
-        }
-
-        Ok(assembled)
     }
 
     /// Creates the output directory if it doesn't exist.
@@ -272,19 +210,6 @@ impl<'a> CSSBuilder<'a> {
         }
     }
 
-    /// Optimizes and minifies CSS.
-    ///
-    /// # Arguments
-    ///
-    /// * `raw_css` - Raw CSS string to optimize.
-    ///
-    /// # Returns
-    ///
-    /// Optimized and minified CSS string.
-    fn optimize_css(&self, raw_css: &str) -> Result<String, GrimoireCSSError> {
-        self.optimizer.optimize(raw_css)
-    }
-
     /// Compiles shared CSS defined in the configuration.
     ///
     /// # Returns
@@ -294,7 +219,7 @@ impl<'a> CSSBuilder<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if CSS composition or optimization fails.
-    fn compile_shared_css(&self) -> Result<Option<Vec<(PathBuf, String)>>, GrimoireCSSError> {
+    fn compile_shared_css(&self) -> Result<Option<Vec<(PathBuf, String)>>, GrimoireCssError> {
         self.config.shared.as_ref().map_or(Ok(None), |shared| {
             let mut compiled_shared_css = Vec::new();
 
@@ -320,7 +245,7 @@ impl<'a> CSSBuilder<'a> {
                 if !composed_css.is_empty() {
                     compiled_shared_css.push((
                         PathBuf::from(&shared_item.output_path),
-                        self.optimize_css(&composed_css)?,
+                        self.css_builder.optimize_css(&composed_css)?,
                     ));
                 }
             }
@@ -338,7 +263,7 @@ impl<'a> CSSBuilder<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if CSS composition or optimization fails.
-    fn compile_critical_css(&self) -> Result<Option<Vec<(PathBuf, String)>>, GrimoireCSSError> {
+    fn compile_critical_css(&self) -> Result<Option<Vec<(PathBuf, String)>>, GrimoireCssError> {
         self.config.critical.as_ref().map_or(Ok(None), |critical| {
             let mut compiled_critical_css = Vec::new();
 
@@ -362,7 +287,7 @@ impl<'a> CSSBuilder<'a> {
                 }
 
                 if !composed_css.is_empty() {
-                    let optimized_css = self.optimize_css(&composed_css)?;
+                    let optimized_css = self.css_builder.optimize_css(&composed_css)?;
 
                     for path_to_inline in &critical_item.file_to_inline_paths {
                         compiled_critical_css
@@ -385,7 +310,7 @@ impl<'a> CSSBuilder<'a> {
     ///
     /// Optional CSS string containing the custom properties.
     fn compose_custom_css_properties(
-        raw_custom_css_properties: &Option<Vec<ConfigCSSCustomProperties>>,
+        raw_custom_css_properties: &Option<Vec<ConfigFsCssCustomProperties>>,
     ) -> Option<String> {
         raw_custom_css_properties.as_ref().map(|items| {
             items
@@ -405,7 +330,7 @@ impl<'a> CSSBuilder<'a> {
     ///
     /// CSS string representing the custom properties.
     fn format_css_custom_properties_item(
-        css_custom_properties_item: &ConfigCSSCustomProperties,
+        css_custom_properties_item: &ConfigFsCssCustomProperties,
     ) -> String {
         let variables = css_custom_properties_item
             .css_variables
@@ -435,7 +360,7 @@ impl<'a> CSSBuilder<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if reading files or spell parsing fails.
-    fn compose_extra_css(&self, shared_styles: &Vec<String>) -> Result<String, GrimoireCSSError> {
+    fn compose_extra_css(&self, shared_styles: &[String]) -> Result<String, GrimoireCssError> {
         let mut seen = HashSet::new();
         let mut files_content = Vec::new();
         let mut spells = Vec::new();
@@ -449,25 +374,27 @@ impl<'a> CSSBuilder<'a> {
                 match fs::read_to_string(item) {
                     Ok(contents) => files_content.push(contents),
                     Err(err) => {
-                        let err_msg = format!("Error reading file {}; {}", item, err);
-                        return Err(GrimoireCSSError::InvalidInput(err_msg));
+                        return Err(GrimoireCssError::InvalidInput(format!(
+                            "Error reading file {}; {}",
+                            item, err
+                        )))
                     }
                 }
-            } else if let Some(spell) = Spell::new(item, self.config)? {
+            } else if let Some(spell) =
+                Spell::new(item, &self.config.shared_spells, &self.config.scrolls)?
+            {
                 spells.push(spell);
             }
         }
 
-        let assembled_spells = self.combine_spells_to_css(&spells)?;
+        let assembled_spells = self.css_builder.combine_spells_to_css(&spells)?;
         let mut raw_css = assembled_spells.join("");
 
         if !files_content.is_empty() {
             raw_css.push_str(&files_content.join(""));
         }
 
-        let css = self.optimize_css(&raw_css)?;
-
-        Ok(css)
+        self.css_builder.optimize_css(&raw_css)
     }
 
     /// Injects critical CSS into HTML files.
@@ -481,8 +408,8 @@ impl<'a> CSSBuilder<'a> {
     /// Returns a `GrimoireCSSError` if reading or writing HTML files fails.
     fn inject_critical_css_into_html(
         &self,
-        inline_shared_css: &Vec<(PathBuf, String)>,
-    ) -> Result<(), GrimoireCSSError> {
+        inline_shared_css: &[(PathBuf, String)],
+    ) -> Result<(), GrimoireCssError> {
         for (file_path, css) in inline_shared_css {
             let path = self.current_dir.join(file_path);
             self.embed_critical_css(&path, css)?;
@@ -505,7 +432,7 @@ impl<'a> CSSBuilder<'a> {
         &self,
         html_file_path: &Path,
         shared_css_str: &str,
-    ) -> Result<(), GrimoireCSSError> {
+    ) -> Result<(), GrimoireCssError> {
         let html_content = fs::read_to_string(html_file_path)?;
         let critical_css = format!(
             "<style data-grimoire-critical-css>{}</style>",
@@ -536,14 +463,14 @@ mod tests {
 
     struct MockOptimizer;
 
-    impl CSSOptimizer for MockOptimizer {
-        fn optimize(&self, css: &str) -> Result<String, GrimoireCSSError> {
+    impl CssOptimizer for MockOptimizer {
+        fn optimize(&self, css: &str) -> Result<String, GrimoireCssError> {
             Ok(css.to_string() + "_optimized")
         }
     }
 
-    fn create_test_config() -> Config {
-        Config::default()
+    fn create_test_config() -> ConfigFs {
+        ConfigFs::default()
     }
 
     #[test]
@@ -552,7 +479,7 @@ mod tests {
         let current_dir = Path::new(".");
         let optimizer = MockOptimizer;
 
-        let builder = CSSBuilder::new(&config, current_dir, &optimizer);
+        let builder = CssBuilderFs::new(&config, current_dir, &optimizer);
         assert!(builder.is_ok());
     }
 
@@ -561,7 +488,7 @@ mod tests {
         let config = create_test_config();
         let current_dir = Path::new(".");
         let optimizer = MockOptimizer;
-        let builder = CSSBuilder::new(&config, current_dir, &optimizer).unwrap();
+        let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
         let build_info = BuildInfo {
             file_path: PathBuf::from("test_output.css"),
@@ -589,7 +516,7 @@ mod tests {
         let config = create_test_config();
         let current_dir = Path::new(".");
         let optimizer = MockOptimizer;
-        let builder = CSSBuilder::new(&config, current_dir, &optimizer).unwrap();
+        let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
         let spells = vec![Spell {
             raw_spell: "d=grid".to_string(),
@@ -602,7 +529,7 @@ mod tests {
             scroll_spells: None,
         }];
 
-        let result = builder.combine_spells_to_css(&spells);
+        let result = builder.css_builder.combine_spells_to_css(&spells);
         assert!(result.is_ok());
 
         let assembled_css = result.unwrap();
@@ -614,7 +541,7 @@ mod tests {
         let file_path = PathBuf::from("test_output.css");
         let css = vec![(file_path.clone(), ".d\\=grid{display:grid;}".to_string())];
 
-        let result = CSSBuilder::write_compiled_css(&css);
+        let result = CssBuilderFs::write_compiled_css(&css);
         assert!(result.is_ok());
 
         let written_content = std::fs::read_to_string(&file_path).unwrap();
@@ -628,10 +555,10 @@ mod tests {
         let config = create_test_config();
         let current_dir = Path::new(".");
         let optimizer = MockOptimizer;
-        let builder = CSSBuilder::new(&config, current_dir, &optimizer).unwrap();
+        let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
         let raw_css = ".d\\=grid{display:grid;}";
-        let result = builder.optimize_css(raw_css);
+        let result = builder.css_builder.optimize_css(raw_css);
         assert!(result.is_ok());
 
         let optimized_css = result.unwrap();
