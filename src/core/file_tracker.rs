@@ -1,7 +1,17 @@
+//! File change tracking and cleanup for generated CSS files.
+//!
+//! This module tracks which CSS files are generated during builds and cleans up
+//! old files that are no longer needed. Uses a lock file to maintain the state.
+//!
+//! # Example
+//! ```ignore
+//! FileTracker::track(cwd, &[path1, path2])?; // Tracks new files and removes old ones
+//! ```
+
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, fs, path::Path};
 
-use super::{Filesystem, GrimoireCSSError};
+use super::{Filesystem, GrimoireCssError};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct GrimoireLock {
@@ -14,7 +24,7 @@ impl FileTracker {
     pub fn track<'a>(
         cwd: &Path,
         builded_files: impl IntoIterator<Item = &'a Path>,
-    ) -> Result<(), GrimoireCSSError> {
+    ) -> Result<(), GrimoireCssError> {
         let prev_lock_path =
             Filesystem::get_or_create_grimoire_path(cwd)?.join("grimoire.lock.json");
 

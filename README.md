@@ -8,7 +8,7 @@
 
 ---
 
-**Grimoire CSS** is a comprehensive CSS system engine crafted in Rust, <br /> focusing on unmatched flexibility, reusable dynamic styling, and optimized performance for every environment.
+**Grimoire CSS** is a comprehensive CSS system engine crafted in Rust, <br /> focusing on unmatched flexibility, reusable dynamic styling, and optimized performance for every environment. Whether you need filesystem-based CSS generation or pure in-memory processing, Grimoire CSS adapts to your needs without compromising on performance or features.
 
 <br/>
 </div>
@@ -55,6 +55,7 @@
   - [A Streamlined CLI with a Strict and Straightforward API](#a-streamlined-cli-with-a-strict-and-straightforward-api)
   - [Easy Migration with Grimoire CSS Transmute (gcsst) Utility](#easy-migration-with-grimoire-css-transmute-gcsst-utility)
   - [Usage and Distribution](#usage-and-distribution)
+    - [Working Modes](#working-modes)
     - [Installation](#installation)
   - [The Arcane Circle](#the-arcane-circle)
 
@@ -553,15 +554,19 @@ With Grimoire CSS, you don’t just write styles - you take control of them. By 
 
 ## CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind
 
-Grimoire CSS takes optimization seriously. It generates only the CSS that’s actually used, and it monitors for duplicates right from the start, ensuring no unnecessary styles sneak through. This happens at the very **early stages** of generation, so by the time the process finishes, you’ve got a lean, clean stylesheet.
+Grimoire CSS takes optimization seriously. It generates only the CSS that's actually used, and it monitors for duplicates right from the start, ensuring no unnecessary styles sneak through. This happens at the very **early stages** of generation, so by the time the process finishes, you've got a lean, clean stylesheet.
 
-But it doesn’t stop there. Grimoire CSS integrates **LightningCSS** to take your code to the next level:
+But it doesn't stop there. Grimoire CSS integrates **LightningCSS** to take your code to the next level:
 
 - **Minification**: It shrinks your CSS without sacrificing readability or maintainability.
-- **Vendor Prefixes**: Automatically adds necessary prefixes for cross-browser compatibility, and even generates a `.browserlistrc` file using 'defaults' if you don’t already have one.
+- **Vendor Prefixes**: Automatically adds necessary prefixes for cross-browser compatibility based on your browserslist configuration:
+  - Uses `.browserslistrc` if it exists in your project
+  - Falls back to 'defaults' if no configuration is found
+  - Supports custom browserslist configuration in in-memory mode
 - **Deduplication**: Duplicate CSS? Not here. Grimoire keeps a close watch and ensures that only the needed CSS is generated.
+- **Modern CSS Features**: Automatically transforms modern CSS features for better browser compatibility
 
-All of this happens while preserving the **CSS cascade** - no unintentional overwrites, no broken styles. Just clean, optimized CSS that’s ready for any environment.
+All of this happens while preserving the **CSS cascade** - no unintentional overwrites, no broken styles. Just clean, optimized CSS that's ready for any environment.
 
 ## Performance-Driven by Rust
 
@@ -625,13 +630,47 @@ Explore the [gcsst](https://github.com/persevie/grimoire-css-transmute) reposito
 
 ## Usage and Distribution
 
-Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. It’s distributed in three ways to give you maximum flexibility:
+Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. It supports both filesystem-based and in-memory operations, making it perfect for traditional web development and dynamic runtime environments. It's distributed in three ways to give you maximum flexibility:
 
 - **Single Executable Application**: A standalone binary for those who prefer a direct, no-nonsense approach.
 - **NPM Library**: A Node.js-compatible interface, perfect for JavaScript and web developers.
   - gcssjs - bin/cli versions [repo](https://github.com/persevie/grimoire-css-js)
   - webpack/rollup/vite plugins [repo](https://github.com/persevie/grimoire-css-js/tree/main/plugins)
 - **Rust Crate**: For developers building in Rust or those who want to integrate Grimoire CSS at the system level.
+
+### Working Modes
+
+Grimoire CSS offers two primary modes of operation:
+
+1. **Filesystem Mode** (Traditional):
+
+   - Works with files on disk
+   - Reads input files and writes CSS output to specified locations
+   - Perfect for build-time CSS generation
+   - Uses the standard configuration file approach
+
+2. **In-Memory Mode**:
+   - Processes CSS entirely in memory
+   - No filesystem operations required
+   - Ideal for runtime CSS generation or serverless environments
+   - Accepts configuration and content directly through API
+   - Returns compiled CSS without writing to disk
+
+Example of using In-Memory mode in Rust:
+
+```rust
+use grimoire_css_lib::{core::ConfigInMemory, start_in_memory};
+
+let config = ConfigInMemory {
+    content: Some("your HTML/JS/any content here".to_string()),
+    // Optional: provide custom browserslist configuration
+    browserslist_content: Some("last 2 versions".to_string()),
+    // ... other configuration options
+};
+
+let result = start_in_memory(&config)?;
+// result contains Vec<CompiledCssInMemory> with your generated CSS
+```
 
 The core of Grimoire CSS is architected entirely in Rust, ensuring top-notch performance and scalability. The main repository compiles both into a standalone executable (SEA) and a Rust crate, meaning you can use it in different environments with ease.
 
@@ -641,10 +680,16 @@ The `grimoire-css-js` takes the core crate and wraps it into a Node.js-compatibl
 
 **Rust crate:**
 
-If you’re using Rust, simply add Grimoire CSS to your Cargo.toml, and follow the link for documentation about crate: [docs.rs](https://docs.rs/grimoire_css/1.0.0).
+If you’re using Rust, simply add Grimoire CSS to your Cargo.toml, and follow the link for documentation about crate: [docs.rs](https://docs.rs/grimoire_css).
 
 ```bash
 cargo install grimoire_css
+```
+
+or
+
+```bash
+cargo add grimoire_css
 ```
 
 **Single Executable Application (SEA):**

@@ -25,7 +25,9 @@
 //! parses the string and returns a `Result` containing either the parsed `Spell` or a `GrimoireCSSError`
 //! if the string format is invalid.
 
-use super::{Config, GrimoireCSSError};
+use std::collections::{HashMap, HashSet};
+
+use super::GrimoireCssError;
 
 #[derive(Eq, Hash, PartialEq, Debug, Clone)]
 pub struct Spell {
@@ -41,7 +43,11 @@ pub struct Spell {
 
 impl Spell {
     /// Example input: "md__{_>_p}hover:display=none"
-    pub fn new(raw_spell: &str, config: &Config) -> Result<Option<Self>, GrimoireCSSError> {
+    pub fn new(
+        raw_spell: &str,
+        shared_spells: &HashSet<String>,
+        scrolls: &Option<HashMap<String, Vec<String>>>,
+    ) -> Result<Option<Self>, GrimoireCssError> {
         let with_template = Self::check_for_template(raw_spell);
 
         let raw_spell = if with_template {
@@ -77,18 +83,20 @@ impl Spell {
                 scroll_spells: None,
             };
 
-            if let Some(raw_scroll_spells) = Self::check_raw_scroll_spells(&spell.component, config)
+            if let Some(raw_scroll_spells) =
+                Self::check_raw_scroll_spells(&spell.component, scrolls)
             {
                 spell.scroll_spells = Self::parse_scroll(
                     component,
                     raw_scroll_spells,
                     &spell.component_target,
-                    config,
+                    shared_spells,
+                    scrolls,
                 )?;
             }
 
             return Ok(Some(spell));
-        } else if let Some(raw_scroll_spells) = Self::check_raw_scroll_spells(rest, config) {
+        } else if let Some(raw_scroll_spells) = Self::check_raw_scroll_spells(rest, scrolls) {
             return Ok(Some(Spell {
                 raw_spell: raw_spell.to_string(),
                 component: rest.to_string(),
@@ -97,7 +105,13 @@ impl Spell {
                 area: area.to_string(),
                 focus: focus.to_string(),
                 with_template,
-                scroll_spells: Self::parse_scroll(rest, raw_scroll_spells, "", config)?,
+                scroll_spells: Self::parse_scroll(
+                    rest,
+                    raw_scroll_spells,
+                    "",
+                    shared_spells,
+                    scrolls,
+                )?,
             }));
         }
 
@@ -110,9 +124,9 @@ impl Spell {
 
     fn check_raw_scroll_spells<'a>(
         spell_component: &'a str,
-        config: &'a Config,
+        scrolls: &'a Option<HashMap<String, Vec<String>>>,
     ) -> Option<&'a Vec<String>> {
-        if let Some(scrolls) = &config.scrolls {
+        if let Some(scrolls) = scrolls {
             return scrolls.get(spell_component);
         };
 
@@ -123,8 +137,9 @@ impl Spell {
         scroll_name: &str,
         raw_scroll_spells: &[String],
         component_target: &str,
-        config: &Config,
-    ) -> Result<Option<Vec<Spell>>, GrimoireCSSError> {
+        shared_spells: &HashSet<String>,
+        scrolls: &Option<HashMap<String, Vec<String>>>,
+    ) -> Result<Option<Vec<Spell>>, GrimoireCssError> {
         if raw_scroll_spells.is_empty() {
             return Ok(None);
         }
@@ -150,18 +165,18 @@ impl Spell {
                     format!("={}", scroll_variables[count_of_used_variables]).as_str(),
                 );
 
-                if let Ok(Some(spell)) = Spell::new(&variabled_raw_spell, config) {
+                if let Ok(Some(spell)) = Spell::new(&variabled_raw_spell, shared_spells, scrolls) {
                     spells.push(spell);
                 }
 
                 count_of_used_variables += 1;
-            } else if let Ok(Some(spell)) = Spell::new(raw_spell, config) {
+            } else if let Ok(Some(spell)) = Spell::new(raw_spell, shared_spells, scrolls) {
                 spells.push(spell);
             }
         }
 
         if count_of_used_variables != count_of_variables {
-            return Err(GrimoireCSSError::InvalidInput(format!(
+            return Err(GrimoireCssError::InvalidInput(format!(
                 "Not all variables used in scroll '{}'. Expected {}, but used {}",
                 scroll_name, count_of_variables, count_of_used_variables,
             )));
@@ -176,13 +191,14 @@ impl Spell {
 
     pub fn generate_spells_from_classes(
         css_classes: Vec<String>,
-        config: &Config,
-    ) -> Result<Vec<Spell>, GrimoireCSSError> {
+        shared_spells: &HashSet<String>,
+        scrolls: &Option<HashMap<String, Vec<String>>>,
+    ) -> Result<Vec<Spell>, GrimoireCssError> {
         let mut spells = Vec::with_capacity(css_classes.len());
 
         for cs in css_classes {
-            if !config.shared_spells.contains(&cs) {
-                if let Some(spell) = Spell::new(&cs, config)? {
+            if !shared_spells.contains(&cs) {
+                if let Some(spell) = Spell::new(&cs, shared_spells, scrolls)? {
                     spells.push(spell);
                 }
             }

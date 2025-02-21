@@ -8,7 +8,7 @@
       "type": "string",
       "description": "Reference to the JSON schema",
       "format": "uri",
-      "default": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config-schema.json"
+      "default": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json"
     },
     "variables": {
       "type": "object",
@@ -54,7 +54,9 @@
       "description": "Optional flag indicating whether the GrimoireCSS configuration is locked"
     }
   },
-  "required": ["projects"],
+  "required": [
+    "projects"
+  ],
   "additionalProperties": false,
   "definitions": {
     "ScrollJSON": {
@@ -80,7 +82,10 @@
           }
         }
       },
-      "required": ["name", "spells"],
+      "required": [
+        "name",
+        "spells"
+      ],
       "additionalProperties": false
     },
     "ProjectJSON": {
@@ -101,15 +106,24 @@
           }
         },
         "outputDirPath": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Optional output directory path for the project's CSS"
         },
         "singleOutputFileName": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Optional file name for a single output file"
         }
       },
-      "required": ["projectName", "inputPaths"],
+      "required": [
+        "projectName",
+        "inputPaths"
+      ],
       "additionalProperties": false
     },
     "GrimoireConfigSharedJSON": {
@@ -135,7 +149,9 @@
           }
         }
       },
-      "required": ["outputPath"],
+      "required": [
+        "outputPath"
+      ],
       "additionalProperties": false
     },
     "GrimoireConfigCriticalJSON": {
@@ -165,7 +181,9 @@
           }
         }
       },
-      "required": ["fileToInlinePaths"],
+      "required": [
+        "fileToInlinePaths"
+      ],
       "additionalProperties": false
     },
     "CSSCustomPropertiesItemJSON": {
@@ -173,7 +191,10 @@
       "description": "Represents a custom CSS property item, including associated variables",
       "properties": {
         "element": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Optional DOM element associated with the CSS variables (e.g., `tag`, `class`, `id`, `:root`)"
         },
         "dataParam": {
@@ -194,7 +215,11 @@
           }
         }
       },
-      "required": ["dataParam", "dataValue", "cssVariables"],
+      "required": [
+        "dataParam",
+        "dataValue",
+        "cssVariables"
+      ],
       "additionalProperties": false
     }
   }

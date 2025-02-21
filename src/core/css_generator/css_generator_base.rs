@@ -18,13 +18,14 @@
 //! The module also includes internal helper functions to manage specific CSS-related tasks such as
 //! unit stripping, handling of regex patterns, and combining base CSS with media queries.
 
-mod color_functions;
-
 use crate::buffer::add_message;
+use crate::core::animations::ANIMATIONS;
+use crate::core::component::get_css_property;
+use crate::core::spell::Spell;
+use crate::core::GrimoireCssError;
 
-use super::animations::ANIMATIONS;
-use super::component::get_css_property;
-use super::{config::Config, spell::Spell, GrimoireCSSError};
+use super::color_functions;
+
 use color_functions::try_handle_color_function;
 use regex::Regex;
 use std::collections::HashMap;
@@ -34,8 +35,10 @@ type GeneratedCSS = (String, (String, String), Option<String>);
 
 type MRSRes = (String, [(String, String); 2]);
 
-pub struct CSSGenerator<'a> {
-    config: &'a Config,
+/// Core CSS generator that transforms spells into valid CSS.
+pub struct CssGenerator<'a> {
+    variables: &'a Option<Vec<(String, String)>>,
+    custom_animations: &'a HashMap<String, String>,
     base_css_regex: Regex,
     mrs_regex: Regex,
     unit_regex: Regex,
@@ -54,10 +57,13 @@ struct Media {
     value: Vec<String>,
 }
 
-impl<'a> CSSGenerator<'a> {
-    pub fn new(config: &'a Config) -> Result<Self, GrimoireCSSError> {
+impl<'a> CssGenerator<'a> {
+    pub fn new(
+        variables: &'a Option<Vec<(String, String)>>,
+        custom_animations: &'a HashMap<String, String>,
+    ) -> Result<Self, GrimoireCssError> {
         let base_css_regex = Regex::new(r"(\w+)\(([^)]*)\)").map_err(|_| {
-            GrimoireCSSError::Regex(regex::Error::Syntax("Invalid regex pattern".to_string()))
+            GrimoireCssError::Regex(regex::Error::Syntax("Invalid regex pattern".to_string()))
         })?;
         let mrs_regex = Regex::new(r"[a-zA-Z]+")?;
         let unit_regex = Regex::new(r"(\d+(\.\d+)?)")?;
@@ -65,7 +71,8 @@ impl<'a> CSSGenerator<'a> {
             Regex::new(r"(?m)(\.GRIMOIRE_CSS_ANIMATION\s*\{[^}]*\})").unwrap();
 
         Ok(Self {
-            config,
+            variables,
+            custom_animations,
             base_css_regex,
             mrs_regex,
             unit_regex,
@@ -85,7 +92,7 @@ impl<'a> CSSGenerator<'a> {
     /// * `Ok(Some(String, String))` 0: containing the generated CSS string if the spell's component is recognized; 1: css class name
     /// * `Ok(None)` if the spell's component is not recognized.
     /// * `Err(GrimoireCSSError)` if there is an error during CSS generation.
-    pub fn generate_css(&self, spell: &Spell) -> Result<Option<GeneratedCSS>, GrimoireCSSError> {
+    pub fn generate_css(&self, spell: &Spell) -> Result<Option<GeneratedCSS>, GrimoireCssError> {
         // generate css class name
         let css_class_name = self.generate_css_class_name(
             &spell.raw_spell,
@@ -107,7 +114,7 @@ impl<'a> CSSGenerator<'a> {
         match css_property {
             Some(css_property) => {
                 // adapt target
-                let adapted_target = self.adapt_targets(&spell.component_target, self.config)?;
+                let adapted_target = self.adapt_targets(&spell.component_target, self.variables)?;
                 // generate base css without any media queries (except for the mrs function)
                 let (base_css, additional_css) = self.generate_base_and_additional_css(
                     &adapted_target,
@@ -164,7 +171,7 @@ impl<'a> CSSGenerator<'a> {
         effects: &str,
         raw_spell_focus: &str,
         with_template: bool,
-    ) -> Result<(String, String), GrimoireCSSError> {
+    ) -> Result<(String, String), GrimoireCssError> {
         let spell_focus = raw_spell_focus.split('_').collect::<Vec<&str>>().join(" ");
         let mut escaped_class_name = self.escape_css_class_name(raw_spell)?;
 
@@ -199,7 +206,7 @@ impl<'a> CSSGenerator<'a> {
     ///
     /// * `Ok(String)` containing the escaped class name.
     /// * `Err(GrimoireCSSError)` if the input is invalid.
-    fn escape_css_class_name(&self, class_name: &str) -> Result<String, GrimoireCSSError> {
+    fn escape_css_class_name(&self, class_name: &str) -> Result<String, GrimoireCssError> {
         let escaped = class_name
             .chars()
             .map(|c| match c {
@@ -215,7 +222,7 @@ impl<'a> CSSGenerator<'a> {
             .collect::<String>();
 
         if escaped.is_empty() {
-            return Err(GrimoireCSSError::InvalidSpellFormat(class_name.to_string()));
+            return Err(GrimoireCssError::InvalidSpellFormat(class_name.to_string()));
         }
 
         Ok(escaped)
@@ -231,7 +238,7 @@ impl<'a> CSSGenerator<'a> {
     ///
     /// * `Ok(String)` containing the formatted effects string.
     /// * `Err(GrimoireCSSError)` if there is an error during effect generation.
-    fn generate_effect(effect: &str) -> Result<String, GrimoireCSSError> {
+    fn generate_effect(effect: &str) -> Result<String, GrimoireCssError> {
         Ok(effect.split(",").collect::<Vec<&str>>().join(":"))
     }
 
@@ -246,12 +253,16 @@ impl<'a> CSSGenerator<'a> {
     ///
     /// * `Ok(String)` containing the adapted target string.
     /// * `Err(GrimoireCSSError)` if there is an error during target adaptation.
-    fn adapt_targets(&self, target: &str, config: &Config) -> Result<String, GrimoireCSSError> {
+    fn adapt_targets(
+        &self,
+        target: &str,
+        variables: &Option<Vec<(String, String)>>,
+    ) -> Result<String, GrimoireCssError> {
         let mut result = String::new();
 
         let formatted_target = target.split('_').collect::<Vec<&str>>().join(" ");
 
-        let variables = config.variables.as_ref();
+        let variables = variables.as_ref();
         let mut replaced_target = formatted_target.clone();
 
         if let Some(v) = variables {
@@ -286,7 +297,7 @@ impl<'a> CSSGenerator<'a> {
         adapted_target: &str,
         css_class_name: &str,
         property: &str,
-    ) -> Result<(String, Option<String>), GrimoireCSSError> {
+    ) -> Result<(String, Option<String>), GrimoireCssError> {
         match property {
             "g-anim" => self.handle_g_anim(adapted_target, css_class_name),
             "animation" => self.handle_animation(adapted_target, css_class_name),
@@ -319,7 +330,7 @@ impl<'a> CSSGenerator<'a> {
         &self,
         adapted_target: &str,
         css_class_name: &str,
-    ) -> Result<(String, Option<String>), GrimoireCSSError> {
+    ) -> Result<(String, Option<String>), GrimoireCssError> {
         if let Some(animation) = ANIMATIONS.get(adapted_target) {
             let (keyframes, class) =
                 self.get_keyframe_class_from_animation(animation, adapted_target)?;
@@ -327,14 +338,14 @@ impl<'a> CSSGenerator<'a> {
             return Ok((base_css, Some(keyframes)));
         }
 
-        if let Some(animation) = self.config.custom_animations.get(adapted_target) {
+        if let Some(animation) = self.custom_animations.get(adapted_target) {
             let (keyframes, class) =
                 self.get_keyframe_class_from_animation(animation, adapted_target)?;
             let base_css = class.replace(".GRIMOIRE_CSS_ANIMATION", css_class_name);
             return Ok((base_css, Some(keyframes)));
         }
 
-        Err(GrimoireCSSError::InvalidSpellFormat(
+        Err(GrimoireCssError::InvalidSpellFormat(
             adapted_target.to_string(),
         ))
     }
@@ -357,7 +368,7 @@ impl<'a> CSSGenerator<'a> {
         &self,
         adapted_target: &str,
         css_class_name: &str,
-    ) -> Result<(String, Option<String>), GrimoireCSSError> {
+    ) -> Result<(String, Option<String>), GrimoireCssError> {
         let additional_css = self.get_additional_css(adapted_target)?;
         let base_css = format!("{}{{animation:{};}}", css_class_name, adapted_target);
         Ok((base_css, additional_css))
@@ -380,7 +391,7 @@ impl<'a> CSSGenerator<'a> {
         &self,
         adapted_target: &str,
         css_class_name: &str,
-    ) -> Result<(String, Option<String>), GrimoireCSSError> {
+    ) -> Result<(String, Option<String>), GrimoireCssError> {
         let additional_css = self.get_additional_css(adapted_target)?;
         let base_css = format!("{}{{animation-name:{};}}", css_class_name, adapted_target);
         Ok((base_css, additional_css))
@@ -405,7 +416,7 @@ impl<'a> CSSGenerator<'a> {
         adapted_target: &str,
         css_class_name: &str,
         property: &str,
-    ) -> Result<(String, Option<String>), GrimoireCSSError> {
+    ) -> Result<(String, Option<String>), GrimoireCssError> {
         let base_css = format!("{}{{{}:{};}}", css_class_name, property, adapted_target);
         let captures = self
             .base_css_regex
@@ -443,7 +454,7 @@ impl<'a> CSSGenerator<'a> {
     /// * `Ok(Some(String))` - The keyframes CSS if a matching animation is found.
     /// * `Ok(None)` - If no matching keyframes are found.
     /// * `Err(GrimoireCSSError)` - If an error occurs during processing.
-    fn get_additional_css(&self, adapted_target: &str) -> Result<Option<String>, GrimoireCSSError> {
+    fn get_additional_css(&self, adapted_target: &str) -> Result<Option<String>, GrimoireCssError> {
         if let Some(grimoire_animation_name) = Self::find_grimoire_animation_name(adapted_target) {
             if let Some(animation) = ANIMATIONS.get(grimoire_animation_name) {
                 let (keyframes, _) =
@@ -452,7 +463,7 @@ impl<'a> CSSGenerator<'a> {
             }
         }
 
-        if let Some(custom_animation) = self.config.custom_animations.get(adapted_target) {
+        if let Some(custom_animation) = self.custom_animations.get(adapted_target) {
             let (keyframes, _) =
                 self.get_keyframe_class_from_animation(custom_animation, adapted_target)?;
             return Ok(Some(keyframes));
@@ -481,7 +492,7 @@ impl<'a> CSSGenerator<'a> {
         captures: Vec<regex::Captures>,
         property: &str,
         css_class_name: &str,
-    ) -> Result<Option<(String, String)>, GrimoireCSSError> {
+    ) -> Result<Option<(String, String)>, GrimoireCssError> {
         let mut base = target.to_owned();
         let mut screen_sizes_state: HashSet<String> = HashSet::with_capacity(2);
         let mut calculations_base_count = 0;
@@ -610,7 +621,7 @@ impl<'a> CSSGenerator<'a> {
         &self,
         args: &str,
         screen_sizes_state: &mut HashSet<String>,
-    ) -> Result<Option<MRSRes>, GrimoireCSSError> {
+    ) -> Result<Option<MRSRes>, GrimoireCssError> {
         let mut parts = args.split(' ');
 
         let min_size = parts.next().unwrap_or("0px");
@@ -631,7 +642,7 @@ impl<'a> CSSGenerator<'a> {
     ///
     /// * `Ok(String)` containing the CSS clamp() function with calculated values.
     /// * `Err(GrimoireCSSError)` if there is an error during fluid size handling.
-    fn handle_mfs(&self, args: &str) -> Result<String, GrimoireCSSError> {
+    fn handle_mfs(&self, args: &str) -> Result<String, GrimoireCssError> {
         let mut parts = args.split(' ');
 
         let min_size = parts.next().unwrap_or("0px");
@@ -664,7 +675,7 @@ impl<'a> CSSGenerator<'a> {
         min_vw: Option<&str>,
         max_vw: Option<&str>,
         screen_sizes_state: &mut HashSet<String>,
-    ) -> Result<Option<MRSRes>, GrimoireCSSError> {
+    ) -> Result<Option<MRSRes>, GrimoireCssError> {
         let min_size_value: u32 = self.strip_unit(min_size)?;
         let max_size_value: u32 = self.strip_unit(max_size)?;
         let min_vw_value: u32 = match min_vw {
@@ -698,11 +709,11 @@ impl<'a> CSSGenerator<'a> {
             && (screen_sizes_state.get(&full_min_vw).is_none()
                 || screen_sizes_state.get(&full_max_vw).is_none())
         {
-            return Err(GrimoireCSSError::InvalidInput(
+            return Err(GrimoireCssError::InvalidInput(
                 "Different screen sizes are not allowed in one rule".to_string(),
             ));
         } else if screen_sizes_state.len() != 2 {
-            return Err(GrimoireCSSError::InvalidInput(format!(
+            return Err(GrimoireCssError::InvalidInput(format!(
                 "Unexpected screen size state: {:?}",
                 screen_sizes_state
             )));
@@ -755,7 +766,7 @@ impl<'a> CSSGenerator<'a> {
         max_size: &str,
         min_vw: Option<&str>,
         max_vw: Option<&str>,
-    ) -> Result<String, GrimoireCSSError> {
+    ) -> Result<String, GrimoireCssError> {
         let min_size_value: f64 = self.strip_unit(min_size)? as f64;
         let max_size_value: f64 = self.strip_unit(max_size)? as f64;
         let min_vw_value: f64 = match min_vw {
@@ -771,13 +782,13 @@ impl<'a> CSSGenerator<'a> {
         let max_size_unit = self.mrs_regex.find(max_size).map_or("", |m| m.as_str());
 
         if min_size_unit != max_size_unit {
-            return Err(GrimoireCSSError::InvalidInput(
+            return Err(GrimoireCssError::InvalidInput(
                 "Units must be consistent".to_string(),
             ));
         }
 
         if min_vw_value == max_vw_value {
-            return Err(GrimoireCSSError::InvalidInput(
+            return Err(GrimoireCssError::InvalidInput(
                 "Viewport widths must differ".to_string(),
             ));
         }
@@ -803,16 +814,16 @@ impl<'a> CSSGenerator<'a> {
     ///
     /// * `Ok(u32)` containing the numeric part of the value.
     /// * `Err(GrimoireCSSError)` if there is an error during unit stripping.
-    fn strip_unit(&self, value: &str) -> Result<u32, GrimoireCSSError> {
+    fn strip_unit(&self, value: &str) -> Result<u32, GrimoireCssError> {
         if let Some(captures) = self.unit_regex.captures(value) {
             captures[1].parse::<u32>().map_err(|_| {
-                GrimoireCSSError::InvalidInput(format!(
+                GrimoireCssError::InvalidInput(format!(
                     "Failed to parse unit from value: {}",
                     value
                 ))
             })
         } else {
-            Err(GrimoireCSSError::InvalidInput(format!(
+            Err(GrimoireCssError::InvalidInput(format!(
                 "No numeric value found in: {}",
                 value
             )))
@@ -838,7 +849,7 @@ impl<'a> CSSGenerator<'a> {
         &self,
         animation: &str,
         animation_name: &str,
-    ) -> Result<(String, String), GrimoireCSSError> {
+    ) -> Result<(String, String), GrimoireCssError> {
         let mut keyframes = animation.to_string();
 
         if let Some(class_block_match) = self.animation_block_regex.find(&keyframes) {
@@ -847,7 +858,7 @@ impl<'a> CSSGenerator<'a> {
 
             Ok((keyframes.trim().to_string(), class_block))
         } else {
-            Err(GrimoireCSSError::InvalidInput(format!(
+            Err(GrimoireCssError::InvalidInput(format!(
                 "No keyframes found in animation: {}",
                 animation_name
             )))
@@ -856,12 +867,12 @@ impl<'a> CSSGenerator<'a> {
 }
 #[cfg(test)]
 mod tests {
-    use crate::core::{css_generator::CSSGenerator, spell::Spell, Config, GrimoireCSSError};
+    use crate::core::{css_generator::CssGenerator, spell::Spell, ConfigFs, GrimoireCssError};
 
     #[test]
     fn test_escape_css_class_name() {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let class_name = "g!font-size=mrs(14px_16px_380px_800px);";
         let result = generator.escape_css_class_name(class_name);
@@ -877,8 +888,8 @@ mod tests {
 
     #[test]
     fn test_generate_css_class_name() {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let raw_spell = "md__{_>_p}hover:h=100px";
         let effects = "hover".to_string();
@@ -896,9 +907,9 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_base_and_additional_css_g_anim() -> Result<(), GrimoireCSSError> {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+    fn test_generate_base_and_additional_css_g_anim() -> Result<(), GrimoireCssError> {
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let raw_spell = "md__{_>_p}hover:g-anim=bounce-in";
         let effects = "hover".to_string();
@@ -932,9 +943,9 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_base_and_additional_css_anim_n() -> Result<(), GrimoireCSSError> {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+    fn test_generate_base_and_additional_css_anim_n() -> Result<(), GrimoireCssError> {
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let raw_spell = "md__{_>_p}hover:anim-n=swing";
         let effects = "hover".to_string();
@@ -969,9 +980,9 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_base_and_additional_css_animation() -> Result<(), GrimoireCSSError> {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+    fn test_generate_base_and_additional_css_animation() -> Result<(), GrimoireCssError> {
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let raw_spell = "anim=3s_linear_wobble";
         let effects = String::new();
@@ -1003,9 +1014,9 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_base_and_additional_css_regular_spell() -> Result<(), GrimoireCSSError> {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+    fn test_generate_base_and_additional_css_regular_spell() -> Result<(), GrimoireCssError> {
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let raw_spell = "d=grid";
         let effects = String::new();
@@ -1033,9 +1044,9 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_base_and_additional_css_templated_spell() -> Result<(), GrimoireCSSError> {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+    fn test_generate_base_and_additional_css_templated_spell() -> Result<(), GrimoireCssError> {
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let raw_spell = "d=grid";
         let effects = String::new();
@@ -1064,8 +1075,8 @@ mod tests {
 
     #[test]
     fn test_handle_generic_css() {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let adapted_target = "100px";
         let css_class_name = ".test-class";
@@ -1082,8 +1093,8 @@ mod tests {
 
     #[test]
     fn test_wrap_base_css_with_media_query() {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let base_css = ".test-class{width:100px;}";
 
@@ -1097,8 +1108,8 @@ mod tests {
 
     #[test]
     fn test_generate_css() {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let spell = Spell {
             raw_spell: "bgc=pink".to_string(),
@@ -1154,8 +1165,8 @@ mod tests {
 
     #[test]
     fn test_make_fluent_size() {
-        let config = Config::default();
-        let generator = CSSGenerator::new(&config).unwrap();
+        let config = ConfigFs::default();
+        let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         // regular case
         let result = generator.make_fluid_size("14px", "16px", Some("380px"), Some("800px"));
