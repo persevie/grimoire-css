@@ -64,7 +64,7 @@ impl Parser {
             };
 
             for class in classes {
-                let should_include = predicate.as_mut().map_or(true, |p| p(&class));
+                let should_include = predicate.as_mut().is_none_or(|p| p(&class));
 
                 if should_include && !seen_class_names.contains(&class) {
                     seen_class_names.insert(class.clone());
