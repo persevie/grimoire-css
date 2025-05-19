@@ -16,48 +16,54 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Welcome to the Circle: Unlock the Magic of CSS with Grimoire](#welcome-to-the-circle-unlock-the-magic-of-css-with-grimoire)
-  - [A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning](#a-spell-system-that-unleashes-the-full-power-of-css---with-no-limits-no-extra-learning)
-    - [Recap](#recap)
-  - [Scroll: Crafting Reusable, Dynamic CSS with Infinite Flexibility](#scroll-crafting-reusable-dynamic-css-with-infinite-flexibility)
-    - [Inheritance with `Scrolls`: The Power of Composition](#inheritance-with-scrolls-the-power-of-composition)
-    - [Why Scrolls Matter: Unlimited Possibilities](#why-scrolls-matter-unlimited-possibilities)
-  - [Projects: Organizing and Compiling Your CSS with Flexibility and Control](#projects-organizing-and-compiling-your-css-with-flexibility-and-control)
-    - [Projects on Your Terms](#projects-on-your-terms)
-  - [Shared and Critical CSS: Optimizing Your Styles for Maximum Efficiency](#shared-and-critical-css-optimizing-your-styles-for-maximum-efficiency)
-    - [Shared CSS: One File, Multiple Uses](#shared-css-one-file-multiple-uses)
-    - [Critical CSS: Inline for Faster Rendering](#critical-css-inline-for-faster-rendering)
-    - [How It Works](#how-it-works)
-    - [Defining Custom Properties](#defining-custom-properties)
-    - [Real-World Example](#real-world-example)
-      - [Organizing and Compiling Your CSS with Flexibility and Control](#organizing-and-compiling-your-css-with-flexibility-and-control)
-    - [Efficiency at Its Core](#efficiency-at-its-core)
-  - [Predefined Scrolls and Built-In Animations: Flexibility at Your Fingertips](#predefined-scrolls-and-built-in-animations-flexibility-at-your-fingertips)
-    - [Built-In Animations: Ready When You Are](#built-in-animations-ready-when-you-are)
-    - [Create Your Own Animations](#create-your-own-animations)
-  - [Variables and Built-in Functions: Total Control Over Styles and Sizes](#variables-and-built-in-functions-total-control-over-styles-and-sizes)
-    - [How to Use Variables](#how-to-use-variables)
-      - [Defining a Variable](#defining-a-variable)
-      - [Using the Variable](#using-the-variable)
-    - [Built-in Areas: Responsive Design, Simplified](#built-in-areas-responsive-design-simplified)
-    - [Adaptive Size Functions: `mrs` and `mfs`](#adaptive-size-functions-mrs-and-mfs)
-      - [`mrs`: Make Responsive Size](#mrs-make-responsive-size)
-        - [Example Usage of `mrs`](#example-usage-of-mrs)
-      - [`mfs`: Make Fluid Size – Creates fully fluid sizes without media queries for seamless scaling](#mfs-make-fluid-size--creates-fully-fluid-sizes-without-media-queries-for-seamless-scaling)
-        - [Example Usage of `mfs`](#example-usage-of-mfs)
-    - [Color Manipulation](#color-manipulation)
-      - [Example Usage](#example-usage)
+- [Why Grimoire CSS](#why-grimoire-css)
+- [A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning](#a-spell-system-that-unleashes-the-full-power-of-css---with-no-limits-no-extra-learning)
+  - [Recap](#recap)
+- [Scroll: Crafting Reusable, Dynamic CSS with Infinite Flexibility](#scroll-crafting-reusable-dynamic-css-with-infinite-flexibility)
+  - [Inheritance with `Scrolls`: The Power of Composition](#inheritance-with-scrolls-the-power-of-composition)
+  - [Why Scrolls Matter: Unlimited Possibilities](#why-scrolls-matter-unlimited-possibilities)
+- [Variables and Built-in Functions: Total Control Over Styles and Sizes](#variables-and-built-in-functions-total-control-over-styles-and-sizes)
+  - [How to Use Variables](#how-to-use-variables)
+    - [Defining a Variable](#defining-a-variable)
+    - [Using the Variable](#using-the-variable)
+  - [Built-in Areas: Responsive Design, Simplified](#built-in-areas-responsive-design-simplified)
+  - [Adaptive Size Functions: `mrs` and `mfs`](#adaptive-size-functions-mrs-and-mfs)
+    - [`mrs`: Make Responsive Size](#mrs-make-responsive-size)
+      - [Example Usage of `mrs`](#example-usage-of-mrs)
+    - [`mfs`: Make Fluid Size – Creates fully fluid sizes without media queries for seamless scaling](#mfs-make-fluid-size--creates-fully-fluid-sizes-without-media-queries-for-seamless-scaling)
+      - [Example Usage of `mfs`](#example-usage-of-mfs)
     - [The Power of Grimoire’s Variables and Functions](#the-power-of-grimoires-variables-and-functions)
-  - [CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind](#css-optimization-minification-vendor-prefixes-and-deduplication---all-with-css-cascade-in-mind)
-  - [Performance-Driven by Rust](#performance-driven-by-rust)
-  - [Language-Agnostic Parser: Extracting Spells from Any File, Any Format](#language-agnostic-parser-extracting-spells-from-any-file-any-format)
-    - [Spells in Plain Text with Template Syntax](#spells-in-plain-text-with-template-syntax)
-  - [A Streamlined CLI with a Strict and Straightforward API](#a-streamlined-cli-with-a-strict-and-straightforward-api)
-  - [Easy Migration with Grimoire CSS Transmute (gcsst) Utility](#easy-migration-with-grimoire-css-transmute-gcsst-utility)
-  - [Usage and Distribution](#usage-and-distribution)
-    - [Working Modes](#working-modes)
-    - [Installation](#installation)
-  - [The Arcane Circle](#the-arcane-circle)
+- [Predefined Scrolls and Built-In Animations: Flexibility at Your Fingertips](#predefined-scrolls-and-built-in-animations-flexibility-at-your-fingertips)
+  - [Built-In Animations: Ready When You Are](#built-in-animations-ready-when-you-are)
+  - [Create Your Own Animations](#create-your-own-animations)
+- [External Scrolls & Variables](#external-scrolls--variables)
+- [Language-Agnostic Parser: Extracting Spells from Any File, Any Format](#language-agnostic-parser-extracting-spells-from-any-file-any-format)
+  - [Spells in Plain Text with Template Syntax](#spells-in-plain-text-with-template-syntax)
+- [CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind](#css-optimization-minification-vendor-prefixes-and-deduplication---all-with-css-cascade-in-mind)
+- [Professional-Grade Color Toolkit](#professional-grade-color-toolkit)
+  - [Example Usage](#example-usage)
+- [Projects](#projects)
+  - [Projects on Your Terms](#projects-on-your-terms)
+  - [Locking](#locking)
+- [Shared and Critical CSS: Optimizing Your Styles for Maximum Efficiency](#shared-and-critical-css-optimizing-your-styles-for-maximum-efficiency)
+  - [Shared CSS: One File, Multiple Uses](#shared-css-one-file-multiple-uses)
+  - [Critical CSS: Inline for Faster Rendering](#critical-css-inline-for-faster-rendering)
+  - [How It Works](#how-it-works)
+  - [Defining Custom Properties](#defining-custom-properties)
+  - [Real-World Example](#real-world-example)
+- [Performance By Design: Built for Speed and Efficiency](#performance-by-design-built-for-speed-and-efficiency)
+  - [Benchmark](#benchmark)
+    - [Overview](#overview)
+      - [Measured Metrics](#measured-metrics)
+      - [Results](#results)
+- [A Streamlined CLI with a Strict and Straightforward API](#a-streamlined-cli-with-a-strict-and-straightforward-api)
+- [Easy Migration with Transmutator](#easy-migration-with-transmutator)
+- [Usage and Distribution](#usage-and-distribution)
+  - [Working Modes](#working-modes)
+  - [Installation](#installation)
+- [Playground](#playground)
+- [The Arcane Circle](#the-arcane-circle)
+  - [The First Member](#the-first-member)
 - [Additional Resources](#additional-resources)
   - [Release Information](#release-information)
     - [Release Notes](#release-notes)
@@ -65,92 +71,106 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-> Demo projects and recipes are on the way. Stay tuned for updates!
+---
 
-# Welcome to the Circle: Unlock the Magic of CSS with Grimoire
+# Why Grimoire CSS
 
-Grimoire CSS is more than just a framework - it’s your entry into a circle of developers who wield the true power of CSS. By mastering Spells and Scrolls, you’ll craft styles with precision, control, and a touch of magic. Whether you’re building responsive interfaces or optimizing for performance, Grimoire empowers you to write CSS in a way that feels both natural and powerful. Welcome to the circle, where the limits of traditional styling fade away, and the full potential of CSS is revealed.
+**Grimoire CSS** is a comprehensive CSS system engine crafted in Rust, <br /> focusing on unmatched flexibility, reusable dynamic styling, and optimized performance for every environment. Whether you need filesystem-based CSS generation or pure in-memory processing, Grimoire CSS adapts to your needs without compromising on performance or features.
 
-## A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning
+1. **True CSS System Engine.** Grimoire CSS is a one-of-a-kind CSS System Engine - exceptionally powerful and endlessly flexible. It doesn't rely on bundlers, optimizers, deduplicators, preprocessors, or postprocessors. Grimoire CSS handles everything itself, internally and efficiently.
+2. **Performance.** Despite its vast capabilities, every part of Grimoire CSS is optimized for maximum efficiency. It outperforms even specialized tools. Compared to TailwindCSS v4.x, it generates CSS **5× faster** and **28× more efficiently**, even considering that Grimoire CSS actually generates real CSS.
+3. **Universality.** Its native parser handles any source file without plugins or configuration, running in both filesystem-based and in-memory modes. Available as a standalone binary, a Rust crate, and an npm library.
+4. **Intelligent CSS Generation.** Grimoire CSS respects the CSS cascade, optimizes your styles, applies necessary prefixes, and ensures full browser compatibility via .browserslistrc, both in file system and in-memory modes.
+5. **The Unique Spell System.** The Spell system powers Grimoire's expressiveness and flexibility. It allows you to define any CSS rule, and build reusable Scrolls that unlock limitless styling possibilities.
+6. **Professional-Grade Color Toolkit.** A powerful module compliant with CSS Color Module Level 4, enabling precise and high-performance color manipulations. Available in the public API - Grimoire CSS doubles as a standalone color toolkit.
+7. **Simple Yet Powerful Configuration.** Grimoire CSS uses a single JSON configuration file per repository. The format is simple yet powerful. Whether managing a monorepo with hundreds of projects or configuring each one individually - variables, scrolls, generation modes, shared and critical CSS, external files - everything is supported out of the box.
+8. **Seamless Migration with Transmutator.** The Transmutator CLI or Web UI makes it easy to convert any CSS to Spell format and migrate entire projects to Grimoire CSS - without changing your component class names. Migrate gradually, while immediately benefiting from the system's power.
+9. **Rich Ecosystem.** Transmutator, online playground, file watcher, bundler plugins - and that's just the beginning.
+10. **The Arcane Circle.** A dedicated community platform where you can share configurations, scrolls, variables, components, and UI kits. Stay updated on news, best practices, and community contributions through this collaborative space.
+11. **Your Magical Companion.** Meet Grimm - `ヽ(• ε •)ﾉ`. He doesn't have a portrait yet, only ASCII, but he's here to keep you informed with progress updates, errors, and Grimoire CSS system activity - as well as news and events.
+
+# A Spell System That Unleashes the Full Power of CSS - With No Limits, No Extra Learning
 
 At the heart of Grimoire CSS lies the `Spell`, the foundational entity of the system. `Spell` takes a different approach from traditional utility classes, like those you’d find in Tailwind. While utilities in Tailwind feel like slightly enhanced Bootstrap classes, Grimoire CSS takes things to a new level. In Tailwind, you’re expected to memorize arbitrary names like `rounded-md` for `border-radius: 0.375rem` - which doesn’t even make things look rounded. And then there’s `tracking-tight` for `letter-spacing: -0.025em`. How are you supposed to know that’s related to letter spacing?
 
-Grimoire CSS cuts through that confusion by introducing `Spell` - an approach that is both simple and infinitely flexible. At its core, a `Spell` is just a CSS declaration, written in a format everyone understands: `property=value`. For example, `border-radius: 0.375rem` in Grimoire CSS becomes `border-radius=0.375rem`. If you prefer something shorter, `br=0.375rem` works too, or even `br=.375rem` (yes, Grimoire CSS respects CSS's own shorthand capabilities). Unlike pre-baked utility classes, `Spells` follow the natural structure of CSS: `property: value` becomes `component=target`.
+Grimoire CSS cuts through that confusion by introducing `Spell` - an approach that is both simple and infinitely flexible. At its core, a `Spell` is just a CSS declaration, written in a format everyone understands: `property=value`. For example, `border-radius: 0.375rem` in Grimoire CSS becomes `border-radius=0.375rem`. If you prefer something shorter, `bd-rad=0.375rem` works too, or even `bd-rad=.375rem` (yes, Grimoire CSS respects CSS's own shorthand capabilities). Unlike pre-baked utility classes, `Spells` follow the natural structure of CSS: `property: value` becomes `component=target`.
+If you don’t know any shorthands yet, you can always write out full components (each full component directly maps to its corresponding CSS property) and then run the `shorten` command to convert all full components in your files (that defined in config) into their shorthand forms. Easy as it should be!
 
 This isn't just another syntax. It’s the whole system reimagined. You’re free to write any value in the target, whether it's custom units, functions, or even complex animations. Everything CSS supports is fair game, and all you need to do is escape spaces with underscores (`_`). That’s it. Of course, we didn't stop at the basics. Spells also introduce **optional enhancements**: `area`, `focus`, and `effects`, which give you deeper control over media queries, pseudo-classes, attributes, and more.
 
-1. **`area`**: You know those media queries that clutter your CSS? In Grimoire CSS, they’re handled elegantly by `area`. The `area` defines conditions like screen size and sits at the start of your spell, separated from the rest by double underscores (`__`). For example, `(width>=768px)__br=0.375rem` will activate the rule only for screens wider than 768px. Prefer a shorthand? You can use built-in names like `md__br=0.375rem`. It’s still valid CSS, but with all the magic of `Spell`.
+- **`area`**: The `area` defines conditions like screen size and sits at the start of your spell, separated from the rest by double underscores (`__`). For example, `(width>=768px)__bd-rad=0.375rem` will activate the rule only for screens wider than 768px. Prefer a shorthand? You can use built-in names like `md__bd-rad=0.375rem`. It’s still valid CSS, but with all the magic of `Spell`.
 
-2. **`focus`**: Sometimes, you need more than a class or a media query. `focus` lets you wrap anything - attributes, pseudo-classes, or nested selectors - inside your spell. Placed as the second part of the spell (or first if there's no `area`), it’s enclosed in curly brackets. For example: `{[hidden]_>_p:hover:active}color=red` becomes this CSS:
+- **`focus`**: Sometimes, you need more than a class or a media query. `focus` lets you wrap anything - attributes, pseudo-classes, or nested selectors - inside your spell. Placed as the second part of the spell (or first if there's no `area`), it’s enclosed in curly brackets. For example: `{[hidden]_>_p:hover:active}color=red` becomes this CSS:
 
-   ```css
-   ... [hidden] > p: hover:active {
-     color: red;
-   }
-   ```
+  ```css
+  ... [hidden] > p:hover:active {
+    color: red;
+  }
+  ```
 
-   It’s not just readable - it’s intuitive. What you see is exactly what you get.
+  It’s not just readable - it’s intuitive. What you see is exactly what you get.
 
-3. **`effects`**: Sometimes, you need quick pseudo-classes without the full complexity of `focus`. That’s where `effects` come in. Just add pseudo-classes directly in the spell like this: `hover,active:color=blue`. With `effect`, you keep it compact without losing any power. Simply separate it from the `component` and `target` with a colon (`:`).
+- **`effects`**: Sometimes, you need quick pseudo-classes without the full complexity of `focus`. That’s where `effects` come in. Just add pseudo-classes directly in the spell like this: `hover,active:color=blue`. With `effect`, you keep it compact without losing any power. Simply separate it from the `component` and `target` with a colon (`:`).
 
-The entire `Spell` system is built on clarity and explicitness. There are no magical, arbitrary strings for targets like you find in other systems. And we don’t compromise on clarity for the sake of brevity. Targets are full, valid CSS values - because that’s how it should be. Components mirror actual CSS properties, but they can be shortened to your liking. In this way, Grimoire CSS is both a **CSS declaration** and a **methodology**. It’s so powerful because every `Spell` is valid CSS - there’s no abstraction that gets in the way of what you need to achieve.
+The entire `Spell` system is built on clarity and explicitness. There are no magical, arbitrary strings for targets like you find in other systems. And we don’t compromise on clarity for the sake of brevity. Targets are full, valid CSS values - because that’s how it should be. Components mirror actual CSS properties, but they can be shortened if you want. In this way, Grimoire CSS is both a **CSS declaration** and a **methodology**. It’s so powerful because every `Spell` is valid CSS - there’s no abstraction that gets in the way of what you need to achieve.
 
-So, why call it a `Spell`? Because, like magic, it’s composed of multiple elements: `area`, `focus`, `effect`, `component`, and `target`. And each of these pieces works together to create something far greater than the sum of its parts. With Grimoire CSS, you’re not just writing styles - you’re casting spells. The name ‘Grimoire’ comes from ancient magical texts. Just as those books hold the knowledge to perform spells, Grimoire CSS provides you the knowledge and tools to perform CSS magic - without relying on pre-baked solutions. You’re in full control.
+So, why call it a `Spell`? Because, like magic, it’s composed of multiple elements: `area`, `focus`, `effect`, `component`, and `target`. And each of these pieces works together to create something far greater than the sum of its parts. With Grimoire CSS, you’re not just writing styles - you’re casting spells. The name **Grimoire** comes from ancient magical texts. Just as those books hold the knowledge to perform spells, Grimoire CSS provides you the knowledge and tools to perform CSS magic - without relying on pre-baked solutions. You’re in full control.
 
-### Recap
+## Recap
 
 - The structure of a spell follows this format: `area__{focus}component=target` or `area__effect:component=target`.
-- Use dashes (`-`) to separate words and underscores (`_`) to escape spaces.
+- Use dashes (`-`) to separate words.
+- Use underscores (`_`) to escape spaces.
 
-## Scroll: Crafting Reusable, Dynamic CSS with Infinite Flexibility
+# Scroll: Crafting Reusable, Dynamic CSS with Infinite Flexibility
 
 A `Scroll` is like a `Spell`, but with one crucial difference - it’s something you build from scratch. Think of it as a customized collection of styles, bundled into one reusable class. Sometimes, you need to combine multiple styles into a single class for consistency, reusability, or just to make your life easier. With `Scroll`, you can do just that. Combine spells, give your new creation a name, and you’ve got a `Scroll` ready to use across your projects.
 
-And here's the best part: everything you love about `Spells` works seamlessly with `Scrolls` too - `area`, `focus`, `effect`, and even `target`. But there’s even more: when you define a `Scroll`, you can introduce **variables** to make your styles dynamic. Just use the `$` symbol, and the `target` becomes a placeholder, waiting for the actual value to be filled in. Want to create a button class that accepts variable values? No problem. Here’s an example:
+And here's the best part: everything you love about `Spells` works seamlessly with `Scrolls` too - `area`, `focus`, `effect`, and even `target`. But there's even more: when you define a `Scroll`, you can introduce **variables** to make your styles dynamic. Just use the `$` symbol, and the `target` becomes a placeholder, waiting for the actual value to be filled in. Want to create a button class that accepts variable values? No problem. Here’s an example:
 
 ```json
 "scrolls": [
   {
     "name": "btn",
     "spells": [
-      "p=6px",
-      "br=$",
-      "ac=center",
-      "bg=none",
-      "bgc=$",
-      "cur=pointer",
-      "hover:bgc=$",
-      "active:bgc=$",
-      "xl__min-w=32px",
-      "xl__p=10px",
-      "xl__hover:fw=bold"
+      "padding=6px",
+      "border-radius=$",
+      "accent-color=center",
+      "background=none",
+      "background-color=$",
+      "cursor=pointer",
+      "hover:background-color=$",
+      "active:background-color=$",
+      "xl__min-width=32px",
+      "xl__padding=10px",
+      "xl__hover:font-weight=bold"
     ]
   }
 ]
 ```
 
-This `btn` scroll expects four target values, and if you pass fewer or more, Grimoire CSS will kindly let you know. The targets are applied in order, giving you incredible flexibility. But we’re not done yet.
+This `btn` scroll expects four target values, and if you pass fewer or more, Grimoire CSS will kindly let you know. The targets are applied in order, giving you incredible flexibility. But we're not done yet.
 
-### Inheritance with `Scrolls`: The Power of Composition
+## Inheritance with `Scrolls`: The Power of Composition
 
-One of the most exciting aspects of `Scrolls` is **inheritance**. Yes, you can extend a `Scroll` with another `Scroll`. Combine and compose them endlessly to create complex, reusable styles. Let’s take a look:
+One of the most exciting aspects of `Scrolls` is **inheritance**. Yes, you can extend a `Scroll` with another `Scroll`. Combine and compose them endlessly to create complex, reusable styles. Let's take a look:
 
 ```json
 "scrolls": [
   {
     "name": "btn",
     "spells": [
-      "p=6px",
-      "br=$",
-      "ac=center",
-      "bg=none",
-      "bgc=$",
-      "cur=pointer",
-      "hover:bgc=$",
-      "active:bgc=$",
-      "xl__min-w=32px",
-      "xl__p=10px",
-      "xl__hover:fw=bold"
+      "padding=6px",
+      "border-radius=$",
+      "accent-color=center",
+      "background=none",
+      "background-color=$",
+      "cursor=pointer",
+      "hover:background-color=$",
+      "active:background-color=$",
+      "xl__min-width=32px",
+      "xl__padding=10px",
+      "xl__hover:font-weight=bold"
     ]
   },
   {
@@ -160,8 +180,8 @@ One of the most exciting aspects of `Scrolls` is **inheritance**. Yes, you can e
     ],
     "spells": [
       "hover:g-anim=vibrate-3",
-      "anim-ic=infinite",
-      "c=white"
+      "animation-iteration-count=infinite",
+      "color=white"
     ]
   },
   {
@@ -176,8 +196,8 @@ One of the most exciting aspects of `Scrolls` is **inheritance**. Yes, you can e
     "name": "round",
     "spells": [
         "border-radius=999999px",
-        "h=$",
-        "w=$"
+        "height=$",
+        "weight=$"
     ]
   }
 ]
@@ -187,13 +207,251 @@ In this example, `danger-btn` extends `btn`, meaning it inherits all of `btn`'s 
 
 But the fun doesn’t stop there - `danger-btn-rnd` extends both `danger-btn` and `round`. This means that `danger-btn-rnd.spells` equals `btn.spells` + `danger-btn.spells` + `round.spells`, combined in the correct order. And yes, the order matters. This layered inheritance allows you to build complex style structures effortlessly.
 
-### Why Scrolls Matter: Unlimited Possibilities
+## Why Scrolls Matter: Unlimited Possibilities
 
 The real magic of `Scrolls` lies in their **unlimited possibilities**. You can chain styles together, extend them endlessly, and define variables as placeholders to create flexible, reusable patterns across your entire project. With `Scrolls`, Grimoire CSS goes far beyond being Yet Another CSS Framework. In fact, you could even recreate the entire structure of Tailwind or Bootstrap using nothing but the flexibility of Spells and Scrolls.
 
 It’s pure, beautiful madness - without limits.
 
-## Projects: Organizing and Compiling Your CSS with Flexibility and Control
+# Variables and Built-in Functions: Total Control Over Styles and Sizes
+
+Grimoire CSS allows you to define your own variables within its settings, making your styling even more dynamic and customizable. Unlike custom properties, these variables don’t compile and remain in your settings and are only compiled when used - keeping your CSS clean and efficient.
+
+## How to Use Variables
+
+You can define **any value** as a variable - font sizes, colors, dimensions, anything. To reference them in your styles, just add the `$` symbol before the variable name (you’ll remember this from the `Scroll` section). Here’s how you define and use a variable:
+
+### Defining a Variable
+
+```json
+{
+  "variables": {
+    "hero-fs": "42px"
+  }
+}
+```
+
+### Using the Variable
+
+```html
+<h1 class="font-size=$hero-fs">Hero text</h1>
+```
+
+In this example, the `hero-fs` variable holds the value `42px`, which is then applied to the `font-size` of the `<h1>` element. Variables in Grimoire CSS offer a simple and effective way to maintain consistency across your styles, while keeping your code flexible and DRY.
+
+## Built-in Areas: Responsive Design, Simplified
+
+Grimoire CSS follows a mobile-first approach and comes with **built-in responsive areas**, including `sm`, `md`, `lg`, `xl`, and `2xl`. When you define a spell with one of these areas, like `md__width=100px`, the spell will apply only when the screen width is equal to or greater than the specified area.
+
+For example, `md__width=100px` is equivalent to this media query:
+`(width>=768px)__width=100px`.
+
+Of course, you’re not limited to the built-in areas. You can define your own media queries just as easily, like this:
+
+```css
+(width>666px)__width=100px
+```
+
+With these areas, you have full control over your responsive design, but without the hassle of constantly writing and rewriting media queries.
+
+## Adaptive Size Functions: `mrs` and `mfs`
+
+Grimoire CSS takes responsive design even further with built-in functions like `mrs` (**M**ake **R**esponsive **S**ize) and `mfs` (**M**ake **F**luid **S**ize). These functions allow you to adapt font sizes, widths, and more based on the viewport size.
+
+### `mrs`: Make Responsive Size
+
+This function dynamically adjusts the size of an element between a minimum and maximum value, depending on the viewport width. Here are the arguments:
+
+- `min_size`: The minimum size for the element.
+- `max_size`: The maximum size for the element.
+- `min_vw`: (Optional) The minimum viewport width.
+- `max_vw`: (Optional) The maximum viewport width.
+
+#### Example Usage of `mrs`
+
+```html
+<p class="font-size=mrs(12px_36px_480px_1280px)">
+  Font size of this text will dynamically change based on the screen size
+</p>
+```
+
+In this example, the font size will automatically adjust between 12px and 36px, depending on the screen size, with fluid adjustments in between. This makes responsive design not only easier but more precise, without the need for complex calculations or multiple breakpoints.
+
+### `mfs`: Make Fluid Size – Creates fully fluid sizes without media queries for seamless scaling
+
+Here are the arguments:
+
+- `min_size`: The minimum size for the element.
+- `max_size`: The maximum size for the element.
+
+#### Example Usage of `mfs`
+
+```html
+<p class="font-size=mfs(12px_36px)">
+  Font size smoothly scales between 12px and 36px based on the viewport size.
+</p>
+```
+
+### The Power of Grimoire’s Variables and Functions
+
+With Grimoire CSS, you don’t just write styles - you take control of them. By leveraging variables, responsive areas, and adaptive size functions, you can make your CSS dynamic, scalable, and ready for any device or screen size. It’s flexibility without the fuss, and it’s all built right in.
+
+# Predefined Scrolls and Built-In Animations: Flexibility at Your Fingertips
+
+Grimoire CSS doesn’t just give you the tools to build powerful styles from scratch - it also comes with a set of **predefined scrolls** to help you get started right away. All predefined scrolls follow the same convention: they begin with the prefix `g-`. This makes it easy to distinguish built-in scrolls from the ones you define yourself.
+
+## Built-In Animations: Ready When You Are
+
+Grimoire CSS comes loaded with **hundreds of built-in animations** (700+ at the moment). These animations are lightweight and efficient - they are only compiled if you actually use them. To trigger one, simply use its name in either the `animation-name` or `animation` CSS rule. But Grimoire CSS doesn’t stop at just applying animations; it also simplifies the process of adding associated rules.
+
+For example, the predefined scroll `g-anim` allows you to apply an animation and its associated rules at the same time. Here, `g-` is the prefix, and `anim` is a short version of the spell `animation`. With this scroll, you can quickly inject an animation along with the necessary rules - saving time and keeping your styles clean and organized.
+
+You can find all the animations on [grimoirecss.com/docs#animations](https://grimoirecss.com/docs#animations)
+
+## Create Your Own Animations
+
+Even though Grimoire CSS comes packed with animations, it also gives you the power to add your own, seamlessly integrating them into your projects. It’s as simple as creating a new subfolder called `animation` inside the `grimoire` folder, then adding your custom CSS file using the format `<name-of-animation>.css`.
+
+Within that file, you define your animation using `@keyframes`, along with any custom styles. You can also use the class placeholder `GRIMOIRE_CSS_ANIMATION` to add specific styles tied to the animation itself. Let’s take a look at an example with a custom pulse animation:
+
+```css
+@keyframes pulse {
+  from {
+    transform: scale3d(1, 1, 1);
+  }
+
+  50% {
+    transform: scale3d(1.05, 1.05, 1.05);
+  }
+
+  to {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.GRIMOIRE_CSS_ANIMATION {
+  animation-name: pulse;
+  animation-timing-function: ease-in-out;
+}
+```
+
+In this example, you’ve defined the pulse animation and set it up with ease using the `GRIMOIRE_CSS_ANIMATION` placeholder. Once this file is in your project, you can invoke the pulse animation as easily as any built-in animation, giving you complete control over custom animations.
+
+# External Scrolls & Variables
+
+In addition to defining scrolls and variables within `grimoire.config.json`, Grimoire CSS allows you to extend your configuration with external JSON files for scrolls and variables. These external JSON files follow the same structure as their corresponding properties in the config file. These files should be stored alongside your main configuration file.
+
+Before generating CSS, Grimoire CSS checks for any external scrolls or variables and merges them into the main config (with the main config taking priority, so external scrolls/variables won't override your primary configuration settings). This adds flexibility, scalability, and convenience to your workflow.
+
+This feature enables sharing your scrolls/spells independently from your main configuration, as well as using those created by others. For example, you can use the Tailwind CSS implementation via external scrolls. More information about where to share and find scrolls, variables, or complete configurations will be detailed below.
+
+# Language-Agnostic Parser: Extracting Spells from Any File, Any Format
+
+Grimoire CSS isn’t just tied to traditional CSS, JavaScript, or HTML files. The beauty of its **language-agnostic parser** is that it can parse spells from any file or extension. Whether you’re working with `.html`, `.tsx`, `.mdx`, or something else entirely, it can handle it.
+
+This means you’re not limited by file types or formats - you define the `inputPaths`, and Grimoire takes care of the rest. Whether your project is built with React, Vue, or something entirely different, it seamlessly integrates and extracts the styles you need.
+
+## Spells in Plain Text with Template Syntax
+
+If you want to use spells outside the traditional `class` or `className` attributes, Grimoire CSS provides a clever solution with its **template syntax**: `g!<spell>;`. This syntax lets you wrap your spell in a template, enabling the parser to collect spells from any text-based content.
+
+Let’s say you have both a classic spell and a templated spell that are essentially the same. Don’t worry - Grimoire CSS is smart enough to combine them into one, as long as it doesn’t affect the CSS cascade. The result? Clean, efficient CSS output like this:
+
+```css
+.classic,
+.templated {
+  /* CSS declaration */
+}
+```
+
+Template syntax also supports multiple spells in a single template using the `&` symbol as a spells separator: `g!color=violet&display=flex;`. This enables CSS-in-JS–like scenarios in absolutely any files.
+
+This flexibility means you can integrate Grimoire CSS in non-traditional environments, using it across various file types and even in plain text. It's not just tied to the web - it’s ready for any project, anywhere.
+
+# CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind
+
+Grimoire CSS doesn’t just help you manage your styles - it ensures that only the CSS you actually need is generated. No duplicates, no wasted space. Whether it’s shared across multiple projects or inlined for critical loading, Grimoire makes sure your CSS is lean, efficient, and optimized for performance.
+
+Grimoire CSS takes optimization seriously. It generates only the CSS that's actually used, and it monitors for duplicates right from the start, ensuring no unnecessary styles sneak through. This happens at the very **early stages** of generation, so by the time the process finishes, you've got a lean, clean stylesheet.
+
+But it doesn't stop there. Just take a look:
+
+- **Minification**: It shrinks your CSS without sacrificing readability or maintainability.
+- **Vendor Prefixes**: Automatically adds necessary prefixes for cross-browser compatibility based on your browserslist configuration:
+  - Uses `.browserslistrc` if it exists in your project
+  - Falls back to 'defaults' if no configuration is found
+  - Supports custom browserslist configuration in in-memory mode
+- **Deduplication**: Duplicate CSS? Not here. Grimoire keeps a close watch and ensures that only the needed CSS is generated.
+- **Modern CSS Features**: Automatically transforms modern CSS features for better browser compatibility
+
+All of this happens while preserving the **CSS cascade** - no unintentional overwrites, no broken styles. Just clean, optimized CSS that's ready for any environment.
+
+# Professional-Grade Color Toolkit
+
+Grimoire CSS introduces a comprehensive suite of built-in color manipulation functions, compliant with the CSS Color Module Level 4 specification. These functions enable precise and dynamic color transformations:
+
+- **`g-grayscale(color)`**: Converts a color to grayscale by setting its saturation to 0%.
+- **`g-complement(color)`**: Generates the complementary color by adding 180° to the hue.
+- **`g-invert(color_weight?)`**: Inverts a color. Optionally, the `weight` parameter controls the intensity of the inversion (default: 100%).
+- **`g-mix(color1_color2_weight)`**: Blends two colors based on a specified weight (0% - 100%).
+- **`g-adjust-hue(color_degrees)`**: Rotates the hue of a color by a specified number of degrees (positive or negative).
+- **`g-adjust-color(color_red?_green?_blue?_hue-val?_sat-val?_light-val?_alpha-val?)`**: Adjusts individual components of a color using delta values for RGB or HSL channels.
+- **`g-change-color(color_red?_green?_blue?_hue-val?_sat-val?_light-val?_alpha-val?)`**: Sets absolute values for RGB or HSL components.
+- **`g-scale-color(color_red?_green?_blue?_sat-val?_light-val?_alpha-val?)`**: Scales RGB or HSL components by percentage values (positive to increase, negative to decrease).
+- **`g-rgba(color_alpha)`**: Updates the alpha (opacity) of a color.
+- **`g-lighten(color_amount)`**: Increases the lightness of a color by a specified percentage.
+- **`g-darken(color_amount)`**: Decreases the lightness of a color by a specified percentage.
+- **`g-saturate(color_amount)`**: Increases the saturation of a color by a specified percentage.
+- **`g-desaturate(color_amount)`**: Decreases the saturation of a color by a specified percentage.
+- **`g-opacify(color_amount)`** (Alias: `g-fade-in`): Increases the opacity of a color by a specified amount.
+- **`g-transparentize(color_amount)`** (Alias: `g-fade-out`): Decreases the opacity of a color by a specified amount.
+
+## Example Usage
+
+**Usage Rules:**
+
+1. All arguments are positional, and any optional arguments can be omitted if they are not being changed.
+2. Do not include `%`, `deg`, or other units in the values - Grimoire handles these internally.
+
+```html
+<div class="bg=g-grayscale(#ff0000)">Grayscale Red Background</div>
+
+<div class="bg=g-complement(#00ff00)">Complementary Green Background</div>
+
+<div class="bg=g-invert(#123456)">Fully Inverted Background</div>
+<div class="bg=g-invert(#123456_50)">Partially Inverted Background</div>
+
+<div class="bg=g-mix(#ff0000_#0000ff_50)">Purple Background</div>
+
+<div class="bg=g-adjust-hue(#ffcc00_45)">Hue Adjusted Background</div>
+
+<div class="bg=g-adjust-color(#123456_0_0_12)">Adjust Blue Component</div>
+<div class="bg=g-adjust-color(#123456_0_0_12_5)">Adjust Blue and Saturation</div>
+
+<div class="bg=g-change-color(#123456_255_0)">Set Red and Green Components</div>
+<div class="bg=g-change-color(#123456_0_0_0_180)">Set Hue Only</div>
+
+<div class="bg=g-scale-color(#123456_10_-10)">Scale Red Up, Green Down</div>
+<div class="bg=g-scale-color(#123456_0_0_0_20)">Scale Saturation Up</div>
+
+<div class="bg=g-rgba(#123456_0.5)">Half Transparent Background</div>
+
+<div class="bg=g-lighten(#123456_10)">Lightened Background</div>
+
+<div class="bg=g-darken(#123456_10)">Darkened Background</div>
+
+<div class="bg=g-saturate(#123456_20)">More Saturated Background</div>
+
+<div class="bg=g-desaturate(#123456_20)">Less Saturated Background</div>
+
+<div class="bg=g-opacify(#123456_0.2)">More Opaque Background</div>
+
+<div class="bg=g-transparentize(#123456_0.2)">More Transparent Background</div>
+```
+
+These functions provide developers with an extensive toolkit for creating vibrant, dynamic, and flexible styles with ease.
+
+# Projects
 
 In Grimoire CSS, managing your projects is as flexible as the spells themselves. You define exactly which files need to be parsed (`inputPaths`, supporting glob patterns) and specify where the built CSS should go (`outputDirPath`).
 
@@ -238,23 +496,39 @@ In essence, the **projects** section of your config is a list of projects, each 
 - In the **first** and **third** projects, we use the single output mode, where all the spells are compiled into one file. This is ideal for **SPAs** or projects that need consolidated CSS for optimization.
 - In the **second** project, a static site, each page will have its own CSS file. This approach is perfect for projects where you want isolated styles for different parts of the website, ensuring that each page only loads what it needs.
 
-### Projects on Your Terms
+## Projects on Your Terms
 
 Grimoire CSS gives you full control over how you manage and compile your styles. You can configure projects for different output strategies depending on whether you're building large, single-page applications or static sites with multiple pages. The flexibility to switch between single or multiple output files means you’re never locked into one approach. Grimoire adapts to your needs, not the other way around.
 
-## Shared and Critical CSS: Optimizing Your Styles for Maximum Efficiency
+## Locking
+
+Grimoire CSS supports a **locking** mechanism for efficient builds. By enabling the `lock` option in `grimoire.config.json`, you can automatically track and clean up outdated built files
+
+```json
+{
+  "projects": [
+    {
+      "projectName": "main",
+      "inputPaths": []
+    }
+  ],
+  "lock": true
+}
+```
+
+# Shared and Critical CSS: Optimizing Your Styles for Maximum Efficiency
 
 Grimoire CSS makes it easy to define **shared** and **critical** CSS alongside your project-specific styles, allowing you to optimize how styles are applied across your entire application.
 
-### Shared CSS: One File, Multiple Uses
+## Shared CSS: One File, Multiple Uses
 
 Shared CSS is exactly what it sounds like - a set of styles that you can build into a separate file and reuse across multiple projects or pages in your application. By defining shared styles, you ensure consistency and reduce repetition, improving performance and maintainability.
 
-### Critical CSS: Inline for Faster Rendering
+## Critical CSS: Inline for Faster Rendering
 
 Critical CSS goes a step further. It automatically inlines essential styles directly into your HTML files, ensuring that key styles are loaded instantly. And here’s the clever part: if some spells are already used in your components or files, Grimoire won’t regenerate them - because they’re now part of your critical CSS. No duplicates, no unnecessary bloat - just efficient, fast-loading styles.
 
-### How It Works
+## How It Works
 
 Both the `shared` and `critical` sections of the config are similar in structure. Each has:
 
@@ -265,7 +539,7 @@ For **shared CSS**, you’ll define an `outputPath` - the file where your shared
 
 Let’s take a look at some examples:
 
-### Defining Custom Properties
+## Defining Custom Properties
 
 In the `cssCustomProperties` section, you can define custom properties and their key-value pairs for any DOM elements in your app. Here are the key parts of this configuration:
 
@@ -299,7 +573,7 @@ Here’s how this might look in JSON:
 
 This structure allows you to define theme-specific variables, making it easier to maintain consistency across your application.
 
-### Real-World Example
+## Real-World Example
 
 Here’s a complete example of how you might configure `shared` and `critical` CSS in Grimoire:
 
@@ -322,8 +596,8 @@ Here’s a complete example of how you might configure `shared` and `critical` C
     "styles": [
       "reset.css",
       "padding=10%_24px",
-      "c=darkblue",
-      "anim-n=swing"
+      "color=darkblue",
+      "animation-name=swing"
     ],
     "cssCustomProperties": [
       {
@@ -352,285 +626,99 @@ In this example:
 - **Shared CSS** includes a simple style (`font-size=20px`) and outputs to `shared.css`.
 - **Critical CSS** will be inlined into all HTML files under the `about` and `blog` directories, ensuring essential styles like `reset.css`, padding, colors, and animations load immediately.
 
-#### Organizing and Compiling Your CSS with Flexibility and Control
+# Performance By Design: Built for Speed and Efficiency
 
-Grimoire CSS supports a **project locking** mechanism for efficient builds. By enabling the `lock` option in `grimoire.config.json`, you can automatically track and clean up outdated built files
+Grimoire CSS achieves exceptional performance through architectural decisions, algorithmic optimizations, and efficient implementation in Rust. The system is built from the ground up with performance as a core principle:
 
-```json
-{
-  "projects": [
-    {
-      "projectName": "main",
-      "inputPaths": []
-    }
-  ],
-  "lock": true
-}
-```
+- **Single-Pass Processing**: Processing styles in a single efficient pass
+- **Smart Memory Management**: Careful memory handling and efficient data structures minimize resource usage
+- **Optimized File I/O**: Reduced system calls and efficient file handling
+- **Rust Implementation**: Taking advantage of zero-cost abstractions and predictable performance
 
-### Efficiency at Its Core
+Grimoire CSS isn't just fast—it's blazingly efficient:
 
-Grimoire CSS doesn’t just help you manage your styles - it ensures that only the CSS you actually need is generated. No duplicates, no wasted space. Whether it’s shared across multiple projects or inlined for critical loading, Grimoire makes sure your CSS is lean, efficient, and optimized for performance.
+- **Class Processing Speed**: Processes an incredible **~200,000 classes per second**
+- **Memory Efficiency**: Handles **~4,000 classes per MB** of memory
+- **Output Optimization**: Generates optimized CSS with minimum overhead
 
-## Predefined Scrolls and Built-In Animations: Flexibility at Your Fingertips
+Remember that Grimoire CSS is a complete CSS engine that goes far beyond simple class collection and CSS generation. It handles parsing, optimization, vendor prefixing, project management, and provides powerful features like variables, functions, animations, and component composition—all while maintaining this exceptional performance profile.
 
-Grimoire CSS doesn’t just give you the tools to build powerful styles from scratch - it also comes with a set of **predefined scrolls** to help you get started right away. All predefined scrolls follow the same convention: they begin with the prefix `g-`. This makes it easy to distinguish built-in scrolls from the ones you define yourself.
+## Benchmark
 
-### Built-In Animations: Ready When You Are
+Grimoire CSS is lightning-fast and highly efficient. While its absolute performance is unquestionable, side-by-side comparisons often offer better perspective. This benchmark is designed to compare Grimoire CSS and Tailwind CSS by accurately measuring build time, memory usage, CPU load, and output file size.
 
-Grimoire CSS comes loaded with **hundreds of built-in animations** (700+ at the moment). These animations are lightweight and efficient - they are only compiled if you actually use them. To trigger one, simply use its name in either the `animation-name` or `animation` CSS rule. But Grimoire CSS doesn’t stop at just applying animations; it also simplifies the process of adding associated rules.
+### Overview
 
-For example, the predefined scroll `g-anim` allows you to apply an animation and its associated rules at the same time. Here, `g-` is the prefix, and `anim` is a short version of the spell `animation`. With this scroll, you can quickly inject an animation along with the necessary rules - saving time and keeping your styles clean and organized.
+The benchmark creates a series of standardized test projects, each containing a large number of HTML files with utility classes for both Grimoire CSS and Tailwind CSS. Then each framework is run to process these projects, and various performance metrics are recorded and analyzed.
 
-### Create Your Own Animations
+#### Measured Metrics
 
-Even though Grimoire CSS comes packed with animations, it also gives you the power to add your own, seamlessly integrating them into your projects. It’s as simple as creating a new subfolder called `animation` inside the `grimoire` folder, then adding your custom CSS file using the format `<name-of-animation>.css`.
+- **Build Time** — total time required to process all projects
+- **Class Processing Speed** — number of processed classes per second
+- **Memory Usage** — peak and average memory consumption
+- **Memory Efficiency** — number of processed classes per MB of used memory
+- **I/O Operations** — volume of data read and written
+- **Output File Size** — total size of generated CSS files
 
-Within that file, you define your animation using `@keyframes`, along with any custom styles. You can also use the class placeholder `GRIMOIRE_CSS_ANIMATION` to add specific styles tied to the animation itself. Let’s take a look at an example with a custom pulse animation:
+#### Results
 
-```css
-@keyframes pulse {
-  from {
-    transform: scale3d(1, 1, 1);
-  }
+When compared to the latest version of Tailwind CSS (v4.x) processing the same workload of 400,000+ classes across 100,000 files, Grimoire CSS demonstrates significant advantages:
 
-  50% {
-    transform: scale3d(1.05, 1.05, 1.05);
-  }
+| Metric                     | Grimoire CSS  | Tailwind CSS | Difference              |
+| -------------------------- | ------------- | ------------ | ----------------------- |
+| **Build Time**             | 2.10s         | 10.58s       | **5.0x faster**         |
+| **Peak Memory Usage**      | 111.2 MB      | 344.97 MB    | **3.1x less memory**    |
+| **Average Memory Usage**   | 45.76 MB      | 182.31 MB    | **4.0x less memory**    |
+| **CPU User Time**          | 755.11ms      | 7.77s        | **10.3x less**          |
+| **CPU System Time**        | 1.33s         | 60.89s       | **45.7x less**          |
+| **Class Processing Speed** | 190,684 cls/s | 37,824 cls/s | **5.0x faster**         |
+| **Memory Efficiency**      | 3,597 cls/MB  | 1,160 cls/MB | **3.1x more efficient** |
+| **Output Size**            | 5.05 MB       | 5.66 MB      | **1.1x smaller**        |
 
-  to {
-    transform: scale3d(1, 1, 1);
-  }
-}
+These performance advantages translate into:
 
-.GRIMOIRE_CSS_ANIMATION {
-  animation-name: pulse;
-  animation-timing-function: ease-in-out;
-}
-```
+- Dramatically improved development experience, even on resource-limited machines.
+- Faster CI/CD pipelines and reduced cloud infrastructure costs.
+- Efficient scaling for projects of any size.
+- Reduced energy consumption for more sustainable development.
 
-In this example, you’ve defined the pulse animation and set it up with ease using the `GRIMOIRE_CSS_ANIMATION` placeholder. Once this file is in your project, you can invoke the pulse animation as easily as any built-in animation, giving you complete control over custom animations.
+[View benchmark README](https://github.com/persevie/grimoire-css/tree/main/benchmark/README.md)
 
-## Variables and Built-in Functions: Total Control Over Styles and Sizes
-
-Grimoire CSS allows you to define your own variables within its settings, making your styling even more dynamic and customizable. Unlike custom properties, these variables don’t compile into shared or critical CSS. Instead, they remain in your settings and are only compiled when used - keeping your CSS clean and efficient.
-
-### How to Use Variables
-
-You can define **any value** as a variable - font sizes, colors, dimensions, anything. To reference them in your styles, just add the `$` symbol before the variable name (you’ll remember this from the `Scroll` section). Here’s how you define and use a variable:
-
-#### Defining a Variable
-
-```json
-{
-  "variables": {
-    "hero-fs": "42px"
-  }
-}
-```
-
-#### Using the Variable
-
-```html
-<h1 class="fs=$hero-fs">Hero text</h1>
-```
-
-In this example, the `hero-fs` variable holds the value `42px`, which is then applied to the `font-size` of the `<h1>` element. Variables in Grimoire CSS offer a simple and effective way to maintain consistency across your styles, while keeping your code flexible and DRY (Don’t Repeat Yourself).
-
-### Built-in Areas: Responsive Design, Simplified
-
-Grimoire CSS follows a mobile-first approach and comes with **built-in responsive areas**, including `sm`, `md`, `lg`, `xl`, and `2xl`. When you define a spell with one of these areas, like `md__w=100px`, the spell will apply only when the screen width is equal to or greater than the specified area.
-
-For example, `md__w=100px` is equivalent to this media query:
-`(width>=768px)__w=100px`.
-
-Of course, you’re not limited to the built-in areas. You can define your own media queries just as easily, like this:
-
-```css
-(width>666px)__w=100px
-```
-
-With these areas, you have full control over your responsive design, but without the hassle of constantly writing and rewriting media queries.
-
-### Adaptive Size Functions: `mrs` and `mfs`
-
-Grimoire CSS takes responsive design even further with built-in functions like `mrs` (Make Responsive Size) and `mfs` (Make Fluid Size, coming soon). These functions allow you to adapt font sizes, widths, and more based on the viewport size.
-
-#### `mrs`: Make Responsive Size
-
-This function dynamically adjusts the size of an element between a minimum and maximum value, depending on the viewport width. Here are the arguments:
-
-- `min_size`: The minimum size for the element.
-- `max_size`: The maximum size for the element.
-- `min_vw`: (Optional) The minimum viewport width.
-- `max_vw`: (Optional) The maximum viewport width.
-
-##### Example Usage of `mrs`
-
-```html
-<p class="fs=mrs(12px_36px_480px_1280px)">
-  Font size of this text will dynamically change based on the screen size
-</p>
-```
-
-In this example, the font size will automatically adjust between 12px and 36px, depending on the screen size, with fluid adjustments in between. This makes responsive design not only easier but more precise, without the need for complex calculations or multiple breakpoints.
-
-#### `mfs`: Make Fluid Size – Creates fully fluid sizes without media queries for seamless scaling
-
-##### Example Usage of `mfs`
-
-```html
-<p class="fs=mfs(12px_36px)">
-  Font size smoothly scales between 12px and 36px based on the viewport size.
-</p>
-```
-
-### Color Manipulation
-
-Grimoire CSS introduces a comprehensive suite of built-in color manipulation functions, compliant with the CSS Color Module Level 4 specification. These functions enable precise and dynamic color transformations:
-
-- **`g-grayscale(color)`**: Converts a color to grayscale by setting its saturation to 0%.
-- **`g-complement(color)`**: Generates the complementary color by adding 180° to the hue.
-- **`g-invert(color_weight?)`**: Inverts a color. Optionally, the `weight` parameter controls the intensity of the inversion (default: 100%).
-- **`g-mix(color1_color2_weight)`**: Blends two colors based on a specified weight (0% - 100%).
-- **`g-adjust-hue(color_degrees)`**: Rotates the hue of a color by a specified number of degrees (positive or negative).
-- **`g-adjust-color(color_red?_green?_blue?_hue-val?_sat-val?_light-val?_alpha-val?)`**: Adjusts individual components of a color using delta values for RGB or HSL channels.
-- **`g-change-color(color_red?_green?_blue?_hue-val?_sat-val?_light-val?_alpha-val?)`**: Sets absolute values for RGB or HSL components.
-- **`g-scale-color(color_red?_green?_blue?_sat-val?_light-val?_alpha-val?)`**: Scales RGB or HSL components by percentage values (positive to increase, negative to decrease).
-- **`g-rgba(color_alpha)`**: Updates the alpha (opacity) of a color.
-- **`g-lighten(color_amount)`**: Increases the lightness of a color by a specified percentage.
-- **`g-darken(color_amount)`**: Decreases the lightness of a color by a specified percentage.
-- **`g-saturate(color_amount)`**: Increases the saturation of a color by a specified percentage.
-- **`g-desaturate(color_amount)`**: Decreases the saturation of a color by a specified percentage.
-- **`g-opacify(color_amount)`** (Alias: `g-fade-in`): Increases the opacity of a color by a specified amount.
-- **`g-transparentize(color_amount)`** (Alias: `g-fade-out`): Decreases the opacity of a color by a specified amount.
-
-#### Example Usage
-
-**Usage Rules:**
-
-1. All arguments are positional, and any optional arguments can be omitted if they are not being changed.
-2. Do not include `%`, `deg`, or other units in the values — Grimoire handles these internally.
-
-```html
-<div class="bg=g-grayscale(#ff0000)">Grayscale Red Background</div>
-
-<div class="bg=g-complement(#00ff00)">Complementary Green Background</div>
-
-<div class="bg=g-invert(#123456)">Fully Inverted Background</div>
-<div class="bg=g-invert(#123456_50)">Partially Inverted Background</div>
-
-<div class="bg=g-mix(#ff0000_#0000ff_50)">Purple Background</div>
-
-<div class="bg=g-adjust-hue(#ffcc00_45)">Hue Adjusted Background</div>
-
-<div class="bg=g-adjust-color(#123456_0_0_12)">Adjust Blue Component</div>
-<div class="bg=g-adjust-color(#123456_0_0_12_5)">Adjust Blue and Saturation</div>
-
-<div class="bg=g-change-color(#123456_255_0)">Set Red and Green Components</div>
-<div class="bg=g-change-color(#123456_0_0_0_180)">Set Hue Only</div>
-
-<div class="bg=g-scale-color(#123456_10_-10)">Scale Red Up, Green Down</div>
-<div class="bg=g-scale-color(#123456_0_0_0_20)">Scale Saturation Up</div>
-
-<div class="bg=g-rgba(#123456_0.5)">Half Transparent Background</div>
-
-<div class="bg=g-lighten(#123456_10)">Lightened Background</div>
-
-<div class="bg=g-darken(#123456_10)">Darkened Background</div>
-
-<div class="bg=g-saturate(#123456_20)">More Saturated Background</div>
-
-<div class="bg=g-desaturate(#123456_20)">Less Saturated Background</div>
-
-<div class="bg=g-opacify(#123456_0.2)">More Opaque Background</div>
-
-<div class="bg=g-transparentize(#123456_0.2)">More Transparent Background</div>
-```
-
-These functions provide developers with an extensive toolkit for creating vibrant, dynamic, and flexible styles with ease.
-
-### The Power of Grimoire’s Variables and Functions
-
-With Grimoire CSS, you don’t just write styles - you take control of them. By leveraging variables, responsive areas, and adaptive size functions, you can make your CSS dynamic, scalable, and ready for any device or screen size. It’s flexibility without the fuss, and it’s all built right in.
-
-## CSS Optimization: Minification, Vendor Prefixes, and Deduplication - All with CSS Cascade in Mind
-
-Grimoire CSS takes optimization seriously. It generates only the CSS that's actually used, and it monitors for duplicates right from the start, ensuring no unnecessary styles sneak through. This happens at the very **early stages** of generation, so by the time the process finishes, you've got a lean, clean stylesheet.
-
-But it doesn't stop there. Grimoire CSS integrates **LightningCSS** to take your code to the next level:
-
-- **Minification**: It shrinks your CSS without sacrificing readability or maintainability.
-- **Vendor Prefixes**: Automatically adds necessary prefixes for cross-browser compatibility based on your browserslist configuration:
-  - Uses `.browserslistrc` if it exists in your project
-  - Falls back to 'defaults' if no configuration is found
-  - Supports custom browserslist configuration in in-memory mode
-- **Deduplication**: Duplicate CSS? Not here. Grimoire keeps a close watch and ensures that only the needed CSS is generated.
-- **Modern CSS Features**: Automatically transforms modern CSS features for better browser compatibility
-
-All of this happens while preserving the **CSS cascade** - no unintentional overwrites, no broken styles. Just clean, optimized CSS that's ready for any environment.
-
-## Performance-Driven by Rust
-
-Grimoire CSS is written entirely in **Rust**, a language designed for high performance. But we didn’t stop at Rust’s natural speed. Grimoire CSS is built with a commitment to efficiency, ensuring your CSS generation is fast, scalable, and precise.
-
-## Language-Agnostic Parser: Extracting Spells from Any File, Any Format
-
-Grimoire CSS isn’t just tied to traditional CSS, JavaScript, or HTML files. The beauty of its **language-agnostic parser** is that it can parse spells from any file or extension. Whether you’re working with `.html`, `.tsx`, `.mdx`, or something else entirely, Grimoire CSS can handle it.
-
-This means you’re not limited by file types or formats - you define the `inputPaths`, and Grimoire CSS takes care of the rest. Whether your project is built with React, Vue, or something entirely different, Grimoire CSS seamlessly integrates and extracts the styles you need.
-
-### Spells in Plain Text with Template Syntax
-
-If you want to use spells outside the traditional `class` or `className` attributes, Grimoire CSS provides a clever solution with its **template syntax**: `g!<spell>;`. This syntax lets you wrap your spell in a template, enabling the parser to collect spells from any text-based content.
-
-Let’s say you have both a classic spell and a templated spell that are essentially the same. Don’t worry - Grimoire CSS is smart enough to combine them into one, as long as it doesn’t affect the CSS cascade. The result? Clean, efficient CSS output like this:
-
-```css
-.classic,
-.templated {
-  /* CSS declaration */
-}
-```
-
-This flexibility means you can integrate Grimoire CSS in non-traditional environments, using it across various file types and even in plain text. It's not just tied to the web - it’s ready for any project, anywhere.
-
-## A Streamlined CLI with a Strict and Straightforward API
+# A Streamlined CLI with a Strict and Straightforward API
 
 Grimoire CSS comes with a minimal but powerful **CLI** (Command Line Interface) that’s designed for simplicity and efficiency. Whether you’re integrating it into your build process or running it manually, the CLI gets the job done without unnecessary complexity.
 
-There are only two commands you need to know:
+There are only 3 commands you need to know:
 
 - **`init`**: Initializes your Grimoire CSS configuration, either by loading an existing config or generating a new one if none is found. This is your starting point.
 - **`build`**: Kicks off the build process, parsing all your input files and generating the compiled CSS. If you haven’t already run `init`, the `build` command will handle that for you automatically.
+- **`shorten`**: Automatically converts all full-length component names in your spells (as defined in your config) to their corresponding shorthand forms. This helps keep your code concise and consistent. Run this command to refactor your files, making your spell syntax as brief as possible without losing clarity or functionality.
 
 Grimoire CSS’s CLI is built for developers who want power without bloat. It’s direct, no-nonsense, and integrates smoothly into any project or bundler.
 
 Here’s a refined version of the remaining parts, keeping the technical depth and making them more engaging and polished:
 
-## Easy Migration with Grimoire CSS Transmute (gcsst) Utility
+# Easy Migration with Transmutator
 
-Migrating to Grimoire CSS is simple, thanks to the Grimoire CSS Transmute utility, also known as **gcsst**. This CLI tool takes the paths of your built CSS files (or the content of built CSS if you’re working in a web environment) and returns a transmuted.json file in the following format:
+Migrating to Grimoire CSS is simple thanks to the Grimoire CSS Transmutator. You can use it as a CLI tool (`gcsst`) or via the Web UI at [grimoirecss.com/transmutator](https://grimoirecss.com/transmutator).
+
+- With the CLI, provide paths to your compiled CSS files (or pass raw CSS via a command-line flag).
+- In the Web UI, either write CSS in the editor and view the JSON output in a separate tab or upload your CSS files and download the transmuted JSON.
+
+In both modes, the Transmutator returns JSON that conforms to the external Scrolls convention by default, so you can immediately leverage your existing CSS classes as Grimoire CSS Scrolls.
 
 ```json
 {
   "classes": [
     {
       "name": "old-class-name",
-      "spells": ["spell-1", "spell-2"],
-      "oneliner": "spell-1 spell-2"
+      "spells": ["spell-1", "spell-2"]
     }
   ]
 }
 ```
 
-**gcsst** parses the existing CSS and automatically generates corresponding spells for each class. One of the standout features of **gcsst** is the structure of the **transmuted.json** file, particularly the classes property. It’s designed to look like the structure of a scroll, except for the `oneliner` property. This makes it incredibly easy to create a scroll or copy-paste the single-line class into your component with minimal effort.
-
-By simplifying the migration process, **gcsst** helps you move to Grimoire CSS without hassle, and you can instantly start leveraging the power of spells.
-
-Explore the [gcsst](https://github.com/persevie/grimoire-css-transmute) repository or try it [online](https://gcsst-ui-zocg.shuttle.app).
-
-## Usage and Distribution
+# Usage and Distribution
 
 Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. It supports both filesystem-based and in-memory operations, making it perfect for traditional web development and dynamic runtime environments. It's distributed in three ways to give you maximum flexibility:
 
@@ -640,7 +728,7 @@ Grimoire CSS is built to integrate seamlessly into a wide range of ecosystems. I
   - webpack/rollup/vite plugins [repo](https://github.com/persevie/grimoire-css-js/tree/main/plugins)
 - **Rust Crate**: For developers building in Rust or those who want to integrate Grimoire CSS at the system level.
 
-### Working Modes
+## Working Modes
 
 Grimoire CSS offers two primary modes of operation:
 
@@ -678,7 +766,7 @@ The core of Grimoire CSS is architected entirely in Rust, ensuring top-notch per
 
 The `grimoire-css-js` takes the core crate and wraps it into a Node.js-compatible interface, which is then compiled into an npm package. Whether you’re working with Rust, Node.js, or need a direct CLI, Grimoire CSS is ready to integrate into your workflow and bring powerful CSS management wherever you need it.
 
-### Installation
+## Installation
 
 **Rust crate:**
 
@@ -731,15 +819,35 @@ or if you are using NPM library:
 gcssjs build
 ```
 
-## The Arcane Circle
+# Playground
+
+This is a web-based editor where you can experiment with creating UIs using Grimoire CSS. Note that the Playground runs in an in-memory mode, which is significantly more limited in functionality compared to the file system (fs) mode. To open it, go to [grimoirecss.com/playground](https://grimoirecss.com/playground).
+
+# The Arcane Circle
 
 Grimoire CSS gives you the freedom to create styles that work exactly the way you want them to - no rigid rules or constraints. Whether you’re crafting dynamic interactions or fine-tuning layouts, Grimoire adapts to your needs, making each step straightforward and rewarding.
 
-So, come join us. Share your work, exchange your thoughts, and help us keep pushing CSS to be more flexible and enjoyable. Together, we’re creating a space where writing styles is about mastery and craftsmanship, not about memorizing classes. Let’s see what we can build - one spell at a time.
+So, come join us. Share your work, exchange your thoughts, and help us keep pushing CSS to be more flexible and enjoyable.
+
+The Arcane Circle, or simply the Circle, is a place where you can share your configs, scrolls, variables, components, or UI kits. It’s where you can catch the latest news, follow development, influence the project, and interact with other members of the Circle.
+
+> The Circle is currently under development. At first, it will support user configs, scrolls, and variables (the Tailwind CSS implementation is already available as external sctolls `grimoire.tailwindcss.scrols.json`).
+
+## The First Member
+
+Hello! My name is Dmitrii Shatokhin, and I am the creator of Grimoire CSS. I invented the Spell concept and all the other ideas behind the project. Grimoire CSS is the result of countless hours of work and dedication, and I am proud to have made it open source.
+
+But this is just the beginning. I am committed to the ongoing development of Grimoire CSS and its entire ecosystem - there are many plans and tasks ahead, which I strive to manage transparently on GitHub. My vision is to grow the Arcane Circle community and bring all these ideas to life.
+
+I also want to develop this GitHub organization, our community, and the company - Persevie. Under the Persevie name, you can expect to see more open source projects in the future (at least three are already in advanced stages of development), and I hope the number of contributors will continue to grow.
+
+I would be truly grateful for any support you can offer - whether it’s starring the project on GitHub, leaving feedback, recommending it to others, contributing to its development, helping to promote Grimoire CSS, or even sponsoring the project or my work.
+
+Honestly, I’m already thankful that you’ve read this far!
+
+Thank you!
 
 ---
-
-Craft Your Code, Cast Your Spells
 
 # Additional Resources
 
@@ -752,3 +860,7 @@ For detailed information about each release, including new features, improvement
 ### Changelog
 
 A concise list of version-specific changes can be found in our [Changelog](./CHANGELOG.md).
+
+---
+
+Craft Your Code, Cast Your Spells

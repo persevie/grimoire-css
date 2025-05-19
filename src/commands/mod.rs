@@ -7,5 +7,6 @@
 mod build;
 pub mod handler;
 mod init;
+mod shorten;
 
 pub use handler::*;
