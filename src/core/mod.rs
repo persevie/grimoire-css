@@ -5,21 +5,21 @@
 //! and configuration management. The public submodules provide the necessary components
 //! to work with the Grimoire CSS pipeline, from initial configuration to the final optimized output.
 
+mod animations;
+mod build_info;
+mod css_generator;
+mod file_tracker;
+mod filesystem;
+
 pub mod color;
+pub mod compiled_css;
 pub mod component;
 pub mod config;
 pub mod css_builder;
 pub mod css_optimizer;
 pub mod grimoire_css_error;
+pub mod parser;
 pub mod spell;
-
-mod animations;
-mod build_info;
-mod compiled_css;
-mod css_generator;
-mod file_tracker;
-mod filesystem;
-mod parser;
 
 pub use color::*;
 pub use compiled_css::*;

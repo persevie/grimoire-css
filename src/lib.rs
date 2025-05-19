@@ -12,25 +12,30 @@
 
 mod buffer;
 mod commands;
-pub mod core;
+mod core;
 mod infrastructure;
 
-use crate::core::GrimoireCssError;
 use commands::{handle_in_memory, process_mode_and_handle};
-use console::{style, Emoji};
-use core::{CompiledCssInMemory, ConfigInMemory};
+use console::style;
+use core::{compiled_css::CompiledCssInMemory, config::ConfigInMemory};
 use indicatif::{ProgressBar, ProgressStyle};
 use infrastructure::LightningCssOptimizer;
 use std::time::{Duration, Instant};
 
-pub static SUCCESS: Emoji<'_, '_> = Emoji("🪄", "✔️");
-pub static FAILURE: Emoji<'_, '_> = Emoji("☠️", "X");
-pub static INFO: Emoji<'_, '_> = Emoji("📖", "i");
+pub use core::{color, component, config, spell::Spell, GrimoireCssError};
 
-pub static SPINNER: [&str; 39] = [
-    "🜁", "🜂", "🜃", "🜄", "🜇", "☽", "☾", "⚯", "⚮", "⚭", "✷", "✶", "⛦", "◈", "❖", "ᚠ", "ᚹ", "ᚻ", "ᛃ",
-    "ᛉ", "ᛊ", "ᛗ", "ᛘ", "ᛚ", "ᛜ", "ᛝ", "ᛞ", "ᛟ", "ᛠ", "ᛡ", "ᛢ", "ᛣ", "ᛤ", "ᛥ", "ᛦ", "ᛧ", "ᛨ", "ᛩ",
-    " ",
+static GRIMM_CALM: &str = " |(• ε •)|";
+static GRIMM_HAPPY: &str = " ヽ(• ε •)ﾉ";
+static GRIMM_CURSED: &str = " |(x ~ x)|";
+static GRIMM_CASTING: [&str; 8] = [
+    GRIMM_CALM,
+    " (|¬ヘ¬)|",
+    " \\(°o°)/",
+    " (∩¬ロ¬)⊃━▪ ～",
+    " (∩¬ロ¬)⊃━▪ ～·",
+    " (∩¬ロ¬)⊃━▪ ～·•",
+    " (∩¬ロ¬)⊃━▪ ～·•●",
+    GRIMM_HAPPY,
 ];
 
 /// Starts the Grimoire CSS system based on the given mode,
@@ -122,72 +127,73 @@ pub fn get_logged_messages() -> Vec<String> {
 /// }
 /// ```
 pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
-    // print empty line for better readability
     println!();
+
+    println!(
+        "{}  Ritual initiated",
+        style(" Grimoire CSS ").white().on_color256(55).bright(),
+    );
 
     // Check if the user provided at least one argument (mode)
     if args.len() < 2 {
         let message = format!(
-            "{}\n    {} ",
-            style(format!("{} Wrong usage!", FAILURE)).red().bold(),
-            style("Follow: grimoire_css <mode> ('build' or 'init')").italic()
+            "{}  {} ",
+            style(" Cursed! ").white().on_red().bright(),
+            "Follow: grimoire_css <mode> ('build', 'init', 'shorten')"
         );
+
+        println!();
+        println!("{}", GRIMM_CURSED);
+        println!();
         println!("{}", message);
 
         return Err(GrimoireCssError::InvalidInput(message));
     }
 
-    println!(
-        "{} {}",
-        INFO,
-        style("Open the Grimoire").color256(55).bold()
-    );
+    println!();
 
     let pb = ProgressBar::new_spinner();
-    pb.set_message(style("Casting spells...").color256(55).italic().to_string());
-    pb.enable_steady_tick(Duration::from_millis(120));
-    pb.set_style(
-        ProgressStyle::default_spinner()
-            .tick_strings(&SPINNER)
-            .template("{spinner:.magenta} {msg}")
-            .unwrap(),
-    );
+    pb.set_style(ProgressStyle::default_spinner().tick_strings(&GRIMM_CASTING));
+    pb.enable_steady_tick(Duration::from_millis(220));
+    pb.set_draw_target(indicatif::ProgressDrawTarget::stdout_with_hz(10));
 
     let start_time = Instant::now();
 
     // Proceed with the main function, passing the first argument (mode)
-    match start(args[1].as_str()) {
+    match start(&args[1]) {
         Ok(_) => {
             pb.finish_and_clear();
 
+            print!("\r\x1b[2K{}  Spells cast successfully.\n", GRIMM_HAPPY);
+
             let duration = start_time.elapsed();
-            println!(
-                "{}",
-                style(format!(
-                    "{} {:.2?}",
-                    style("✨ Magic complete in").color256(55).bold(),
-                    style(duration).color256(55).bold().underlined(),
-                ))
-            );
 
             output_saved_messages();
 
-            // print empty line for better readability
             println!();
-            Ok(())
-        }
-        Err(e) => {
-            pb.finish();
 
             println!(
                 "{}",
-                style(format!("{} Dark magic interfered!\n {}", FAILURE, e))
-                    .red()
-                    .bold()
+                style(format!(
+                    "{}",
+                    style(format!(" Enchanted in {:.2?}! ", duration))
+                        .white()
+                        .on_color256(55)
+                        .bright(),
+                ))
             );
 
-            // print empty line for better readability
             println!();
+
+            Ok(())
+        }
+        Err(e) => {
+            pb.finish_and_clear();
+            print!("\r\x1b[2K{}\n", GRIMM_CURSED);
+
+            println!();
+            println!("{} {}", style(" Cursed! ").white().on_red().bright(), e);
+
             Err(e)
         }
     }
@@ -197,12 +203,9 @@ fn output_saved_messages() {
     let messages = get_logged_messages();
 
     if !messages.is_empty() {
+        println!();
         for msg in &messages {
-            println!(
-                "{} {}",
-                style("    •").color256(53),
-                style(msg).color256(53)
-            );
+            println!("  • {}", msg);
         }
     }
 }

@@ -50,7 +50,8 @@ impl<'a> CssBuilder<'a> {
     ///
     /// Returns a `GrimoireCSSError` if CSS generation fails.
     pub fn combine_spells_to_css(&self, spells: &[Spell]) -> Result<Vec<String>, GrimoireCssError> {
-        let mut assembled = Vec::new();
+        let mut base_rules = Vec::new();
+        let mut media_queries = Vec::new();
 
         for spell in spells {
             match &spell.scroll_spells {
@@ -89,25 +90,48 @@ impl<'a> CssBuilder<'a> {
                             .wrap_base_css_with_media_query(&spell.area, &combined_css)
                     };
 
-                    assembled.push(wrapped_css);
+                    if wrapped_css.trim_start().starts_with("@media") {
+                        media_queries.push(wrapped_css);
+                    } else {
+                        base_rules.push(wrapped_css);
+                    }
 
-                    if !local_scroll_additional_css_vec.is_empty() {
-                        assembled.push(local_scroll_additional_css_vec.join(""));
+                    for add_css in local_scroll_additional_css_vec {
+                        base_rules.push(add_css);
                     }
                 }
                 _ => {
                     if let Some(css) = self.css_generator.generate_css(spell)? {
-                        assembled.push(css.0);
+                        if css.0.trim_start().starts_with("@media") {
+                            media_queries.push(css.0);
+                        } else {
+                            base_rules.push(css.0);
+                        }
 
                         if let Some(additional_css) = css.2 {
-                            assembled.push(additional_css);
+                            base_rules.push(additional_css);
                         }
                     }
                 }
             }
         }
 
-        Ok(assembled)
+        media_queries.sort_by(|a, b| {
+            fn extract_min_width(s: &str) -> Option<u32> {
+                let re = regex::Regex::new(r"min-width:\s*(\\d+)").unwrap();
+                re.captures(s)
+                    .and_then(|cap| cap.get(1))
+                    .and_then(|m| m.as_str().parse::<u32>().ok())
+            }
+            match (extract_min_width(a), extract_min_width(b)) {
+                (Some(aw), Some(bw)) => aw.cmp(&bw),
+                (Some(_), None) => std::cmp::Ordering::Less,
+                (None, Some(_)) => std::cmp::Ordering::Greater,
+                (None, None) => a.cmp(b),
+            }
+        });
+        base_rules.extend(media_queries);
+        Ok(base_rules)
     }
 
     /// Optimizes and minifies CSS.

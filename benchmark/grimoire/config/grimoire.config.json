@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json",
+  "projects": [
+    {
+      "projectName": "project1",
+      "inputPaths": ["input/project1/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project1.css"
+    },
+
+    {
+      "projectName": "project2",
+      "inputPaths": ["input/project2/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project2.css"
+    },
+    {
+      "projectName": "project3",
+      "inputPaths": ["input/project3/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project3.css"
+    },
+    {
+      "projectName": "project4",
+      "inputPaths": ["input/project4/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project4.css"
+    },
+    {
+      "projectName": "project5",
+      "inputPaths": ["input/project5/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project5.css"
+    },
+    {
+      "projectName": "project6",
+      "inputPaths": ["input/project6/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project6.css"
+    },
+    {
+      "projectName": "project7",
+      "inputPaths": ["input/project7/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project7.css"
+    },
+    {
+      "projectName": "project8",
+      "inputPaths": ["input/project8/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project8.css"
+    },
+    {
+      "projectName": "project9",
+      "inputPaths": ["input/project9/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project9.css"
+    },
+    {
+      "projectName": "project10",
+      "inputPaths": ["input/project10/*.html"],
+      "outputDirPath": "grimoire_css_output",
+      "singleOutputFileName": "project10.css"
+    }
+  ]
+}

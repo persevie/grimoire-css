@@ -1,5 +1,54 @@
 # Changelog
 
+## [v1.5.0] - 2025-05-19
+
+> Full release notes: [releases/v1.5.0.md](./releases/v1.5.0.md)
+
+### Added
+
+- **shorten Command**: Compress and simplify all spells in filesystem projects with a single CLI invocation and detailed summary output.
+- **External Scrolls & Variables**: Load and merge `grimoire.*.scrolls.json` and `grimoire.*.variables.json` for modular, shareable style collections.
+- **Template Spell Grouping**: Define multi-spell templates using the `&` delimiter for streamlined CSS-in-JS workflows.
+- **Color Toolkit**: Public Grimoire CSS Color module for parsing and manipulating colors per CSS Color Module Level 4.
+- **Mascot Introduction**: Meet Grimm, the official wizard mascot of Grimoire CSS.
+- **Transmutator CLI & Web UI**: `gcsst` utility rebranded as Transmutator, with 2× performance improvements, new web UI, and native config output.
+- **Community Platform**: Launched grimoirecss.com, Playground, and Circle community portal.
+- **Tailwind CSS Integration**: Full external scrolls for Tailwind CSS static utilities and comprehensive benchmarks.
+
+### Improved
+
+- Media queries are now emitted at the end of generated CSS for better cascade control.
+- Refined short component definitions with improved naming and property mappings.
+- Enhanced parser reliability, especially for quote handling.
+- Continued performance and memory optimizations.
+
+### Fixed
+
+- Quote-aware parsing fixes for correct handling of single vs. double quotes.
+- Parser logic improvements for template and spell parsing.
+
+---
+
+## [v1.4.0] - 2025-04-10
+
+> Full release notes: [releases/v1.4.0.md](./releases/v1.4.0.md)
+
+### Added
+
+- Enhanced argument handling with `Vec<String>` for better NodeJS integration.
+- New spinner variations for improved progress visualization.
+- Unified documentation: new combined RELEASES.md for complete release history.
+
+### Improved
+
+- Streamlined CLI flow with improved `start_as_cli` workflow.
+- Enhanced command processing and execution flow.
+- Improved overall CLI interaction experience.
+- Updated argument type signatures for better integration.
+- Optimized argument handling in core functions.
+
+---
+
 ## [v1.3.0] - 2025-02-21
 
 > Full release notes: [releases/v1.3.0.md](./releases/v1.3.0.md)

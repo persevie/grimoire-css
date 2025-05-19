@@ -1,0 +1,9 @@
+{
+  "outDir": "./grimoire_css_output",
+  "include": [
+    "./input/**/*.html"
+  ],
+  "exclude": [],
+  "minify": true,
+  "addSourceMap": false
+}

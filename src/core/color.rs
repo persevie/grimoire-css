@@ -14,7 +14,7 @@
 //!
 //! # Examples
 //! ```rust
-//! use grimoire_css_lib::core::Color;
+//! use grimoire_css_lib::color::Color;
 //! let c = Color::try_from_str("rgb(255, 0, 0)").unwrap(); // strictly CSS parsing
 //! ```
 
@@ -356,7 +356,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let c = Color::new(255, 0, 0, 1.0); // Fully opaque red
     /// ```
@@ -383,7 +383,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// // Pure red via HSL
     /// let c = Color::from_hsl(0.0, 100.0, 50.0, 1.0);
@@ -504,7 +504,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let c = Color::new(255, 0, 0, 1.0);
     /// let (h, s, l) = c.to_hsl();
@@ -528,7 +528,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let c = Color::new(127, 255, 212, 1.0);
     /// assert_eq!(c.to_hex_string(), "#7fffd4");
@@ -548,7 +548,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let c = Color::new(255, 0, 0, 1.0);
     /// assert_eq!(c.to_named_color_str(), Some("red"));
@@ -582,7 +582,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let white = Color::new(255, 255, 255, 1.0);
     /// let black = white.invert(None);
@@ -608,7 +608,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let red = Color::new(255, 0, 0, 1.0);
     /// let blue = Color::new(0, 0, 255, 1.0);
@@ -647,7 +647,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let c = Color::new(128, 128, 128, 1.0);
     /// // Make it slightly redder
@@ -793,7 +793,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let c = Color::new(255, 0, 0, 1.0);
     /// let half_transparent_red = c.rgba(0.5);
@@ -810,7 +810,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let red = Color::new(255, 0, 0, 1.0);
     /// let lighter_red = red.lighten(10.0); // ~ #ff3333
@@ -843,7 +843,7 @@ impl Color {
     /// # Examples
     ///
     /// ```
-    /// use grimoire_css_lib::core::Color;
+    /// use grimoire_css_lib::color::Color;
     ///
     /// let mut c = Color::new(255, 0, 0, 0.5);
     /// c = c.opacify(0.3);  // new alpha = 0.8

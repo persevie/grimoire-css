@@ -3,6 +3,7 @@ use std::path::Path;
 use super::{
     build::{build, build_in_memory},
     init::init,
+    shorten::shorten,
 };
 use crate::core::{CompiledCssInMemory, ConfigInMemory, CssOptimizer, GrimoireCssError};
 
@@ -33,12 +34,10 @@ pub fn process_mode_and_handle<O: CssOptimizer>(
         "build" => {
             build(current_dir, css_optimizer, mode)?;
         }
-        _ => {
-            return Err(GrimoireCssError::InvalidInput(format!(
-                "Unknown mode: {}",
-                mode
-            )))
+        "shorten" => {
+            shorten(current_dir)?;
         }
+        _ => return Err(GrimoireCssError::InvalidInput(mode.to_string())),
     }
     Ok(())
 }

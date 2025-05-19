@@ -179,6 +179,17 @@ impl ParserFs {
 
         Ok(entries)
     }
+
+    pub fn collect_raw_spells(
+        &self,
+        content: &str,
+    ) -> Result<Vec<String>, crate::core::GrimoireCssError> {
+        let mut raw_spells = Vec::new();
+        let mut seen = std::collections::HashSet::new();
+        self.base_parser
+            .collect_candidates(content, &mut raw_spells, &mut seen)?;
+        Ok(raw_spells)
+    }
 }
 
 #[cfg(test)]

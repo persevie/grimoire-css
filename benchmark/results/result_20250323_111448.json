@@ -1,0 +1,108 @@
+{
+  "system_info": {
+    "os": {
+      "name": "Darwin",
+      "version": "Darwin Kernel Version 24.3.0: Thu Jan  2 20:24:23 PST 2025; root:xnu-11215.81.4~3/RELEASE_ARM64_T6020",
+      "release": "24.3.0"
+    },
+    "cpu": {
+      "name": "arm",
+      "cores_logical": 12,
+      "cores_physical": 12
+    },
+    "memory": {
+      "total_gb": 32.0
+    },
+    "python_version": "3.13.2",
+    "timestamp": 1742724888.643092,
+    "timestamp_human": "2025-03-23 11:14:48"
+  },
+  "grimoire": {
+    "input": {
+      "unique_class_count": 400006,
+      "total_input_size_bytes": 49187280,
+      "file_count": 100000
+    },
+    "output": {
+      "file_count": 10,
+      "total_size_bytes": 5296770,
+      "total_size_kb": 5172.626953125,
+      "avg_size_bytes": 529677.0,
+      "avg_size_kb": 517.2626953125
+    },
+    "process": {
+      "memory": {
+        "peak_bytes": 116604928,
+        "peak_mb": 111.203125,
+        "avg_bytes": 47982004.589147285,
+        "avg_mb": 45.75920542635659,
+        "std_dev_mb": 25.961544766980627
+      },
+      "cpu": {
+        "user_time": 0.755105886,
+        "system_time": 1.333121863,
+        "total_time": 2.0882277489999996
+      },
+      "io": {
+        "read_bytes": 49187280,
+        "read_mb": 46.90864562988281,
+        "write_bytes": 5296770,
+        "write_mb": 5.051393508911133
+      }
+    },
+    "throughput": {
+      "build_time_seconds": 2.09773588180542,
+      "classes_per_second": 190684.6345478603,
+      "memory_efficiency": 3597.0751721230854,
+      "bytes_processed_per_second": 23447794.56108978,
+      "bytes_generated_per_second": 2524993.754428859,
+      "cpu_utilization": 0.9954674309154511
+    },
+    "exit_code": 0,
+    "success": true
+  },
+  "tailwind": {
+    "input": {
+      "unique_class_count": 400006,
+      "total_input_size_bytes": 49187280,
+      "file_count": 100000
+    },
+    "output": {
+      "file_count": 10,
+      "total_size_bytes": 5937710,
+      "total_size_kb": 5798.544921875,
+      "avg_size_bytes": 593771.0,
+      "avg_size_kb": 579.8544921875
+    },
+    "process": {
+      "memory": {
+        "peak_bytes": 361725952,
+        "peak_mb": 344.96875,
+        "avg_bytes": 191161685.33333334,
+        "avg_mb": 182.30598958333334,
+        "std_dev_mb": 74.08982503042134
+      },
+      "cpu": {
+        "user_time": 7.772634282,
+        "system_time": 60.89118616200001,
+        "total_time": 68.663820444
+      },
+      "io": {
+        "read_bytes": 49187280,
+        "read_mb": 46.90864562988281,
+        "write_bytes": 5937710,
+        "write_mb": 5.662641525268555
+      }
+    },
+    "throughput": {
+      "build_time_seconds": 10.575389862060547,
+      "classes_per_second": 37824.23203470074,
+      "memory_efficiency": 1159.5427122021922,
+      "bytes_processed_per_second": 4651107.9630700415,
+      "bytes_generated_per_second": 561464.8800137072,
+      "cpu_utilization": 6.492793300257707
+    },
+    "exit_code": 0,
+    "success": true
+  }
+}
