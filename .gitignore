@@ -12,3 +12,9 @@ Thumbs.db
 *.bak
 *.bk
 *.patch
+
+# benchmark
+benchmark/input
+benchmark/grimoire_css_output
+benchmark/tailwind_css_output
+benchmark/node_modules

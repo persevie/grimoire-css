@@ -27,7 +27,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use super::GrimoireCssError;
+use super::{component::get_css_property, GrimoireCssError};
 
 #[derive(Eq, Hash, PartialEq, Debug, Clone)]
 pub struct Spell {
@@ -49,7 +49,6 @@ impl Spell {
         scrolls: &Option<HashMap<String, Vec<String>>>,
     ) -> Result<Option<Self>, GrimoireCssError> {
         let with_template = Self::check_for_template(raw_spell);
-
         let raw_spell = if with_template {
             raw_spell
                 .strip_prefix("g!")
@@ -58,6 +57,28 @@ impl Spell {
         } else {
             raw_spell
         };
+
+        let raw_spell_split: Vec<&str> = raw_spell.split("--").filter(|s| !s.is_empty()).collect();
+
+        if with_template && !raw_spell_split.is_empty() {
+            let mut scroll_spells: Vec<Spell> = Vec::new();
+            for rs in raw_spell_split {
+                if let Some(spell) = Spell::new(rs, shared_spells, scrolls)? {
+                    scroll_spells.push(spell);
+                }
+            }
+
+            return Ok(Some(Spell {
+                raw_spell: raw_spell.to_string(),
+                component: String::new(),
+                component_target: String::new(),
+                effects: String::new(),
+                area: String::new(),
+                focus: String::new(),
+                with_template,
+                scroll_spells: Some(scroll_spells),
+            }));
+        }
 
         // Split the input string by "__" to separate the area (screen size) and the rest
         let (area, rest) = raw_spell.split_once("__").unwrap_or(("", raw_spell));
@@ -126,6 +147,10 @@ impl Spell {
         spell_component: &'a str,
         scrolls: &'a Option<HashMap<String, Vec<String>>>,
     ) -> Option<&'a Vec<String>> {
+        if get_css_property(spell_component).is_some() {
+            return None;
+        }
+
         if let Some(scrolls) = scrolls {
             return scrolls.get(spell_component);
         };
@@ -205,5 +230,29 @@ impl Spell {
         }
 
         Ok(spells)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::core::spell::Spell;
+    use std::collections::{HashMap, HashSet};
+
+    #[test]
+    fn test_multiple_raw_spells_in_template() {
+        let shared_spells = HashSet::new();
+        let scrolls: Option<HashMap<String, Vec<String>>> = None;
+        let raw = "g!color=red--display=flex;";
+        let spell = Spell::new(raw, &shared_spells, &scrolls)
+            .expect("parse ok")
+            .expect("not None");
+        assert!(spell.with_template);
+        assert!(spell.scroll_spells.is_some());
+        let spells = spell.scroll_spells.as_ref().unwrap();
+        assert_eq!(spells.len(), 2);
+        assert_eq!(spells[0].component, "color");
+        assert_eq!(spells[0].component_target, "red");
+        assert_eq!(spells[1].component, "display");
+        assert_eq!(spells[1].component_target, "flex");
     }
 }

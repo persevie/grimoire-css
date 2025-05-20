@@ -1112,8 +1112,8 @@ mod tests {
         let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let spell = Spell {
-            raw_spell: "bgc=pink".to_string(),
-            component: "bgc".to_string(),
+            raw_spell: "bg-c=pink".to_string(),
+            component: "bg-c".to_string(),
             component_target: "pink".to_string(),
             effects: "".to_string(),
             area: "".to_string(),
@@ -1132,13 +1132,13 @@ mod tests {
 
         let (css, _, _) = option_value.unwrap();
 
-        assert_eq!(css, ".bgc\\=pink{background-color:pink;}");
+        assert_eq!(css, ".bg-c\\=pink{background-color:pink;}");
 
         // --- COMPLEX ---
 
         let spell_complex = Spell {
-            raw_spell: "{[data-theme='light']_p}fs=mrs(14px_16px_380px_800px)".to_string(),
-            component: "fs".to_string(),
+            raw_spell: "{[data-theme='light']_p}font-sz=mrs(14px_16px_380px_800px)".to_string(),
+            component: "font-sz".to_string(),
             component_target: "mrs(14px_16px_380px_800px)".to_string(),
             effects: "".to_string(),
             area: "".to_string(),
@@ -1159,7 +1159,7 @@ mod tests {
 
         assert_eq!(
             css,
-            r".g\!\{\[data-theme\=\'light\'\]\_p\}fs\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size:14px;}@media screen and (min-width: 380px) {.g\!\{\[data-theme\=\'light\'\]\_p\}fs\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size: calc(14px + 2 * ((100vw - 380px) / 420));}}@media screen and (min-width: 800px) {.g\!\{\[data-theme\=\'light\'\]\_p\}fs\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size: 16px;}}"
+            r".g\!\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size:14px;}@media screen and (min-width: 380px) {.g\!\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size: calc(14px + 2 * ((100vw - 380px) / 420));}}@media screen and (min-width: 800px) {.g\!\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size: 16px;}}"
         );
     }
 

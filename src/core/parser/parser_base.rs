@@ -19,9 +19,9 @@ impl Parser {
     /// Creates a new `Parser` instance with predefined regular expressions for extracting class names
     /// and templated spells.
     pub fn new() -> Self {
-        let class_name_regex = Regex::new(r#"className=["|'|`](.*?)["|'|`]"#).unwrap();
-        let class_regex = Regex::new(r#"class=["|'|`](.*?)["|'|`]"#).unwrap();
-        let tepmplated_spell_regex = Regex::new(r#"(g!\S*?;)"#).unwrap();
+        let class_name_regex = Regex::new(r#"className=("([^"]*)"|'([^']*)'|`([^`]*)`)"#).unwrap();
+        let class_regex = Regex::new(r#"class=("([^"]*)"|'([^']*)'|`([^`]*)`)"#).unwrap();
+        let tepmplated_spell_regex = Regex::new(r#"(g![^;]*;)"#).unwrap();
 
         Self {
             tepmplated_spell_regex,
@@ -51,16 +51,27 @@ impl Parser {
         mut splitter: Option<S>,
         class_names: &mut Vec<String>,
         seen_class_names: &mut HashSet<String>,
+        is_templated_spell: bool,
     ) -> Result<(), GrimoireCssError>
     where
         P: FnMut(&str) -> bool,
         S: FnMut(&str) -> Vec<String>,
     {
         for cap in regex.captures_iter(content) {
-            let classes = if let Some(splitter_fn) = &mut splitter {
-                splitter_fn(&cap[1])
+            let class_value = if is_templated_spell {
+                cap.get(1).map(|m| m.as_str()).unwrap_or("")
             } else {
-                vec![cap[1].to_string()]
+                cap.get(2)
+                    .or_else(|| cap.get(3))
+                    .or_else(|| cap.get(4))
+                    .map(|m| m.as_str())
+                    .unwrap_or("")
+            };
+
+            let classes = if let Some(splitter_fn) = &mut splitter {
+                splitter_fn(class_value)
+            } else {
+                vec![class_value.to_string()]
             };
 
             for class in classes {
@@ -108,6 +119,7 @@ impl Parser {
             Some(whitespace_splitter),
             class_names,
             seen_class_names,
+            false,
         )?;
 
         // Collect all 'class' matches
@@ -118,6 +130,7 @@ impl Parser {
             Some(whitespace_splitter),
             class_names,
             seen_class_names,
+            false,
         )?;
 
         // Collect all 'templated class' (starts with 'g!', ends with ';') matches
@@ -128,6 +141,7 @@ impl Parser {
             None,
             class_names,
             seen_class_names,
+            true,
         )?;
 
         Ok(())

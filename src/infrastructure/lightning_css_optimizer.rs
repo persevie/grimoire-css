@@ -44,10 +44,7 @@ impl LightningCssOptimizer {
             fs::write(&browserslist_config_path, "defaults")
                 .expect("Failed to create '.browserslistrc' with defaults");
 
-            add_message(
-                "'.browserslistrc' file was missing and has been created with 'defaults'."
-                    .to_string(),
-            );
+            add_message("Created missing '.browserslistrc' file with 'defaults'".to_string());
         }
 
         env::set_var("BROWSERSLIST_CONFIG", &browserslist_config_path);
