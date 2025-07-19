@@ -676,15 +676,15 @@ impl<'a> CssGenerator<'a> {
         max_vw: Option<&str>,
         screen_sizes_state: &mut HashSet<String>,
     ) -> Result<Option<MRSRes>, GrimoireCssError> {
-        let min_size_value: u32 = self.strip_unit(min_size)?;
-        let max_size_value: u32 = self.strip_unit(max_size)?;
-        let min_vw_value: u32 = match min_vw {
+        let min_size_value: f64 = self.strip_unit(min_size)?;
+        let max_size_value: f64 = self.strip_unit(max_size)?;
+        let min_vw_value: f64 = match min_vw {
             Some(i) => self.strip_unit(i)?,
-            None => 480,
+            None => 480.0,
         };
-        let max_vw_value: u32 = match max_vw {
+        let max_vw_value: f64 = match max_vw {
             Some(i) => self.strip_unit(i)?,
-            None => 1280,
+            None => 1280.0,
         };
 
         let min_size_unit = self.mrs_regex.find(min_size).map_or("", |m| m.as_str());
@@ -762,17 +762,17 @@ impl<'a> CssGenerator<'a> {
         min_vw: Option<&str>,
         max_vw: Option<&str>,
     ) -> Result<String, GrimoireCssError> {
-        let min_size_value: f64 = self.strip_unit(min_size)? as f64;
-        let max_size_value: f64 = self.strip_unit(max_size)? as f64;
+        let min_size_value: f64 = self.strip_unit(min_size)?;
+        let max_size_value: f64 = self.strip_unit(max_size)?;
+
         let min_vw_value: f64 = match min_vw {
-            Some(i) => self.strip_unit(i)? as f64,
+            Some(i) => self.strip_unit(i)?,
             None => 480.0,
         };
         let max_vw_value: f64 = match max_vw {
-            Some(i) => self.strip_unit(i)? as f64,
+            Some(i) => self.strip_unit(i)?,
             None => 1280.0,
         };
-
         let min_size_unit = self.mrs_regex.find(min_size).map_or("", |m| m.as_str());
         let max_size_unit = self.mrs_regex.find(max_size).map_or("", |m| m.as_str());
 
@@ -807,11 +807,11 @@ impl<'a> CssGenerator<'a> {
     ///
     /// # Returns
     ///
-    /// * `Ok(u32)` containing the numeric part of the value.
+    /// * `Ok(f64)` containing the numeric part of the value.
     /// * `Err(GrimoireCSSError)` if there is an error during unit stripping.
-    fn strip_unit(&self, value: &str) -> Result<u32, GrimoireCssError> {
+    fn strip_unit(&self, value: &str) -> Result<f64, GrimoireCssError> {
         if let Some(captures) = self.unit_regex.captures(value) {
-            captures[1].parse::<u32>().map_err(|_| {
+            captures[1].parse::<f64>().map_err(|_| {
                 GrimoireCssError::InvalidInput(format!("Failed to parse unit from value: {value}"))
             })
         } else {
