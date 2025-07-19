@@ -2,7 +2,7 @@
 //!
 //! Both filesystem and in-memory builders extend this functionality.
 
-use crate::core::{css_generator::CssGenerator, spell::Spell, CssOptimizer, GrimoireCssError};
+use crate::core::{CssOptimizer, GrimoireCssError, css_generator::CssGenerator, spell::Spell};
 use std::collections::HashMap;
 
 /// Core CSS builder that handles spell compilation and optimization
@@ -69,7 +69,7 @@ impl<'a> CssBuilder<'a> {
                             )?;
 
                             let updated_css = self.css_generator.replace_class_name(
-                                &css.1 .1,
+                                &css.1.1,
                                 &class_name.0,
                                 &css.0,
                             );

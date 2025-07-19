@@ -12,8 +12,8 @@
 use crate::{
     buffer::add_message,
     core::{
-        build_info::BuildInfo, file_tracker::FileTracker, parser::ParserFs, spell::Spell, ConfigFs,
-        ConfigFsCssCustomProperties, CssOptimizer, GrimoireCssError,
+        ConfigFs, ConfigFsCssCustomProperties, CssOptimizer, GrimoireCssError,
+        build_info::BuildInfo, file_tracker::FileTracker, parser::ParserFs, spell::Spell,
     },
 };
 use regex::Regex;
@@ -335,7 +335,7 @@ impl<'a> CssBuilderFs<'a> {
         let variables = css_custom_properties_item
             .css_variables
             .iter()
-            .map(|(var_name, var_value)| format!("--{}: {};", var_name, var_value))
+            .map(|(var_name, var_value)| format!("--{var_name}: {var_value};"))
             .collect::<Vec<_>>()
             .join(" ");
         format!(
@@ -375,9 +375,8 @@ impl<'a> CssBuilderFs<'a> {
                     Ok(contents) => files_content.push(contents),
                     Err(err) => {
                         return Err(GrimoireCssError::InvalidInput(format!(
-                            "Error reading file {}; {}",
-                            item, err
-                        )))
+                            "Error reading file {item}; {err}"
+                        )));
                     }
                 }
             } else if let Some(spell) =
@@ -434,10 +433,7 @@ impl<'a> CssBuilderFs<'a> {
         shared_css_str: &str,
     ) -> Result<(), GrimoireCssError> {
         let html_content = fs::read_to_string(html_file_path)?;
-        let critical_css = format!(
-            "<style data-grimoire-critical-css>{}</style>",
-            shared_css_str
-        );
+        let critical_css = format!("<style data-grimoire-critical-css>{shared_css_str}</style>");
 
         // Remove existing critical CSS
         let cleaned_html_content = self.inline_css_regex.replace(&html_content, "").to_string();
@@ -445,10 +441,10 @@ impl<'a> CssBuilderFs<'a> {
         // Insert the critical CSS just before the closing </head> tag
         let updated_html_content = if let Some(index) = cleaned_html_content.rfind("</head>") {
             let (before_head, after_head) = cleaned_html_content.split_at(index);
-            format!("{}{}{}", before_head, critical_css, after_head)
+            format!("{before_head}{critical_css}{after_head}")
         } else {
             // If </head> is not found, append the critical CSS at the end
-            format!("{}{}", cleaned_html_content, critical_css)
+            format!("{cleaned_html_content}{critical_css}")
         };
 
         fs::write(html_file_path, updated_html_content)?;
@@ -504,7 +500,7 @@ mod tests {
             }],
         };
 
-        let result = builder.compile_css(&vec![build_info]);
+        let result = builder.compile_css(&[build_info]);
         assert!(result.is_ok());
 
         let compiled_css = result.unwrap();

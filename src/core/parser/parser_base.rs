@@ -219,7 +219,7 @@ mod tests {
 
         assert_eq!(class_names.len(), 6);
         for i in 1..=6 {
-            assert!(class_names.contains(&format!("test{}", i)));
+            assert!(class_names.contains(&format!("test{i}")));
         }
     }
 }

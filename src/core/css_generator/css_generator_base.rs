@@ -19,10 +19,10 @@
 //! unit stripping, handling of regex patterns, and combining base CSS with media queries.
 
 use crate::buffer::add_message;
+use crate::core::GrimoireCssError;
 use crate::core::animations::ANIMATIONS;
 use crate::core::component::get_css_property;
 use crate::core::spell::Spell;
-use crate::core::GrimoireCssError;
 
 use super::color_functions;
 
@@ -162,7 +162,7 @@ impl<'a> CssGenerator<'a> {
     }
 
     fn wrap_size_area(&self, area: &str, base_css: &str) -> String {
-        format!("@media (min-width: {}){{{}}}", area, base_css)
+        format!("@media (min-width: {area}){{{base_css}}}")
     }
 
     pub fn generate_css_class_name(
@@ -176,9 +176,9 @@ impl<'a> CssGenerator<'a> {
         let mut escaped_class_name = self.escape_css_class_name(raw_spell)?;
 
         if with_template {
-            escaped_class_name = format!(".g\\!{}\\;", escaped_class_name);
+            escaped_class_name = format!(".g\\!{escaped_class_name}\\;");
         } else {
-            escaped_class_name = format!(".{}", escaped_class_name);
+            escaped_class_name = format!(".{escaped_class_name}");
         }
 
         let effects_string = Self::generate_effect(effects)?;
@@ -186,7 +186,7 @@ impl<'a> CssGenerator<'a> {
         let base_class_name = escaped_class_name.clone();
 
         if !effects_string.is_empty() {
-            escaped_class_name.push_str(&format!(":{}", effects_string));
+            escaped_class_name.push_str(&format!(":{effects_string}"));
         }
 
         if !spell_focus.is_empty() {
@@ -212,7 +212,7 @@ impl<'a> CssGenerator<'a> {
             .map(|c| match c {
                 '!' | '"' | '#' | '$' | '%' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | '.'
                 | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | '\\' | ']' | '^' | '_'
-                | '`' | '{' | '|' | '}' | '~' => format!("\\{}", c),
+                | '`' | '{' | '|' | '}' | '~' => format!("\\{c}"),
                 ' ' => {
                     add_message("HTML does not support spaces. To separate values use underscore ('_') instead".to_string());
                     c.to_string()
@@ -267,7 +267,7 @@ impl<'a> CssGenerator<'a> {
 
         if let Some(v) = variables {
             for (key, value) in v {
-                let placeholder = format!("${}", key);
+                let placeholder = format!("${key}");
                 replaced_target = replaced_target.replace(&placeholder, value);
             }
         }
@@ -370,7 +370,7 @@ impl<'a> CssGenerator<'a> {
         css_class_name: &str,
     ) -> Result<(String, Option<String>), GrimoireCssError> {
         let additional_css = self.get_additional_css(adapted_target)?;
-        let base_css = format!("{}{{animation:{};}}", css_class_name, adapted_target);
+        let base_css = format!("{css_class_name}{{animation:{adapted_target};}}");
         Ok((base_css, additional_css))
     }
 
@@ -393,7 +393,7 @@ impl<'a> CssGenerator<'a> {
         css_class_name: &str,
     ) -> Result<(String, Option<String>), GrimoireCssError> {
         let additional_css = self.get_additional_css(adapted_target)?;
-        let base_css = format!("{}{{animation-name:{};}}", css_class_name, adapted_target);
+        let base_css = format!("{css_class_name}{{animation-name:{adapted_target};}}");
         Ok((base_css, additional_css))
     }
 
@@ -417,7 +417,7 @@ impl<'a> CssGenerator<'a> {
         css_class_name: &str,
         property: &str,
     ) -> Result<(String, Option<String>), GrimoireCssError> {
-        let base_css = format!("{}{{{}:{};}}", css_class_name, property, adapted_target);
+        let base_css = format!("{css_class_name}{{{property}:{adapted_target};}}");
         let captures = self
             .base_css_regex
             .captures_iter(adapted_target)
@@ -428,7 +428,7 @@ impl<'a> CssGenerator<'a> {
                 self.handle_grimoire_functions(adapted_target, captures, property, css_class_name)?
             {
                 Ok((
-                    format!("{}{{{}:{};}}{}", css_class_name, property, base, media),
+                    format!("{css_class_name}{{{property}:{base};}}{media}"),
                     None,
                 ))
             } else {
@@ -508,7 +508,7 @@ impl<'a> CssGenerator<'a> {
                     if let Some((base_value, media_queries)) =
                         self.handle_mrs(args, &mut screen_sizes_state)?
                     {
-                        let key = format!("mrs_{}", calculations_base_count);
+                        let key = format!("mrs_{calculations_base_count}");
                         calculations_base_count += 1;
 
                         // Add media sizes in the order returned from handle_mrs
@@ -534,7 +534,7 @@ impl<'a> CssGenerator<'a> {
                 }
                 "mfs" => {
                     let clamp_value = self.handle_mfs(args)?;
-                    let key = format!("mfs_{}", calculations_base_count);
+                    let key = format!("mfs_{calculations_base_count}");
                     calculations_base_count += 1;
 
                     calculation_map.insert(
@@ -698,8 +698,8 @@ impl<'a> CssGenerator<'a> {
             None => "px",
         };
 
-        let full_min_vw = format!("{}{}", min_vw_value, min_vw_unit);
-        let full_max_vw = format!("{}{}", max_vw_value, max_vw_unit);
+        let full_min_vw = format!("{min_vw_value}{min_vw_unit}");
+        let full_max_vw = format!("{max_vw_value}{max_vw_unit}");
 
         // update state and handle different screen sizes
         if screen_sizes_state.is_empty() {
@@ -714,8 +714,7 @@ impl<'a> CssGenerator<'a> {
             ));
         } else if screen_sizes_state.len() != 2 {
             return Err(GrimoireCssError::InvalidInput(format!(
-                "Unexpected screen size state: {:?}",
-                screen_sizes_state
+                "Unexpected screen size state: {screen_sizes_state:?}"
             )));
         }
 
@@ -729,16 +728,12 @@ impl<'a> CssGenerator<'a> {
             let base = min_size.to_owned();
             let media: [(String, String); 2] = [
                 (
-                    format!("{}{}", min_vw_value, min_vw_unit),
+                    format!("{min_vw_value}{min_vw_unit}"),
                     format!(
-                        "calc({} + {} * ((100vw - {}{}) / {}))",
-                        min_size, size_diff, min_vw_value, min_vw_unit, vw_diff
+                        "calc({min_size} + {size_diff} * ((100vw - {min_vw_value}{min_vw_unit}) / {vw_diff}))"
                     ),
                 ),
-                (
-                    format!("{}{}", max_vw_value, max_vw_unit),
-                    max_size.to_string(),
-                ),
+                (format!("{max_vw_value}{max_vw_unit}"), max_size.to_string()),
             ];
 
             Ok(Some((base, media)))
@@ -801,7 +796,7 @@ impl<'a> CssGenerator<'a> {
 
         let preferred = format!("{}vw + {}{}", slope * 100.0, intercept, min_size_unit);
 
-        Ok(format!("clamp({}, {}, {})", min_size, preferred, max_size))
+        Ok(format!("clamp({min_size}, {preferred}, {max_size})"))
     }
 
     /// Strips the unit from a CSS size value and returns the numeric part.
@@ -817,15 +812,11 @@ impl<'a> CssGenerator<'a> {
     fn strip_unit(&self, value: &str) -> Result<u32, GrimoireCssError> {
         if let Some(captures) = self.unit_regex.captures(value) {
             captures[1].parse::<u32>().map_err(|_| {
-                GrimoireCssError::InvalidInput(format!(
-                    "Failed to parse unit from value: {}",
-                    value
-                ))
+                GrimoireCssError::InvalidInput(format!("Failed to parse unit from value: {value}"))
             })
         } else {
             Err(GrimoireCssError::InvalidInput(format!(
-                "No numeric value found in: {}",
-                value
+                "No numeric value found in: {value}"
             )))
         }
     }
@@ -859,15 +850,14 @@ impl<'a> CssGenerator<'a> {
             Ok((keyframes.trim().to_string(), class_block))
         } else {
             Err(GrimoireCssError::InvalidInput(format!(
-                "No keyframes found in animation: {}",
-                animation_name
+                "No keyframes found in animation: {animation_name}"
             )))
         }
     }
 }
 #[cfg(test)]
 mod tests {
-    use crate::core::{css_generator::CssGenerator, spell::Spell, ConfigFs, GrimoireCssError};
+    use crate::core::{ConfigFs, GrimoireCssError, css_generator::CssGenerator, spell::Spell};
 
     #[test]
     fn test_escape_css_class_name() {

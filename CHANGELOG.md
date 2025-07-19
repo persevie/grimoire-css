@@ -109,4 +109,4 @@
 
 **Initial Release**
 
-Grimoire CSS debuts as a powerful CSS system engine designed for flexibility and performance.
+Grimoire CSS debuts as a powerful CSS engine designed for flexibility and performance.

@@ -281,7 +281,7 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let parser = ParserFs::new(temp_dir.path());
         let result = parser.collect_classes_single_output(&vec!["nonexistent.html".to_string()]);
-        println!("{:?}", result);
+        println!("{result:?}");
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0);
     }

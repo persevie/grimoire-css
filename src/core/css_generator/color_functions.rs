@@ -37,7 +37,7 @@ static SPELL_COLOR_FUNCTIONS: &[(&str, SpellColorFunc)] = &[
 ///
 /// # Arguments
 ///
-/// * `adapted_target` - A string slice in the form of `"g-func(...)"`,  
+/// * `adapted_target` - A string slice in the form of `"g-func(...)"`,
 ///   for example: `"g-lighten(#ff0000 10)"`.
 ///
 /// # Returns
