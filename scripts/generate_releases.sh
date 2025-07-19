@@ -37,7 +37,7 @@ if ! grep -q "v1.0.0" "$temp_file"; then
 
 # v1.0.0: Initial Release
 
-The debut release of Grimoire CSS, introducing a powerful CSS system engine designed for flexibility and performance.
+The debut release of Grimoire CSS, introducing a powerful CSS engine designed for flexibility and performance.
 EOF
 fi
 

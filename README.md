@@ -8,7 +8,7 @@
 
 ---
 
-**Grimoire CSS** is a comprehensive CSS system engine crafted in Rust, <br /> focusing on unmatched flexibility, reusable dynamic styling, and optimized performance for every environment. Whether you need filesystem-based CSS generation or pure in-memory processing, Grimoire CSS adapts to your needs without compromising on performance or features.
+**Grimoire CSS** is a comprehensive CSS engine crafted in Rust, <br /> focusing on unmatched flexibility, reusable dynamic styling, and optimized performance for every environment. Whether you need filesystem-based CSS generation or pure in-memory processing, Grimoire CSS adapts to your needs without compromising on performance or features.
 
 <br/>
 </div>
@@ -75,9 +75,9 @@
 
 # Why Grimoire CSS
 
-**Grimoire CSS** is a comprehensive CSS system engine crafted in Rust, <br /> focusing on unmatched flexibility, reusable dynamic styling, and optimized performance for every environment. Whether you need filesystem-based CSS generation or pure in-memory processing, Grimoire CSS adapts to your needs without compromising on performance or features.
+**Grimoire CSS** is a comprehensive CSS engine crafted in Rust, <br /> focusing on unmatched flexibility, reusable dynamic styling, and optimized performance for every environment. Whether you need filesystem-based CSS generation or pure in-memory processing, Grimoire CSS adapts to your needs without compromising on performance or features.
 
-1. **True CSS System Engine.** Grimoire CSS is a one-of-a-kind CSS System Engine - exceptionally powerful and endlessly flexible. It doesn't rely on bundlers, optimizers, deduplicators, preprocessors, or postprocessors. Grimoire CSS handles everything itself, internally and efficiently.
+1. **True CSS engine.** Grimoire CSS is a one-of-a-kind CSS engine - exceptionally powerful and endlessly flexible. It doesn't rely on bundlers, optimizers, deduplicators, preprocessors, or postprocessors. Grimoire CSS handles everything itself, internally and efficiently.
 2. **Performance.** Despite its vast capabilities, every part of Grimoire CSS is optimized for maximum efficiency. It outperforms even specialized tools. Compared to TailwindCSS v4.x, it generates CSS **5× faster** and **28× more efficiently**, even considering that Grimoire CSS actually generates real CSS.
 3. **Universality.** Its native parser handles any source file without plugins or configuration, running in both filesystem-based and in-memory modes. Available as a standalone binary, a Rust crate, and an npm library.
 4. **Intelligent CSS Generation.** Grimoire CSS respects the CSS cascade, optimizes your styles, applies necessary prefixes, and ensures full browser compatibility via .browserslistrc, both in file system and in-memory modes.

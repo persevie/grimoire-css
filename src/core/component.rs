@@ -599,8 +599,7 @@ mod tests {
         for &(_, abbreviation) in PROPERTIES.iter() {
             assert!(
                 seen.insert(abbreviation),
-                "Duplicate abbreviation found: {}",
-                abbreviation
+                "Duplicate abbreviation found: {abbreviation}"
             );
         }
     }

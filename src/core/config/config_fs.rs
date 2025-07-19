@@ -570,7 +570,7 @@ impl ConfigFs {
                     }
                 }
                 Err(e) => {
-                    add_message(format!("Failed to read glob pattern {}: {}", pattern, e));
+                    add_message(format!("Failed to read glob pattern {pattern}: {e}"));
                 }
             }
         }
@@ -653,23 +653,20 @@ impl ConfigFs {
                                             }
 
                                             add_message(format!(
-                                                "Loaded external scrolls from '{}'",
-                                                file_name
+                                                "Loaded external scrolls from '{file_name}'"
                                             ));
                                         }
                                     }
                                     Err(err) => {
                                         add_message(format!(
-                                            "Failed to parse external scroll file '{}': {}",
-                                            file_name, err
+                                            "Failed to parse external scroll file '{file_name}': {err}"
                                         ));
                                     }
                                 }
                             }
                             Err(err) => {
                                 add_message(format!(
-                                    "Failed to read external scroll file '{}': {}",
-                                    file_name, err
+                                    "Failed to read external scroll file '{file_name}': {err}"
                                 ));
                             }
                         }
@@ -677,10 +674,7 @@ impl ConfigFs {
                 }
             }
             Err(err) => {
-                add_message(format!(
-                    "Failed to search for external scroll files: {}",
-                    err
-                ));
+                add_message(format!("Failed to search for external scroll files: {err}"));
             }
         }
 
@@ -761,23 +755,20 @@ impl ConfigFs {
                                             }
 
                                             add_message(format!(
-                                                "Loaded external variables from '{}'",
-                                                file_name
+                                                "Loaded external variables from '{file_name}'"
                                             ));
                                         }
                                     }
                                     Err(err) => {
                                         add_message(format!(
-                                            "Failed to parse external variables file '{}': {}",
-                                            file_name, err
+                                            "Failed to parse external variables file '{file_name}': {err}"
                                         ));
                                     }
                                 }
                             }
                             Err(err) => {
                                 add_message(format!(
-                                    "Failed to read external variables file '{}': {}",
-                                    file_name, err
+                                    "Failed to read external variables file '{file_name}': {err}"
                                 ));
                             }
                         }
@@ -786,8 +777,7 @@ impl ConfigFs {
             }
             Err(err) => {
                 add_message(format!(
-                    "Failed to search for external variables files: {}",
-                    err
+                    "Failed to search for external variables files: {err}"
                 ));
             }
         }

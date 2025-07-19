@@ -281,4 +281,4 @@ Grimoire CSS takes a major leap forward with the **v1.1.0 Arcana** release, brin
 
 # v1.0.0: Initial Release
 
-The debut release of Grimoire CSS, introducing a powerful CSS system engine designed for flexibility and performance.
+The debut release of Grimoire CSS, introducing a powerful CSS engine designed for flexibility and performance.

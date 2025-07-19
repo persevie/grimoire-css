@@ -1,4 +1,4 @@
-//! Core library module that orchestrates the core functionality of the Grimoire CSS system engine.
+//! Core library module that orchestrates the core functionality of the Grimoire CSS engine.
 //!
 //! This module provides two main functions:
 //! - [`start`] - Pure function that executes core CSS processing logic
@@ -22,7 +22,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use infrastructure::LightningCssOptimizer;
 use std::time::{Duration, Instant};
 
-pub use core::{color, component, config, spell::Spell, GrimoireCssError};
+pub use core::{GrimoireCssError, color, component, config, spell::Spell};
 
 static GRIMM_CALM: &str = " |(• ε •)|";
 static GRIMM_HAPPY: &str = " ヽ(• ε •)ﾉ";
@@ -143,9 +143,9 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
         );
 
         println!();
-        println!("{}", GRIMM_CURSED);
+        println!("{GRIMM_CURSED}");
         println!();
-        println!("{}", message);
+        println!("{message}");
 
         return Err(GrimoireCssError::InvalidInput(message));
     }
@@ -164,7 +164,7 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
         Ok(_) => {
             pb.finish_and_clear();
 
-            print!("\r\x1b[2K{}  Spells cast successfully.\n", GRIMM_HAPPY);
+            print!("\r\x1b[2K{GRIMM_HAPPY}  Spells cast successfully.\n");
 
             let duration = start_time.elapsed();
 
@@ -176,7 +176,7 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
                 "{}",
                 style(format!(
                     "{}",
-                    style(format!(" Enchanted in {:.2?}! ", duration))
+                    style(format!(" Enchanted in {duration:.2?}! "))
                         .white()
                         .on_color256(55)
                         .bright(),
@@ -189,7 +189,7 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
         }
         Err(e) => {
             pb.finish_and_clear();
-            print!("\r\x1b[2K{}\n", GRIMM_CURSED);
+            print!("\r\x1b[2K{GRIMM_CURSED}\n");
 
             println!();
             println!("{} {}", style(" Cursed! ").white().on_red().bright(), e);
@@ -205,7 +205,7 @@ fn output_saved_messages() {
     if !messages.is_empty() {
         println!();
         for msg in &messages {
-            println!("  • {}", msg);
+            println!("  • {msg}");
         }
     }
 }

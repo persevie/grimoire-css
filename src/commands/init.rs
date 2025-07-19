@@ -32,7 +32,7 @@ pub fn init(current_dir: &Path, mode: &str) -> Result<ConfigFs, GrimoireCssError
         }
         Err(err) => match err {
             GrimoireCssError::Serde(_) => {
-                let err_msg = format!("Failed to parse config. {}", err);
+                let err_msg = format!("Failed to parse config. {err}");
                 Err(GrimoireCssError::InvalidInput(err_msg))
             }
             _ => {

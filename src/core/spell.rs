@@ -27,7 +27,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use super::{component::get_css_property, GrimoireCssError};
+use super::{GrimoireCssError, component::get_css_property};
 
 #[derive(Eq, Hash, PartialEq, Debug, Clone)]
 pub struct Spell {
@@ -202,8 +202,7 @@ impl Spell {
 
         if count_of_used_variables != count_of_variables {
             return Err(GrimoireCssError::InvalidInput(format!(
-                "Not all variables used in scroll '{}'. Expected {}, but used {}",
-                scroll_name, count_of_variables, count_of_used_variables,
+                "Not all variables used in scroll '{scroll_name}'. Expected {count_of_variables}, but used {count_of_used_variables}",
             )));
         }
 

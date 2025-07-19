@@ -1,7 +1,7 @@
 use crate::buffer::add_message;
 use crate::commands::init::init;
 use crate::core::parser::parser_fs::ParserFs;
-use crate::core::{component::get_shorten_component, spell::Spell, GrimoireCssError};
+use crate::core::{GrimoireCssError, component::get_shorten_component, spell::Spell};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -120,7 +120,7 @@ pub fn shorten(current_dir: &Path) -> Result<(), GrimoireCssError> {
         if unit == "B" {
             format!("{} {}", value as isize, unit)
         } else {
-            format!("{:.2} {}", value, unit)
+            format!("{value:.2} {unit}")
         }
     }
     Ok(())

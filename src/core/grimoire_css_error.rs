@@ -37,14 +37,14 @@ pub enum GrimoireCssError {
 impl fmt::Display for GrimoireCssError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            GrimoireCssError::Io(e) => write!(f, "IO error: {}", e),
-            GrimoireCssError::Regex(e) => write!(f, "Regex error: {}", e),
-            GrimoireCssError::Serde(e) => write!(f, "Serialization/Deserialization error: {}", e),
-            GrimoireCssError::InvalidSpellFormat(s) => write!(f, "Invalid spell format: {}", s),
-            GrimoireCssError::InvalidInput(s) => write!(f, "Invalid input: {}", s),
-            GrimoireCssError::InvalidPath(s) => write!(f, "Invalid path: {}", s),
-            GrimoireCssError::GlobPatternError(s) => write!(f, "Glob pattern error: {}", s),
-            GrimoireCssError::RuntimeError(s) => write!(f, "Runtime error: {}", s),
+            GrimoireCssError::Io(e) => write!(f, "IO error: {e}"),
+            GrimoireCssError::Regex(e) => write!(f, "Regex error: {e}"),
+            GrimoireCssError::Serde(e) => write!(f, "Serialization/Deserialization error: {e}"),
+            GrimoireCssError::InvalidSpellFormat(s) => write!(f, "Invalid spell format: {s}"),
+            GrimoireCssError::InvalidInput(s) => write!(f, "Invalid input: {s}"),
+            GrimoireCssError::InvalidPath(s) => write!(f, "Invalid path: {s}"),
+            GrimoireCssError::GlobPatternError(s) => write!(f, "Glob pattern error: {s}"),
+            GrimoireCssError::RuntimeError(s) => write!(f, "Runtime error: {s}"),
         }
     }
 }
