@@ -300,8 +300,10 @@ impl<'a> CssGenerator<'a> {
     ) -> Result<(String, Option<String>), GrimoireCssError> {
         match property {
             "g-anim" => self.handle_g_anim(adapted_target, css_class_name),
-            "animation" => self.handle_animation(adapted_target, css_class_name),
-            "animation-name" => self.handle_animation_name(adapted_target, css_class_name),
+            "animation" | "anim" => self.handle_animation(adapted_target, css_class_name),
+            "animation-name" | "anim-n" => {
+                self.handle_animation_name(adapted_target, css_class_name)
+            }
             _ => {
                 if let Some(css_str) = try_handle_color_function(adapted_target) {
                     self.handle_generic_css(&css_str, css_class_name, property)
@@ -461,12 +463,14 @@ impl<'a> CssGenerator<'a> {
                     self.get_keyframe_class_from_animation(animation, grimoire_animation_name)?;
                 return Ok(Some(keyframes));
             }
-        }
+        };
 
-        if let Some(custom_animation) = self.custom_animations.get(adapted_target) {
-            let (keyframes, _) =
-                self.get_keyframe_class_from_animation(custom_animation, adapted_target)?;
-            return Ok(Some(keyframes));
+        for adapted_target_item in adapted_target.split_whitespace() {
+            if let Some(custom_animation) = self.custom_animations.get(adapted_target_item) {
+                let (keyframes, _) =
+                    self.get_keyframe_class_from_animation(custom_animation, adapted_target_item)?;
+                return Ok(Some(keyframes));
+            }
         }
 
         Ok(None)
