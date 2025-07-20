@@ -7,12 +7,22 @@ use std::collections::HashSet;
 
 use crate::core::GrimoireCssError;
 
+/// Represents the type of class collection being performed
+#[derive(Debug, Clone, Copy)]
+enum CollectionType {
+    TemplatedSpell,
+    CurlyClass,
+    RegularClass,
+}
+
 /// Base `Parser` is responsible for extracting CSS class names and templated spells from content.
 /// It uses regular expressions to find class names and spell-like patterns.
 pub struct Parser {
     tepmplated_spell_regex: Regex,
     class_name_regex: Regex,
     class_regex: Regex,
+    curly_class_name_regex: Regex,
+    curly_class_regex: Regex,
 }
 
 impl Parser {
@@ -22,11 +32,15 @@ impl Parser {
         let class_name_regex = Regex::new(r#"className=("([^"]*)"|'([^']*)'|`([^`]*)`)"#).unwrap();
         let class_regex = Regex::new(r#"class=("([^"]*)"|'([^']*)'|`([^`]*)`)"#).unwrap();
         let tepmplated_spell_regex = Regex::new(r#"(g![^;]*;)"#).unwrap();
+        let curly_class_name_regex = Regex::new(r#"className=\{((?:[^{}]|\{[^}]*\})*)\}"#).unwrap();
+        let curly_class_regex = Regex::new(r#"class=\{((?:[^{}]|\{[^}]*\})*)\}"#).unwrap();
 
         Self {
             tepmplated_spell_regex,
             class_name_regex,
             class_regex,
+            curly_class_name_regex,
+            curly_class_regex,
         }
     }
 
@@ -51,25 +65,35 @@ impl Parser {
         mut splitter: Option<S>,
         class_names: &mut Vec<String>,
         seen_class_names: &mut HashSet<String>,
-        is_templated_spell: bool,
+        collection_type: CollectionType,
     ) -> Result<(), GrimoireCssError>
     where
         P: FnMut(&str) -> bool,
         S: FnMut(&str) -> Vec<String>,
     {
         for cap in regex.captures_iter(content) {
-            let class_value = if is_templated_spell {
-                cap.get(1).map(|m| m.as_str()).unwrap_or("")
-            } else {
-                cap.get(2)
+            let class_value = match collection_type {
+                CollectionType::TemplatedSpell => cap.get(1).map(|m| m.as_str()).unwrap_or(""),
+                CollectionType::CurlyClass => cap.get(1).map(|m| m.as_str()).unwrap_or(""),
+                CollectionType::RegularClass => cap
+                    .get(2)
                     .or_else(|| cap.get(3))
                     .or_else(|| cap.get(4))
                     .map(|m| m.as_str())
-                    .unwrap_or("")
+                    .unwrap_or(""),
             };
 
             let classes = if let Some(splitter_fn) = &mut splitter {
-                splitter_fn(class_value)
+                let splitted = splitter_fn(class_value);
+
+                if matches!(collection_type, CollectionType::CurlyClass) {
+                    splitted
+                        .into_iter()
+                        .map(|s| s.replace(['\'', '"', '`'], ""))
+                        .collect()
+                } else {
+                    splitted
+                }
             } else {
                 vec![class_value.to_string()]
             };
@@ -119,7 +143,7 @@ impl Parser {
             Some(whitespace_splitter),
             class_names,
             seen_class_names,
-            false,
+            CollectionType::RegularClass,
         )?;
 
         // Collect all 'class' matches
@@ -130,7 +154,7 @@ impl Parser {
             Some(whitespace_splitter),
             class_names,
             seen_class_names,
-            false,
+            CollectionType::RegularClass,
         )?;
 
         // Collect all 'templated class' (starts with 'g!', ends with ';') matches
@@ -141,7 +165,29 @@ impl Parser {
             None,
             class_names,
             seen_class_names,
-            true,
+            CollectionType::TemplatedSpell,
+        )?;
+
+        // Collect all curly 'className' matches
+        Self::collect_classes::<fn(&str) -> bool, fn(&str) -> Vec<String>>(
+            content,
+            &self.curly_class_name_regex,
+            None,
+            Some(whitespace_splitter),
+            class_names,
+            seen_class_names,
+            CollectionType::CurlyClass,
+        )?;
+
+        // Collect all curly 'class' matches
+        Self::collect_classes::<fn(&str) -> bool, fn(&str) -> Vec<String>>(
+            content,
+            &self.curly_class_regex,
+            None,
+            Some(whitespace_splitter),
+            class_names,
+            seen_class_names,
+            CollectionType::CurlyClass,
         )?;
 
         Ok(())
@@ -221,5 +267,33 @@ mod tests {
         for i in 1..=6 {
             assert!(class_names.contains(&format!("test{i}")));
         }
+    }
+
+    #[test]
+    fn test_collect_curly_class_and_classname_attributes() {
+        let parser = Parser::new();
+        let mut class_names = Vec::new();
+        let mut seen_class_names = HashSet::new();
+
+        let content = r#"
+            <div className={isError ? 'color=red regular-class-error' : 'color=green regular-class-success'}></div>
+            <div class={`display=grid state-${state}`}></div>
+        "#;
+
+        parser
+            .collect_candidates(content, &mut class_names, &mut seen_class_names)
+            .unwrap();
+
+        assert_eq!(class_names.len(), 9);
+
+        assert!(class_names.contains(&"isError".to_string()));
+        assert!(class_names.contains(&"?".to_string()));
+        assert!(class_names.contains(&"color=red".to_string()));
+        assert!(class_names.contains(&"regular-class-error".to_string()));
+        assert!(class_names.contains(&":".to_string()));
+        assert!(class_names.contains(&"color=green".to_string()));
+        assert!(class_names.contains(&"regular-class-success".to_string()));
+        assert!(class_names.contains(&"display=grid".to_string()));
+        assert!(class_names.contains(&"state-${state}".to_string()));
     }
 }
