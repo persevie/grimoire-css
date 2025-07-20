@@ -44,6 +44,61 @@ impl Parser {
         }
     }
 
+    /// Removes unpaired brackets and quotes from a string
+    fn clean_unpaired_brackets(s: &str) -> String {
+        let chars: Vec<char> = s.chars().collect();
+        let mut result = Vec::with_capacity(chars.len());
+        let mut stack = Vec::new();
+        let mut keep = vec![false; chars.len()];
+
+        // First pass: mark paired brackets
+        for (i, &ch) in chars.iter().enumerate() {
+            match ch {
+                '(' | '[' | '{' => stack.push((ch, i)),
+                ')' => {
+                    if let Some((open, open_idx)) = stack.pop() {
+                        if open == '(' {
+                            keep[open_idx] = true;
+                            keep[i] = true;
+                        }
+                    }
+                }
+                ']' => {
+                    if let Some((open, open_idx)) = stack.pop() {
+                        if open == '[' {
+                            keep[open_idx] = true;
+                            keep[i] = true;
+                        }
+                    }
+                }
+                '}' => {
+                    if let Some((open, open_idx)) = stack.pop() {
+                        if open == '{' {
+                            keep[open_idx] = true;
+                            keep[i] = true;
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // Second pass: build result, keeping only paired brackets and other chars
+        for (i, &ch) in chars.iter().enumerate() {
+            match ch {
+                '(' | ')' | '[' | ']' | '{' | '}' => {
+                    if keep[i] {
+                        result.push(ch);
+                    }
+                }
+                '\'' | '"' | '`' => {} // Remove quotes
+                _ => result.push(ch),
+            }
+        }
+
+        result.into_iter().collect()
+    }
+
     /// Collects class names from content based on the given regular expression and optional predicate/splitter functions.
     ///
     /// # Arguments
@@ -89,7 +144,7 @@ impl Parser {
                 if matches!(collection_type, CollectionType::CurlyClass) {
                     splitted
                         .into_iter()
-                        .map(|s| s.replace(['\'', '"', '`'], ""))
+                        .map(|s| Self::clean_unpaired_brackets(&s))
                         .collect()
                 } else {
                     splitted
@@ -295,5 +350,31 @@ mod tests {
         assert!(class_names.contains(&"regular-class-success".to_string()));
         assert!(class_names.contains(&"display=grid".to_string()));
         assert!(class_names.contains(&"state-${state}".to_string()));
+    }
+
+    #[test]
+    fn test_clean_unpaired_brackets() {
+        let parser = Parser::new();
+        let mut class_names = Vec::new();
+        let mut seen_class_names = HashSet::new();
+
+        let content = r#"
+            <div className={`class-with-{unpaired} (brackets] and [quotes"`}></div>
+            <div class={`normal-class {paired} [brackets] (work)`}></div>
+        "#;
+
+        parser
+            .collect_candidates(content, &mut class_names, &mut seen_class_names)
+            .unwrap();
+
+        // Should clean unpaired brackets and quotes
+        assert!(class_names.contains(&"class-with-{unpaired}".to_string()));
+        assert!(class_names.contains(&"brackets".to_string()));
+        assert!(class_names.contains(&"and".to_string()));
+        assert!(class_names.contains(&"quotes".to_string()));
+        assert!(class_names.contains(&"normal-class".to_string()));
+        assert!(class_names.contains(&"{paired}".to_string()));
+        assert!(class_names.contains(&"[brackets]".to_string()));
+        assert!(class_names.contains(&"(work)".to_string()));
     }
 }
