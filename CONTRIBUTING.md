@@ -13,7 +13,7 @@
       - [4. Finalizing a Release](#4-finalizing-a-release)
       - [5. Handling Hotfixes](#5-handling-hotfixes)
       - [6. Handling Chores](#6-handling-chores)
-      - [7. Updating Feature and Fix Branches](#7-updating-feature-and-fix-branches)
+      - [7. Updating Feature, Refactor, and Fix Branches](#7-updating-feature-refactor-and-fix-branches)
     - [Automated Tagging and Publishing](#automated-tagging-and-publishing)
     - [Repository Security and Permissions](#repository-security-and-permissions)
     - [Project Management](#project-management)
@@ -62,6 +62,10 @@ We follow a structured Git workflow to manage the lifecycle of code and contribu
 
   - Naming convention: `hotfix/{hotfix-description}`
 
+- **Refactor Branches**: Branches for code refactoring that improves code structure, readability, or performance without changing functionality.
+
+  - Naming convention: `refactor/{refactor-description}`
+
 - **Chore Branches**: Branches for maintenance tasks such as updating documentation, CI configurations, or other non-feature/non-fix changes.
   - Naming convention: `chore/{chore-description}`
 
@@ -88,6 +92,10 @@ We encourage contributors to propose new features, fixes, or chores, even if the
     ```bash
     git checkout -b fix/{fix-description} main
     ```
+  - For refactoring:
+    ```bash
+    git checkout -b refactor/{refactor-description} main
+    ```
   - For hotfixes:
     ```bash
     git checkout -b hotfix/{hotfix-description} main
@@ -105,7 +113,7 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 - **Open a Pull Request**:
 
   - **Target Branch**:
-    - For features and regular fixes:
+    - For features, refactoring, and regular fixes:
       - Open a PR against the appropriate `rc/{version}` branch.
       - If unsure which release your contribution will fit into, you can initially target your PR to `main`, and maintainers will retarget it as needed.
     - For hotfixes and chores:
@@ -131,9 +139,9 @@ We encourage contributors to propose new features, fixes, or chores, even if the
     git checkout -b rc/1.2.0 main
     ```
 
-- **Merging Feature and Fix Branches**:
+- **Merging Feature, Refactor, and Fix Branches**:
 
-  - Maintainers will merge feature (`feature/**`) and fix (`fix/**`) branches intended for the release into the `rc/{version}` branch via pull requests.
+  - Maintainers will merge feature (`feature/**`), refactor (`refactor/**`), and fix (`fix/**`) branches intended for the release into the `rc/{version}` branch via pull requests.
 
 - **Testing and Stabilization**:
   - Perform thorough testing on the `rc/{version}` branch.
@@ -224,10 +232,10 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 - **Note**:
   - Merging `chore/**` branches into `main` will **not** trigger tagging or a new release.
 
-#### 7. Updating Feature and Fix Branches
+#### 7. Updating Feature, Refactor, and Fix Branches
 
 - **Sync with `main`**:
-  - Regularly merge `main` into your feature (`feature/**`) and fix (`fix/**`) branches to keep them up to date.
+  - Regularly merge `main` into your feature (`feature/**`), refactor (`refactor/**`), and fix (`fix/**`) branches to keep them up to date.
     ```bash
     git checkout feature/{feature-name}
     git merge main

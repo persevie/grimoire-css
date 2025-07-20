@@ -1,9 +1,10 @@
 [package]
 name = "grimoire_css"
-version = "1.5.0"
-edition = "2021"
+version = "1.6.0"
+edition = "2024"
+rust-version = "1.88"
 authors = ["Dmitrii Shatokhin <dmtrshatokhin@gmail.com>"]
-description = "A magical CSS system engine for all environments"
+description = "A magical CSS engine for all environments"
 license = "MIT"
 keywords = ["css", "css-compiler", "styling", "web", "system"]
 categories = ["web-programming", "development-tools"]
@@ -29,6 +30,7 @@ codegen-units = 1
 [dependencies]
 console = "0.15.8"
 glob = "0.3.1"
+grimoire_css_color_toolkit = "1.0.0"
 indicatif = "0.17.8"
 lazy_static = "1.5.0"
 lightningcss = { version = "1.0.0-alpha.59", features = ["browserslist"] }

@@ -6,8 +6,8 @@
 use std::collections::HashSet;
 
 use crate::core::{
-    compiled_css::CompiledCssInMemory, config::config_in_memory::ConfigInMemory, parser::Parser,
-    spell::Spell, CssOptimizer, GrimoireCssError,
+    CssOptimizer, GrimoireCssError, compiled_css::CompiledCssInMemory,
+    config::config_in_memory::ConfigInMemory, parser::Parser, spell::Spell,
 };
 
 use super::CssBuilder;
@@ -132,7 +132,7 @@ mod tests {
         let mut builder = CssBuilderInMemory::new(&config, &optimizer).unwrap();
         let result = builder.build().unwrap();
 
-        println!("result: {:?}", result);
+        println!("result: {result:?}");
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].name, "test");
         assert!(result[0].content.eq(".display\\=flex{display:flex;}"));

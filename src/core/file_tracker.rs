@@ -45,10 +45,7 @@ impl FileTracker {
                 if file_path.exists() {
                     fs::remove_file(&file_path)?;
                 } else {
-                    eprintln!(
-                        "Warning: File {} does not exist and cannot be deleted.",
-                        file
-                    );
+                    eprintln!("Warning: File {file} does not exist and cannot be deleted.");
                 }
             }
         }
@@ -86,8 +83,7 @@ mod tests {
         let lock_file_path = cwd.join("grimoire/grimoire.lock.json");
         assert!(
             lock_file_path.exists(),
-            "Lock file was not created at expected path: {:?}",
-            lock_file_path
+            "Lock file was not created at expected path: {lock_file_path:?}"
         );
     }
 
@@ -120,19 +116,16 @@ mod tests {
 
         assert!(
             !old_file1.exists(),
-            "Old file was not deleted: {:?}",
-            old_file1
+            "Old file was not deleted: {old_file1:?}"
         );
         assert!(
             !old_file2.exists(),
-            "Old file was not deleted: {:?}",
-            old_file2
+            "Old file was not deleted: {old_file2:?}"
         );
 
         assert!(
             new_file.exists(),
-            "New file was unexpectedly deleted: {:?}",
-            new_file
+            "New file was unexpectedly deleted: {new_file:?}"
         );
     }
 
@@ -150,8 +143,7 @@ mod tests {
         let lock_file_path = cwd.join("grimoire/grimoire.lock.json");
         assert!(
             lock_file_path.exists(),
-            "Lock file was not created at expected path: {:?}",
-            lock_file_path
+            "Lock file was not created at expected path: {lock_file_path:?}"
         );
     }
 }
