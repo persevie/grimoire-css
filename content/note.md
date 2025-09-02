@@ -1,0 +1,1 @@
+> For the best experience and access to advanced features like playgrounds and interactive previews, please visit the [Grimoire CSS site](https://grimoirecss.com). The documentation is the same in both places.
