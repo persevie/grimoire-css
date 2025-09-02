@@ -221,10 +221,10 @@ impl Spell {
         let mut spells = Vec::with_capacity(css_classes.len());
 
         for cs in css_classes {
-            if !shared_spells.contains(&cs) {
-                if let Some(spell) = Spell::new(&cs, shared_spells, scrolls)? {
-                    spells.push(spell);
-                }
+            if !shared_spells.contains(&cs)
+                && let Some(spell) = Spell::new(&cs, shared_spells, scrolls)?
+            {
+                spells.push(spell);
             }
         }
 

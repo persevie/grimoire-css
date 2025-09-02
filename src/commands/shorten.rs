@@ -70,15 +70,14 @@ pub fn shorten(current_dir: &Path) -> Result<(), GrimoireCssError> {
                     }
                 } else if let Ok(Some(spell)) =
                     Spell::new(raw_spell, &config.shared_spells, &config.scrolls)
+                    && let Some(short) = get_shorten_component(&spell.component)
                 {
-                    if let Some(short) = get_shorten_component(&spell.component) {
-                        let short_spell = raw_spell.replacen(&spell.component, short, 1);
-                        if raw_spell != &short_spell && new_content.contains(raw_spell) {
-                            let count = new_content.matches(raw_spell).count();
-                            new_content = new_content.replace(raw_spell, &short_spell);
-                            replaced_any = true;
-                            replaced_count += count;
-                        }
+                    let short_spell = raw_spell.replacen(&spell.component, short, 1);
+                    if raw_spell != &short_spell && new_content.contains(raw_spell) {
+                        let count = new_content.matches(raw_spell).count();
+                        new_content = new_content.replace(raw_spell, &short_spell);
+                        replaced_any = true;
+                        replaced_count += count;
                     }
                 }
             }

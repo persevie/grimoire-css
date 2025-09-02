@@ -457,12 +457,12 @@ impl<'a> CssGenerator<'a> {
     /// * `Ok(None)` - If no matching keyframes are found.
     /// * `Err(GrimoireCSSError)` - If an error occurs during processing.
     fn get_additional_css(&self, adapted_target: &str) -> Result<Option<String>, GrimoireCssError> {
-        if let Some(grimoire_animation_name) = Self::find_grimoire_animation_name(adapted_target) {
-            if let Some(animation) = ANIMATIONS.get(grimoire_animation_name) {
-                let (keyframes, _) =
-                    self.get_keyframe_class_from_animation(animation, grimoire_animation_name)?;
-                return Ok(Some(keyframes));
-            }
+        if let Some(grimoire_animation_name) = Self::find_grimoire_animation_name(adapted_target)
+            && let Some(animation) = ANIMATIONS.get(grimoire_animation_name)
+        {
+            let (keyframes, _) =
+                self.get_keyframe_class_from_animation(animation, grimoire_animation_name)?;
+            return Ok(Some(keyframes));
         };
 
         for adapted_target_item in adapted_target.split_whitespace() {
