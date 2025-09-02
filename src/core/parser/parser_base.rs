@@ -56,27 +56,27 @@ impl Parser {
             match ch {
                 '(' | '[' | '{' => stack.push((ch, i)),
                 ')' => {
-                    if let Some((open, open_idx)) = stack.pop() {
-                        if open == '(' {
-                            keep[open_idx] = true;
-                            keep[i] = true;
-                        }
+                    if let Some((open, open_idx)) = stack.pop()
+                        && open == '('
+                    {
+                        keep[open_idx] = true;
+                        keep[i] = true;
                     }
                 }
                 ']' => {
-                    if let Some((open, open_idx)) = stack.pop() {
-                        if open == '[' {
-                            keep[open_idx] = true;
-                            keep[i] = true;
-                        }
+                    if let Some((open, open_idx)) = stack.pop()
+                        && open == '['
+                    {
+                        keep[open_idx] = true;
+                        keep[i] = true;
                     }
                 }
                 '}' => {
-                    if let Some((open, open_idx)) = stack.pop() {
-                        if open == '{' {
-                            keep[open_idx] = true;
-                            keep[i] = true;
-                        }
+                    if let Some((open, open_idx)) = stack.pop()
+                        && open == '{'
+                    {
+                        keep[open_idx] = true;
+                        keep[i] = true;
                     }
                 }
                 _ => {}
