@@ -1,5 +1,5 @@
 use crate::core::{GrimoireCssError, SourceFile};
-use miette::Diagnostic;
+use miette::{Diagnostic, LabeledSpan, SourceCode};
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -15,65 +15,104 @@ fn named_source_from(source: &Arc<SourceFile>) -> miette::NamedSource<String> {
     miette::NamedSource::new(source.name.clone(), content)
 }
 
-#[derive(Debug, Error, Diagnostic)]
+#[derive(Debug, Error)]
 pub enum GrimoireCssDiagnostic {
     #[error("IO error: {0}")]
-    #[diagnostic(code(grimoire_css::io))]
     Io(String),
 
     #[error("Regex error: {0}")]
-    #[diagnostic(code(grimoire_css::regex))]
     Regex(String),
 
     #[error("Serialization/Deserialization error: {0}")]
-    #[diagnostic(code(grimoire_css::serde))]
     Serde(String),
 
     #[error("Invalid input: {0}")]
-    #[diagnostic(code(grimoire_css::invalid_input))]
     InvalidInput(String),
 
     #[error("Invalid path: {0}")]
-    #[diagnostic(code(grimoire_css::invalid_path))]
     InvalidPath(String),
 
     #[error("Glob pattern error: {0}")]
-    #[diagnostic(code(grimoire_css::glob_pattern))]
     GlobPatternError(String),
 
     #[error("Runtime error: {0}")]
-    #[diagnostic(code(grimoire_css::runtime))]
     RuntimeError(String),
 
     #[error("CSS Optimization failed: {0}")]
-    #[diagnostic(code(grimoire_css::optimization))]
     OptimizationError(String),
 
     #[error("Invalid spell format: {message}")]
-    #[diagnostic(code(grimoire_css::invalid_spell_format))]
     InvalidSpellFormat {
         message: String,
-        #[source_code]
         src: miette::NamedSource<String>,
-        #[label("{label}")]
         span: (usize, usize),
         label: String,
-        #[help]
         help: Option<String>,
     },
 
     #[error("{message}")]
-    #[diagnostic(code(grimoire_css::compile_error))]
     CompileError {
         message: String,
-        #[source_code]
         src: miette::NamedSource<String>,
-        #[label("{label}")]
         span: (usize, usize),
         label: String,
-        #[help]
         help: Option<String>,
     },
+}
+
+impl Diagnostic for GrimoireCssDiagnostic {
+    fn code<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
+        match self {
+            GrimoireCssDiagnostic::Io(_) => Some(Box::new("grimoire_css::io")),
+            GrimoireCssDiagnostic::Regex(_) => Some(Box::new("grimoire_css::regex")),
+            GrimoireCssDiagnostic::Serde(_) => Some(Box::new("grimoire_css::serde")),
+            GrimoireCssDiagnostic::InvalidInput(_) => Some(Box::new("grimoire_css::invalid_input")),
+            GrimoireCssDiagnostic::InvalidPath(_) => Some(Box::new("grimoire_css::invalid_path")),
+            GrimoireCssDiagnostic::GlobPatternError(_) => {
+                Some(Box::new("grimoire_css::glob_pattern"))
+            }
+            GrimoireCssDiagnostic::RuntimeError(_) => Some(Box::new("grimoire_css::runtime")),
+            GrimoireCssDiagnostic::OptimizationError(_) => {
+                Some(Box::new("grimoire_css::optimization"))
+            }
+            GrimoireCssDiagnostic::InvalidSpellFormat { .. } => {
+                Some(Box::new("grimoire_css::invalid_spell_format"))
+            }
+            GrimoireCssDiagnostic::CompileError { .. } => {
+                Some(Box::new("grimoire_css::compile_error"))
+            }
+        }
+    }
+
+    fn help<'a>(&'a self) -> Option<Box<dyn std::fmt::Display + 'a>> {
+        match self {
+            GrimoireCssDiagnostic::InvalidSpellFormat { help, .. }
+            | GrimoireCssDiagnostic::CompileError { help, .. } => help
+                .as_deref()
+                .map(|h| Box::new(h) as Box<dyn std::fmt::Display>),
+            _ => None,
+        }
+    }
+
+    fn source_code(&self) -> Option<&dyn SourceCode> {
+        match self {
+            GrimoireCssDiagnostic::InvalidSpellFormat { src, .. }
+            | GrimoireCssDiagnostic::CompileError { src, .. } => Some(src),
+            _ => None,
+        }
+    }
+
+    fn labels(&self) -> Option<Box<dyn Iterator<Item = LabeledSpan> + '_>> {
+        match self {
+            GrimoireCssDiagnostic::InvalidSpellFormat { span, label, .. }
+            | GrimoireCssDiagnostic::CompileError { span, label, .. } => {
+                Some(Box::new(std::iter::once(
+                    LabeledSpan::new_primary_with_span(Some(label.clone()), *span),
+                )))
+            }
+            _ => None,
+        }
+    }
 }
 
 impl From<&GrimoireCssError> for GrimoireCssDiagnostic {
