@@ -13,8 +13,8 @@ use crate::{
     buffer::add_message,
     core::{
         ConfigFs, ConfigFsCssCustomProperties, CssOptimizer, GrimoireCssError,
-        build_info::BuildInfo, file_tracker::FileTracker, parser::ParserFs, spell::Spell,
-        source_file::SourceFile,
+        build_info::BuildInfo, file_tracker::FileTracker, parser::ParserFs,
+        source_file::SourceFile, spell::Spell,
     },
 };
 use regex::Regex;

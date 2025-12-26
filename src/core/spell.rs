@@ -31,10 +31,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use super::{
-    GrimoireCssError,
-    component::get_css_property,
-    source_file::SourceFile,
-    spell_value_validator,
+    GrimoireCssError, component::get_css_property, source_file::SourceFile, spell_value_validator,
 };
 
 #[derive(Debug, Clone)]
@@ -399,8 +396,8 @@ Example: complex-card=arg1_arg2_arg3"
 
 #[cfg(test)]
 mod tests {
-    use crate::core::spell::Spell;
     use crate::core::source_file::SourceFile;
+    use crate::core::spell::Spell;
     use std::collections::{HashMap, HashSet};
     use std::sync::Arc;
 

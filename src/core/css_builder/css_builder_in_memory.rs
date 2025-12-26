@@ -8,8 +8,8 @@ use std::sync::Arc;
 
 use crate::core::{
     CssOptimizer, GrimoireCssError, compiled_css::CompiledCssInMemory,
-    config::config_in_memory::ConfigInMemory, parser::Parser, spell::Spell,
-    source_file::SourceFile,
+    config::config_in_memory::ConfigInMemory, parser::Parser, source_file::SourceFile,
+    spell::Spell,
 };
 
 use super::CssBuilder;
@@ -65,11 +65,7 @@ impl<'a> CssBuilderInMemory<'a> {
             self.parser
                 .collect_candidates(&content, &mut class_names, &mut seen_class_names)?;
 
-            let source = Arc::new(SourceFile::new(
-                None,
-                project.name.clone(),
-                content,
-            ));
+            let source = Arc::new(SourceFile::new(None, project.name.clone(), content));
 
             // Generate spells using empty shared_spells set since we're working in memory
             let spells = Spell::generate_spells_from_classes(

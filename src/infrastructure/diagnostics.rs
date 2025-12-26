@@ -76,9 +76,13 @@ impl From<&GrimoireCssError> for GrimoireCssDiagnostic {
             GrimoireCssError::Serde(e) => GrimoireCssDiagnostic::Serde(e.to_string()),
             GrimoireCssError::InvalidInput(msg) => GrimoireCssDiagnostic::InvalidInput(msg.clone()),
             GrimoireCssError::InvalidPath(msg) => GrimoireCssDiagnostic::InvalidPath(msg.clone()),
-            GrimoireCssError::GlobPatternError(msg) => GrimoireCssDiagnostic::GlobPatternError(msg.clone()),
+            GrimoireCssError::GlobPatternError(msg) => {
+                GrimoireCssDiagnostic::GlobPatternError(msg.clone())
+            }
             GrimoireCssError::RuntimeError(msg) => GrimoireCssDiagnostic::RuntimeError(msg.clone()),
-            GrimoireCssError::OptimizationError(msg) => GrimoireCssDiagnostic::OptimizationError(msg.clone()),
+            GrimoireCssError::OptimizationError(msg) => {
+                GrimoireCssDiagnostic::OptimizationError(msg.clone())
+            }
             GrimoireCssError::InvalidSpellFormat {
                 message,
                 span,

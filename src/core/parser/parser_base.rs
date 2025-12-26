@@ -165,7 +165,8 @@ impl Parser {
                         //
                         // We return a Diagnostic-style error so the CLI can render it like rustc.
                         return Err(GrimoireCssError::CompileError {
-                            message: "Spaces are not allowed inside a single spell token.".to_string(),
+                            message: "Spaces are not allowed inside a single spell token."
+                                .to_string(),
                             span: (start, length),
                             label: "Error in this spell".to_string(),
                             help: Some(format!(

@@ -45,7 +45,9 @@ static SPELL_COLOR_FUNCTIONS: &[(&str, SpellColorFunc)] = &[
 /// * `Some(String)` containing the resulting color in hex form (e.g., `"#808080"`),
 ///   if parsing and the color transformation succeed.
 /// * `None` if the string is not in a valid format, or the color transformation failed.
-pub fn try_handle_color_function(adapted_target: &str) -> Result<Option<String>, crate::core::GrimoireCssError> {
+pub fn try_handle_color_function(
+    adapted_target: &str,
+) -> Result<Option<String>, crate::core::GrimoireCssError> {
     let Some((func_name, args_str)) = parse_function_call(adapted_target) else {
         return Ok(None);
     };
@@ -77,9 +79,13 @@ pub fn try_handle_color_function(adapted_target: &str) -> Result<Option<String>,
         "g-invert" => "g-invert(color [weight])",
         "g-mix" => "g-mix(color1 color2 weight)",
         "g-adjust-hue" => "g-adjust-hue(color degrees)",
-        "g-adjust-color" => "g-adjust-color(color [red_delta green_delta blue_delta hue_delta sat_delta light_delta alpha_delta])",
+        "g-adjust-color" => {
+            "g-adjust-color(color [red_delta green_delta blue_delta hue_delta sat_delta light_delta alpha_delta])"
+        }
         "g-change-color" => "g-change-color(color [red green blue hue sat light alpha])",
-        "g-scale-color" => "g-scale-color(color [red_scale green_scale blue_scale saturation_scale lightness_scale alpha_scale])",
+        "g-scale-color" => {
+            "g-scale-color(color [red_scale green_scale blue_scale saturation_scale lightness_scale alpha_scale])"
+        }
         "g-rgba" => "g-rgba(color alpha)",
         "g-lighten" => "g-lighten(color amount)",
         "g-darken" => "g-darken(color amount)",
@@ -391,7 +397,10 @@ mod tests {
 
     /// A helper to compare Option<String> equality with Some("#rrggbb").
     /// This is just to reduce boilerplate in our tests.
-    fn assert_hex_eq(got: Result<Option<String>, crate::core::GrimoireCssError>, expected_hex: &str) {
+    fn assert_hex_eq(
+        got: Result<Option<String>, crate::core::GrimoireCssError>,
+        expected_hex: &str,
+    ) {
         assert_eq!(got.unwrap(), Some(expected_hex.to_string()));
     }
 

@@ -2,8 +2,8 @@
 //! with filesystem-specific functionality for collecting CSS classes from files and directories.
 
 use super::Parser;
-use crate::{buffer::add_message, core::GrimoireCssError};
 use crate::core::SourceFile;
+use crate::{buffer::add_message, core::GrimoireCssError};
 use std::{
     collections::HashSet,
     fs,
