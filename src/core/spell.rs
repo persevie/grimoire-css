@@ -376,17 +376,17 @@ Example: complex-card=arg1_arg2_arg3"
         let mut spells = Vec::with_capacity(css_classes.len());
 
         for (cs, span) in css_classes {
-            if !shared_spells.contains(&cs) {
-                if let Some(spell) = Spell::new(
+            if !shared_spells.contains(&cs)
+                && let Some(spell) = Spell::new(
                     &cs,
                     shared_spells,
                     scrolls,
                     span,
                     file_path.clone(),
                     source.clone(),
-                )? {
-                    spells.push(spell);
-                }
+                )?
+            {
+                spells.push(spell);
             }
         }
 

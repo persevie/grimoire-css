@@ -118,23 +118,23 @@ impl<'a> CssGenerator<'a> {
             };
         }
 
-        if let GrimoireCssError::InvalidInput(msg) = &error {
-            if msg.starts_with("Unknown animation") {
-                return GrimoireCssError::CompileError {
-                    message: format!("Invalid input: {msg}"),
-                    span: spell.span,
-                    label: "Error in this spell".to_string(),
-                    help: Some(
-                        "The animation name is not known.\n\
+        if let GrimoireCssError::InvalidInput(msg) = &error
+            && msg.starts_with("Unknown animation")
+        {
+            return GrimoireCssError::CompileError {
+                message: format!("Invalid input: {msg}"),
+                span: spell.span,
+                label: "Error in this spell".to_string(),
+                help: Some(
+                    "The animation name is not known.\n\
 \
 Fix options:\n\
 - Use a built-in animation name supported by Grimoire CSS\n\
 - Or define a custom animation in config -> custom_animations\n"
-                            .to_string(),
-                    ),
-                    source_file: spell.source.clone(),
-                };
-            }
+                        .to_string(),
+                ),
+                source_file: spell.source.clone(),
+            };
         }
 
         let message = error.to_string();
@@ -283,7 +283,7 @@ Fix options:\n\
                     //
                     // We intentionally return a "context-carrying" error variant here. The outer layer
                     // (generate_css/create_compile_error) will attach the actual source and span.
-                    return Err(GrimoireCssError::CompileError {
+                    Err(GrimoireCssError::CompileError {
                                                 message: "Spaces are not allowed inside a single spell token.".to_string(),
                         span: (0, 0),
                                                 label: "Error in this spell".to_string(),
@@ -294,7 +294,7 @@ Fix: replace spaces with '_' inside the value, e.g.:\n\
 Offending spell: '{class_name}'"
                                                 )),
                         source_file: None,
-                    });
+                    })
                 }
                 _ => Ok(c.to_string()),
             })

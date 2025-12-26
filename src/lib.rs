@@ -194,9 +194,8 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
 
             println!();
             println!(
-                "{} {}",
-                style(" Cursed! ").white().on_red().bright(),
-                "Something went wrong..."
+                "{} Something went wrong...",
+                style(" Cursed! ").white().on_red().bright()
             );
             println!();
 

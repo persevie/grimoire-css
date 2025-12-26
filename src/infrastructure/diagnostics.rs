@@ -93,9 +93,7 @@ impl From<&GrimoireCssError> for GrimoireCssDiagnostic {
                 let src = source_file
                     .as_ref()
                     .map(named_source_from)
-                    .unwrap_or_else(|| {
-                        miette::NamedSource::new("unknown".to_string(), "".to_string())
-                    });
+                    .unwrap_or_else(|| miette::NamedSource::new("unknown", "".to_string()));
 
                 GrimoireCssDiagnostic::InvalidSpellFormat {
                     message: message.clone(),
@@ -115,9 +113,7 @@ impl From<&GrimoireCssError> for GrimoireCssDiagnostic {
                 let src = source_file
                     .as_ref()
                     .map(named_source_from)
-                    .unwrap_or_else(|| {
-                        miette::NamedSource::new("unknown".to_string(), "".to_string())
-                    });
+                    .unwrap_or_else(|| miette::NamedSource::new("unknown", "".to_string()));
 
                 GrimoireCssDiagnostic::CompileError {
                     message: message.clone(),

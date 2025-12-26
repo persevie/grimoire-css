@@ -11,6 +11,12 @@ use std::{
     sync::Arc,
 };
 
+type Span = (usize, usize);
+type ClassWithSpan = (String, Span);
+
+type SingleOutputFileResult = (PathBuf, String, Vec<ClassWithSpan>);
+type MultiOutputFileResult = (PathBuf, PathBuf, String, Vec<ClassWithSpan>);
+
 /// `ParserFs` extends the base `Parser` with filesystem-specific functionality.
 /// It handles file reading, directory traversal, and path resolution.
 pub struct ParserFs {
@@ -47,7 +53,7 @@ impl ParserFs {
     pub fn collect_classes_single_output(
         &self,
         input_paths: &Vec<String>,
-    ) -> Result<Vec<(PathBuf, String, Vec<(String, (usize, usize))>)>, GrimoireCssError> {
+    ) -> Result<Vec<SingleOutputFileResult>, GrimoireCssError> {
         let mut results = Vec::new();
         let mut seen_class_names: HashSet<String> = HashSet::new();
 
@@ -77,8 +83,7 @@ impl ParserFs {
         &self,
         input_paths: &Vec<String>,
         output_dir_path: &Path,
-    ) -> Result<Vec<(PathBuf, PathBuf, String, Vec<(String, (usize, usize))>)>, GrimoireCssError>
-    {
+    ) -> Result<Vec<MultiOutputFileResult>, GrimoireCssError> {
         let mut res = Vec::new();
 
         for input_path_string in input_paths {
@@ -147,7 +152,7 @@ impl ParserFs {
     fn collect_spells_from_path(
         &self,
         path: &Path,
-        results: &mut Vec<(PathBuf, String, Vec<(String, (usize, usize))>)>,
+        results: &mut Vec<SingleOutputFileResult>,
         seen_class_names: &mut HashSet<String>,
     ) -> Result<(), GrimoireCssError> {
         if path.is_file() {
