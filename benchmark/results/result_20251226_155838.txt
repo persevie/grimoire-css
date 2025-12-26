@@ -1,0 +1,123 @@
+
+
+================================================================================================================================================================
+GRIMOIRE PERFORMANCE BENCHMARK REPORT
+================================================================================
+Generated: 2025-12-26 15:58:38
+
+SYSTEM INFORMATION
+--------------------------------------------------------------------------------
+OS:      Darwin 25.2.0
+CPU:     arm
+Cores:   12 physical, 12 logical
+Memory:  32.0 GB
+
+INPUT SUMMARY
+--------------------------------------------------------------------------------
+Unique Utility Classes: 400006
+Total Input Size: 47.19 MB
+Input HTML Files: 100000
+
+PERFORMANCE METRICS
+--------------------------------------------------------------------------------
+Build Time: 1.45 s
+Processing Speed: 275604.86 classes/second
+
+MEMORY USAGE
+--------------------------------------------------------------------------------
+Peak Memory: 169.58 MB
+Average Memory: 103.82 MB
+Peak RSS: 169.58 MB
+Average RSS: 103.82 MB
+Peak USS: 119.83 MB
+Average USS: 45.60 MB
+Primary Memory Metric: rss
+Memory Efficiency: 2358.83 classes/MB
+Memory Stability (Std Dev): 62.63 MB
+Memory per Class: 444.53 bytes/class
+
+CPU USAGE
+--------------------------------------------------------------------------------
+User CPU Time: 960.54 ms
+System CPU Time: 3.54 s
+Total CPU Time: 4.50 s
+
+I/O & OUTPUT METRICS
+--------------------------------------------------------------------------------
+Total Read: 47.19 MB
+Total Written: 5.05 MB
+Output File Count: 10
+Output Size: 5.05 MB
+
+================================================================================
+TAILWIND PERFORMANCE BENCHMARK REPORT
+================================================================================
+Generated: 2025-12-26 15:58:38
+
+SYSTEM INFORMATION
+--------------------------------------------------------------------------------
+OS:      Darwin 25.2.0
+CPU:     arm
+Cores:   12 physical, 12 logical
+Memory:  32.0 GB
+
+INPUT SUMMARY
+--------------------------------------------------------------------------------
+Unique Utility Classes: 400006
+Total Input Size: 47.19 MB
+Input HTML Files: 100000
+
+PERFORMANCE METRICS
+--------------------------------------------------------------------------------
+Build Time: 7.89 s
+Processing Speed: 50728.14 classes/second
+
+MEMORY USAGE
+--------------------------------------------------------------------------------
+Peak Memory: 307.19 MB
+Average Memory: 157.43 MB
+Memory Efficiency: 1302.16 classes/MB
+Memory Stability (Std Dev): 76.02 MB
+Memory per Class: 805.26 bytes/class
+
+CPU USAGE
+--------------------------------------------------------------------------------
+User CPU Time: 8.84 s
+System CPU Time: 20.62 s
+Total CPU Time: 29.46 s
+
+I/O & OUTPUT METRICS
+--------------------------------------------------------------------------------
+Total Read: 47.19 MB
+Total Written: 5.66 MB
+Output File Count: 10
+Output Size: 5.66 MB
+
+================================================================================
+CSS FRAMEWORKS PERFORMANCE COMPARISON
+================================================================================
+Generated: 2025-12-26 15:58:38
+
+SYSTEM INFORMATION
+--------------------------------------------------------------------------------
+OS:      Darwin 25.2.0
+CPU:     arm
+Cores:   12 physical, 12 logical
+Memory:  32.0 GB
+
+PERFORMANCE COMPARISON
+--------------------------------------------------------------------------------
+Metric            | Grimoire CSS       | Tailwind CSS       | Difference         | Ratio (G/T)
+-------------------------------------------------------------------------------------------------
+Build Time        | 1.45 s             | 7.89 s             | 6.43 s             | 5.43x      
+Classes/sec       | 275604.86          | 50728.14           | 224876.72          | 5.43x      
+Peak Memory       | 169.58 MB          | 307.19 MB          | 137.61 MB          | 1.81x      
+Memory Efficiency | 2358.83 classes/MB | 1302.16 classes/MB | 1056.67 classes/MB | 1.81x      
+Output Size       | 5.05 MB            | 5.66 MB            | 625.89 KB          | 1.12x      
+
+Notes:
+- Build Time: lower is better
+- Classes/sec: higher is better
+- Peak Memory: lower is better
+- Memory Efficiency: higher is better
+- Output Size: lower is better

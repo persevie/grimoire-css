@@ -43,16 +43,11 @@ pub fn shorten(current_dir: &Path) -> Result<(), GrimoireCssError> {
                     let mut new_parts = Vec::with_capacity(parts.len());
                     let mut changed = false;
                     for part in parts {
-                        if let Ok(Some(spell)) = Spell::new(
-                            part,
-                            &config.shared_spells,
-                            &config.scrolls,
-                            (0, 0),
-                            None,
-                            None,
-                        ) {
-                            if let Some(short) = get_shorten_component(&spell.component) {
-                                let short_part = part.replacen(&spell.component, short, 1);
+                        if let Ok(Some(spell)) =
+                            Spell::new(part, &config.shared_spells, &config.scrolls, (0, 0), None)
+                        {
+                            if let Some(short) = get_shorten_component(spell.component()) {
+                                let short_part = part.replacen(spell.component(), short, 1);
                                 if short_part != part {
                                     changed = true;
                                 }
@@ -79,10 +74,9 @@ pub fn shorten(current_dir: &Path) -> Result<(), GrimoireCssError> {
                     &config.scrolls,
                     (0, 0),
                     None,
-                    None,
-                ) && let Some(short) = get_shorten_component(&spell.component)
+                ) && let Some(short) = get_shorten_component(spell.component())
                 {
-                    let short_spell = raw_spell.replacen(&spell.component, short, 1);
+                    let short_spell = raw_spell.replacen(spell.component(), short, 1);
                     if raw_spell != &short_spell && new_content.contains(raw_spell) {
                         let count = new_content.matches(raw_spell).count();
                         new_content = new_content.replace(raw_spell, &short_spell);

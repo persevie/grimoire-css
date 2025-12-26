@@ -1437,6 +1437,21 @@ There are only 3 commands you need to know:
 - **`build`**: Kicks off the build process, parsing all your input files and generating the compiled CSS. If you haven’t already run `init`, the `build` command will handle that for you automatically.
 - **`shorten`**: Automatically converts all full-length component names in your spells (as defined in your config) to their corresponding shorthand forms. This helps keep your code concise and consistent. Run this command to refactor your files, making your spell syntax as brief as possible without losing clarity or functionality.
 
+**Optional parallel project builds**
+
+If your config defines multiple independent projects (multiple output files), Grimoire CSS can build them in parallel.
+
+- Enable by setting the `GRIMOIRE_CSS_JOBS` environment variable to a positive integer (e.g. `4`).
+- Default is `1` (fully sequential; same behavior as before).
+- Values are capped to the machine’s available parallelism.
+- Higher values can reduce wall-clock build time, but may increase peak memory usage due to multiple optimizations running simultaneously.
+
+Example:
+
+```bash
+GRIMOIRE_CSS_JOBS=4 grimoire_css build
+```
+
 Grimoire CSS’s CLI is built for developers who want power without bloat. It’s direct, no-nonsense, and integrates smoothly into any project or bundler.
 
 Here’s a refined version of the remaining parts, keeping the technical depth and making them more engaging and polished:

@@ -8,8 +8,8 @@ use std::sync::Arc;
 
 use crate::core::{
     CssOptimizer, GrimoireCssError, compiled_css::CompiledCssInMemory,
-    config::config_in_memory::ConfigInMemory, parser::Parser, spell::Spell,
-    source_file::SourceFile,
+    config::config_in_memory::ConfigInMemory, parser::Parser, source_file::SourceFile,
+    spell::Spell,
 };
 
 use super::CssBuilder;
@@ -65,25 +65,21 @@ impl<'a> CssBuilderInMemory<'a> {
             self.parser
                 .collect_candidates(&content, &mut class_names, &mut seen_class_names)?;
 
-            let source = Arc::new(SourceFile::new(
-                None,
-                project.name.clone(),
-                content,
-            ));
+            let source = Arc::new(SourceFile::new(None, project.name.clone(), content));
 
             // Generate spells using empty shared_spells set since we're working in memory
             let spells = Spell::generate_spells_from_classes(
                 class_names,
                 &HashSet::new(),
                 &self.config.scrolls,
-                None,
                 Some(source),
             )?;
 
             // Combine spells into CSS
-            let assembled_spells = self.css_builder.combine_spells_to_css(&spells)?;
-            let raw_css = assembled_spells.join("");
-            let css = self.css_builder.optimize_css(&raw_css)?;
+            // Avoid validate() + optimize() double-parsing for the common success path.
+            let css = self
+                .css_builder
+                .combine_spells_to_optimized_css_string(&spells)?;
 
             results.push(CompiledCssInMemory {
                 name: project.name.clone(),

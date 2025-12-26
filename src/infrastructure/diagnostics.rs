@@ -4,7 +4,15 @@ use std::sync::Arc;
 use thiserror::Error;
 
 fn named_source_from(source: &Arc<SourceFile>) -> miette::NamedSource<String> {
-    miette::NamedSource::new(source.name.clone(), (*source.content).clone())
+    let content = if let Some(content) = &source.content {
+        (**content).clone()
+    } else if let Some(path) = &source.path {
+        std::fs::read_to_string(path).unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    miette::NamedSource::new(source.name.clone(), content)
 }
 
 #[derive(Debug, Error, Diagnostic)]
@@ -76,9 +84,13 @@ impl From<&GrimoireCssError> for GrimoireCssDiagnostic {
             GrimoireCssError::Serde(e) => GrimoireCssDiagnostic::Serde(e.to_string()),
             GrimoireCssError::InvalidInput(msg) => GrimoireCssDiagnostic::InvalidInput(msg.clone()),
             GrimoireCssError::InvalidPath(msg) => GrimoireCssDiagnostic::InvalidPath(msg.clone()),
-            GrimoireCssError::GlobPatternError(msg) => GrimoireCssDiagnostic::GlobPatternError(msg.clone()),
+            GrimoireCssError::GlobPatternError(msg) => {
+                GrimoireCssDiagnostic::GlobPatternError(msg.clone())
+            }
             GrimoireCssError::RuntimeError(msg) => GrimoireCssDiagnostic::RuntimeError(msg.clone()),
-            GrimoireCssError::OptimizationError(msg) => GrimoireCssDiagnostic::OptimizationError(msg.clone()),
+            GrimoireCssError::OptimizationError(msg) => {
+                GrimoireCssDiagnostic::OptimizationError(msg.clone())
+            }
             GrimoireCssError::InvalidSpellFormat {
                 message,
                 span,
@@ -89,9 +101,7 @@ impl From<&GrimoireCssError> for GrimoireCssDiagnostic {
                 let src = source_file
                     .as_ref()
                     .map(named_source_from)
-                    .unwrap_or_else(|| {
-                        miette::NamedSource::new("unknown".to_string(), "".to_string())
-                    });
+                    .unwrap_or_else(|| miette::NamedSource::new("unknown", "".to_string()));
 
                 GrimoireCssDiagnostic::InvalidSpellFormat {
                     message: message.clone(),
@@ -111,9 +121,7 @@ impl From<&GrimoireCssError> for GrimoireCssDiagnostic {
                 let src = source_file
                     .as_ref()
                     .map(named_source_from)
-                    .unwrap_or_else(|| {
-                        miette::NamedSource::new("unknown".to_string(), "".to_string())
-                    });
+                    .unwrap_or_else(|| miette::NamedSource::new("unknown", "".to_string()));
 
                 GrimoireCssDiagnostic::CompileError {
                     message: message.clone(),

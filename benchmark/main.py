@@ -28,6 +28,7 @@ import platform
 import psutil
 import time
 import datetime
+import subprocess
 from pathlib import Path
 
 from core.project_creator import create_benchmark_projects
@@ -66,6 +67,23 @@ def parse_args():
 
 def collect_system_info():
     """Collect information about the system for benchmark context."""
+    # Best-effort git metadata to make benchmark results reproducible.
+    git_sha = None
+    git_dirty = None
+    try:
+        git_sha = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        git_dirty = subprocess.call(
+            ["git", "diff", "--quiet"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ) != 0
+    except Exception:
+        pass
+
     return {
         "os": {
             "name": platform.system(),
@@ -79,6 +97,11 @@ def collect_system_info():
         },
         "memory": {
             "total_gb": round(psutil.virtual_memory().total / (1024**3), 1)
+        },
+        "psutil_version": getattr(psutil, "__version__", "unknown"),
+        "git": {
+            "sha": git_sha,
+            "dirty": git_dirty,
         },
         "python_version": platform.python_version(),
         "timestamp": time.time(),

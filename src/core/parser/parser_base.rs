@@ -141,6 +141,15 @@ impl Parser {
                         let start = base_offset + part_start;
                         let length = part.len();
 
+                        // For regular `class` / `className` tokens we can check the HashSet
+                        // by `&str` first to avoid allocating `String` for duplicates.
+                        if !matches!(collection_type, CollectionType::CurlyClass)
+                            && !part.is_empty()
+                            && seen_class_names.contains(part)
+                        {
+                            continue;
+                        }
+
                         let mut class_string = part.to_string();
 
                         if matches!(collection_type, CollectionType::CurlyClass) {
@@ -165,7 +174,8 @@ impl Parser {
                         //
                         // We return a Diagnostic-style error so the CLI can render it like rustc.
                         return Err(GrimoireCssError::CompileError {
-                            message: "Spaces are not allowed inside a single spell token.".to_string(),
+                            message: "Spaces are not allowed inside a single spell token."
+                                .to_string(),
                             span: (start, length),
                             label: "Error in this spell".to_string(),
                             help: Some(format!(

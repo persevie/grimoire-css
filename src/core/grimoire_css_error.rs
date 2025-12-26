@@ -5,8 +5,8 @@
 //! serialization/deserialization processes, and custom application-specific errors related to
 //! invalid input or spell formats.
 
-use thiserror::Error;
 use std::sync::Arc;
+use thiserror::Error;
 
 use super::source_file::SourceFile;
 
