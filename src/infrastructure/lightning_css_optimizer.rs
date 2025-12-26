@@ -79,8 +79,9 @@ impl CssOptimizer for LightningCssOptimizer {
     ///
     /// Returns a `Result` containing the optimized CSS string or a `GrimoireCSSError` if optimization fails.
     fn optimize(&self, raw_css: &str) -> Result<String, GrimoireCssError> {
-        let mut stylesheet = StyleSheet::parse(raw_css, ParserOptions::default())
-            .map_err(|e| GrimoireCssError::InvalidInput(format!("Failed to parse CSS: {e}")))?;
+        let mut stylesheet = StyleSheet::parse(raw_css, ParserOptions::default()).map_err(|e| {
+            GrimoireCssError::OptimizationError(format!("Failed to parse CSS: {e}"))
+        })?;
 
         // Apply minification and optimization based on the browser targets.
         stylesheet
@@ -88,7 +89,9 @@ impl CssOptimizer for LightningCssOptimizer {
                 targets: self.targets,
                 unused_symbols: Default::default(),
             })
-            .map_err(|e| GrimoireCssError::InvalidInput(format!("Failed to minify CSS: {e}")))?;
+            .map_err(|e| {
+                GrimoireCssError::OptimizationError(format!("Failed to minify CSS: {e}"))
+            })?;
 
         // Generate the final CSS as a string.
         stylesheet
@@ -97,6 +100,14 @@ impl CssOptimizer for LightningCssOptimizer {
                 ..Default::default()
             })
             .map(|res| res.code)
-            .map_err(|e| GrimoireCssError::InvalidInput(format!("Failed to generate CSS: {e}")))
+            .map_err(|e| {
+                GrimoireCssError::OptimizationError(format!("Failed to generate CSS: {e}"))
+            })
+    }
+
+    fn validate(&self, raw_css: &str) -> Result<(), GrimoireCssError> {
+        StyleSheet::parse(raw_css, ParserOptions::default())
+            .map(|_| ())
+            .map_err(|e| GrimoireCssError::OptimizationError(format!("Failed to parse CSS: {e}")))
     }
 }

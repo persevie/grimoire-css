@@ -45,21 +45,56 @@ static SPELL_COLOR_FUNCTIONS: &[(&str, SpellColorFunc)] = &[
 /// * `Some(String)` containing the resulting color in hex form (e.g., `"#808080"`),
 ///   if parsing and the color transformation succeed.
 /// * `None` if the string is not in a valid format, or the color transformation failed.
-pub fn try_handle_color_function(adapted_target: &str) -> Option<String> {
-    let (func_name, args_str) = parse_function_call(adapted_target)?;
-    // Split arguments by spaces.
-    let args: Vec<&str> = args_str.split(' ').map(|s| s.trim()).collect();
+pub fn try_handle_color_function(adapted_target: &str) -> Result<Option<String>, crate::core::GrimoireCssError> {
+    let Some((func_name, args_str)) = parse_function_call(adapted_target) else {
+        return Ok(None);
+    };
 
-    // Find the corresponding handler.
-    if let Some((_, handler)) = SPELL_COLOR_FUNCTIONS
+    let Some((_, handler)) = SPELL_COLOR_FUNCTIONS
         .iter()
         .find(|(name, _)| *name == func_name)
-    {
-        let result_color = handler(&args)?;
-        Some(result_color.to_hex_string())
+    else {
+        return Ok(None);
+    };
+
+    let args: Vec<&str> = if args_str.is_empty() {
+        Vec::new()
     } else {
-        None
+        args_str
+            .split(' ')
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .collect()
+    };
+
+    if let Some(result_color) = handler(&args) {
+        return Ok(Some(result_color.to_hex_string()));
     }
+
+    let expected_usage = match func_name {
+        "g-grayscale" => "g-grayscale(color)",
+        "g-complement" => "g-complement(color)",
+        "g-invert" => "g-invert(color [weight])",
+        "g-mix" => "g-mix(color1 color2 weight)",
+        "g-adjust-hue" => "g-adjust-hue(color degrees)",
+        "g-adjust-color" => "g-adjust-color(color [red_delta green_delta blue_delta hue_delta sat_delta light_delta alpha_delta])",
+        "g-change-color" => "g-change-color(color [red green blue hue sat light alpha])",
+        "g-scale-color" => "g-scale-color(color [red_scale green_scale blue_scale saturation_scale lightness_scale alpha_scale])",
+        "g-rgba" => "g-rgba(color alpha)",
+        "g-lighten" => "g-lighten(color amount)",
+        "g-darken" => "g-darken(color amount)",
+        "g-saturate" => "g-saturate(color amount)",
+        "g-desaturate" => "g-desaturate(color amount)",
+        "g-opacify" => "g-opacify(color amount)",
+        "g-fade-in" => "g-fade-in(color amount)",
+        "g-transparentize" => "g-transparentize(color amount)",
+        "g-fade-out" => "g-fade-out(color amount)",
+        _ => "(see docs)",
+    };
+
+    Err(crate::core::GrimoireCssError::InvalidInput(format!(
+        "Invalid arguments for Grimoire color function '{func_name}'.\nExpected: {expected_usage}\nGot: '{adapted_target}'"
+    )))
 }
 
 /// Parses a string like `"g-func(arg1 arg2)"` and returns a tuple `( "g-func", "arg1 arg2" )`.
@@ -356,8 +391,8 @@ mod tests {
 
     /// A helper to compare Option<String> equality with Some("#rrggbb").
     /// This is just to reduce boilerplate in our tests.
-    fn assert_hex_eq(got: Option<String>, expected_hex: &str) {
-        assert_eq!(got, Some(expected_hex.to_string()));
+    fn assert_hex_eq(got: Result<Option<String>, crate::core::GrimoireCssError>, expected_hex: &str) {
+        assert_eq!(got.unwrap(), Some(expected_hex.to_string()));
     }
 
     #[test]
@@ -405,13 +440,13 @@ mod tests {
     #[test]
     fn test_invalid_spell_function() {
         let res = try_handle_color_function("g-unknown(#fff)");
-        assert_eq!(res, None);
+        assert_eq!(res.unwrap(), None);
     }
 
     #[test]
     fn test_invalid_args() {
         // e.g. "g-grayscale()" with no args
         let res = try_handle_color_function("g-grayscale()");
-        assert_eq!(res, None);
+        assert!(res.is_err());
     }
 }

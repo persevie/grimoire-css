@@ -19,7 +19,8 @@ use commands::{handle_in_memory, process_mode_and_handle};
 use console::style;
 use core::{compiled_css::CompiledCssInMemory, config::ConfigInMemory};
 use indicatif::{ProgressBar, ProgressStyle};
-use infrastructure::LightningCssOptimizer;
+use infrastructure::{GrimoireCssDiagnostic, LightningCssOptimizer};
+use miette::GraphicalReportHandler;
 use std::time::{Duration, Instant};
 
 pub use core::{GrimoireCssError, color, component, config, spell::Spell};
@@ -192,7 +193,19 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
             print!("\r\x1b[2K{GRIMM_CURSED}\n");
 
             println!();
-            println!("{} {}", style(" Cursed! ").white().on_red().bright(), e);
+            println!(
+                "{} {}",
+                style(" Cursed! ").white().on_red().bright(),
+                "Something went wrong..."
+            );
+            println!();
+
+            let diagnostic: GrimoireCssDiagnostic = (&e).into();
+            let mut out = String::new();
+            GraphicalReportHandler::new()
+                .render_report(&mut out, &diagnostic)
+                .unwrap();
+            println!("{out}");
 
             Err(e)
         }

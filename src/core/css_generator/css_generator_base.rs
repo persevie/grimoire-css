@@ -18,7 +18,6 @@
 //! The module also includes internal helper functions to manage specific CSS-related tasks such as
 //! unit stripping, handling of regex patterns, and combining base CSS with media queries.
 
-use crate::buffer::add_message;
 use crate::core::GrimoireCssError;
 use crate::core::animations::ANIMATIONS;
 use crate::core::component::get_css_property;
@@ -92,14 +91,73 @@ impl<'a> CssGenerator<'a> {
     /// * `Ok(Some(String, String))` 0: containing the generated CSS string if the spell's component is recognized; 1: css class name
     /// * `Ok(None)` if the spell's component is not recognized.
     /// * `Err(GrimoireCSSError)` if there is an error during CSS generation.
+    fn create_compile_error(&self, spell: &Spell, error: GrimoireCssError) -> GrimoireCssError {
+        if let GrimoireCssError::InvalidSpellFormat { message, help, .. } = error {
+            return GrimoireCssError::InvalidSpellFormat {
+                message,
+                span: spell.span,
+                label: "Error in this spell".to_string(),
+                help,
+                source_file: spell.source.clone(),
+            };
+        }
+
+        if let GrimoireCssError::CompileError {
+            message,
+            label,
+            help,
+            ..
+        } = error
+        {
+            return GrimoireCssError::CompileError {
+                message,
+                span: spell.span,
+                label,
+                help,
+                source_file: spell.source.clone(),
+            };
+        }
+
+        if let GrimoireCssError::InvalidInput(msg) = &error {
+            if msg.starts_with("Unknown animation") {
+                return GrimoireCssError::CompileError {
+                    message: format!("Invalid input: {msg}"),
+                    span: spell.span,
+                    label: "Error in this spell".to_string(),
+                    help: Some(
+                        "The animation name is not known.\n\
+\
+Fix options:\n\
+- Use a built-in animation name supported by Grimoire CSS\n\
+- Or define a custom animation in config -> custom_animations\n"
+                            .to_string(),
+                    ),
+                    source_file: spell.source.clone(),
+                };
+            }
+        }
+
+        let message = error.to_string();
+
+        GrimoireCssError::CompileError {
+            message,
+            span: spell.span,
+            label: "Error in this spell".to_string(),
+            help: None,
+            source_file: spell.source.clone(),
+        }
+    }
+
     pub fn generate_css(&self, spell: &Spell) -> Result<Option<GeneratedCSS>, GrimoireCssError> {
         // generate css class name
-        let css_class_name = self.generate_css_class_name(
-            &spell.raw_spell,
-            &spell.effects,
-            &spell.focus,
-            spell.with_template,
-        )?;
+        let css_class_name = self
+            .generate_css_class_name(
+                &spell.raw_spell,
+                &spell.effects,
+                &spell.focus,
+                spell.with_template,
+            )
+            .map_err(|e| self.create_compile_error(spell, e))?;
 
         let component_str = spell.component.as_str();
 
@@ -114,13 +172,17 @@ impl<'a> CssGenerator<'a> {
         match css_property {
             Some(css_property) => {
                 // adapt target
-                let adapted_target = self.adapt_targets(&spell.component_target, self.variables)?;
+                let adapted_target = self
+                    .adapt_targets(&spell.component_target, self.variables)
+                    .map_err(|e| self.create_compile_error(spell, e))?;
                 // generate base css without any media queries (except for the mrs function)
-                let (base_css, additional_css) = self.generate_base_and_additional_css(
-                    &adapted_target,
-                    &css_class_name.0,
-                    css_property,
-                )?;
+                let (base_css, additional_css) = self
+                    .generate_base_and_additional_css(
+                        &adapted_target,
+                        &css_class_name.0,
+                        css_property,
+                    )
+                    .map_err(|e| self.create_compile_error(spell, e))?;
 
                 if !spell.area.is_empty() {
                     return Ok(Some((
@@ -212,17 +274,43 @@ impl<'a> CssGenerator<'a> {
             .map(|c| match c {
                 '!' | '"' | '#' | '$' | '%' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | '.'
                 | '/' | ':' | ';' | '<' | '=' | '>' | '?' | '@' | '[' | '\\' | ']' | '^' | '_'
-                | '`' | '{' | '|' | '}' | '~' => format!("\\{c}"),
+                | '`' | '{' | '|' | '}' | '~' => Ok(format!("\\{c}")),
                 ' ' => {
-                    add_message("HTML does not support spaces. To separate values use underscore ('_') instead".to_string());
-                    c.to_string()
+                    // IMPORTANT:
+                    // - In HTML attributes, spaces are class separators, not part of a single class token.
+                    // - If a user tries to encode a value that contains spaces (e.g. calc(100vh - 50px)),
+                    //   the correct Grimoire convention is to use underscores instead: calc(100vh_-_50px).
+                    //
+                    // We intentionally return a "context-carrying" error variant here. The outer layer
+                    // (generate_css/create_compile_error) will attach the actual source and span.
+                    return Err(GrimoireCssError::CompileError {
+                                                message: "Spaces are not allowed inside a single spell token.".to_string(),
+                        span: (0, 0),
+                                                label: "Error in this spell".to_string(),
+                                                help: Some(format!(
+                                                        "You likely wrote a value with spaces inside a class attribute (HTML treats spaces as class separators).\n\
+Fix: replace spaces with '_' inside the value, e.g.:\n\
+    h=calc(100vh - 50px)  ->  h=calc(100vh_-_50px)\n\n\
+Offending spell: '{class_name}'"
+                                                )),
+                        source_file: None,
+                    });
                 }
-                _ => c.to_string(),
+                _ => Ok(c.to_string()),
             })
-            .collect::<String>();
+            .collect::<Result<String, GrimoireCssError>>()?;
 
         if escaped.is_empty() {
-            return Err(GrimoireCssError::InvalidSpellFormat(class_name.to_string()));
+            return Err(GrimoireCssError::CompileError {
+                message: format!("Empty spell token: '{class_name}'"),
+                span: (0, 0),
+                label: "Error in this spell".to_string(),
+                help: Some(
+                    "Spell tokens must not be empty. Check for extra spaces or malformed templates in class/className."
+                        .to_string(),
+                ),
+                source_file: None,
+            });
         }
 
         Ok(escaped)
@@ -305,7 +393,7 @@ impl<'a> CssGenerator<'a> {
                 self.handle_animation_name(adapted_target, css_class_name)
             }
             _ => {
-                if let Some(css_str) = try_handle_color_function(adapted_target) {
+                if let Some(css_str) = try_handle_color_function(adapted_target)? {
                     self.handle_generic_css(&css_str, css_class_name, property)
                 } else {
                     self.handle_generic_css(adapted_target, css_class_name, property)
@@ -347,9 +435,10 @@ impl<'a> CssGenerator<'a> {
             return Ok((base_css, Some(keyframes)));
         }
 
-        Err(GrimoireCssError::InvalidSpellFormat(
-            adapted_target.to_string(),
-        ))
+        Err(GrimoireCssError::InvalidInput(format!(
+            "Unknown animation: {}",
+            adapted_target
+        )))
     }
 
     /// Handles CSS generation for the `animation` property.
@@ -1106,6 +1195,9 @@ mod tests {
         let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let spell = Spell {
+            file_path: None,
+            span: (0, 0),
+            source: None,
             raw_spell: "bg-c=pink".to_string(),
             component: "bg-c".to_string(),
             component_target: "pink".to_string(),
@@ -1131,6 +1223,9 @@ mod tests {
         // --- COMPLEX ---
 
         let spell_complex = Spell {
+            file_path: None,
+            span: (0, 0),
+            source: None,
             raw_spell: "{[data-theme='light']_p}font-sz=mrs(14px_16px_380px_800px)".to_string(),
             component: "font-sz".to_string(),
             component_target: "mrs(14px_16px_380px_800px)".to_string(),

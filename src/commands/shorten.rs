@@ -43,9 +43,14 @@ pub fn shorten(current_dir: &Path) -> Result<(), GrimoireCssError> {
                     let mut new_parts = Vec::with_capacity(parts.len());
                     let mut changed = false;
                     for part in parts {
-                        if let Ok(Some(spell)) =
-                            Spell::new(part, &config.shared_spells, &config.scrolls)
-                        {
+                        if let Ok(Some(spell)) = Spell::new(
+                            part,
+                            &config.shared_spells,
+                            &config.scrolls,
+                            (0, 0),
+                            None,
+                            None,
+                        ) {
                             if let Some(short) = get_shorten_component(&spell.component) {
                                 let short_part = part.replacen(&spell.component, short, 1);
                                 if short_part != part {
@@ -68,9 +73,14 @@ pub fn shorten(current_dir: &Path) -> Result<(), GrimoireCssError> {
                             replaced_count += count;
                         }
                     }
-                } else if let Ok(Some(spell)) =
-                    Spell::new(raw_spell, &config.shared_spells, &config.scrolls)
-                    && let Some(short) = get_shorten_component(&spell.component)
+                } else if let Ok(Some(spell)) = Spell::new(
+                    raw_spell,
+                    &config.shared_spells,
+                    &config.scrolls,
+                    (0, 0),
+                    None,
+                    None,
+                ) && let Some(short) = get_shorten_component(&spell.component)
                 {
                     let short_spell = raw_spell.replacen(&spell.component, short, 1);
                     if raw_spell != &short_spell && new_content.contains(raw_spell) {

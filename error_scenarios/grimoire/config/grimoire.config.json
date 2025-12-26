@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json",
+  "variables": null,
+  "scrolls": [{ "name": "complex-card", "spells": ["h=$", "c=$", "w=$"] }],
+  "projects": [
+    {
+      "projectName": "1",
+      "inputPaths": ["1.html"],
+      "outputDirPath": ".",
+      "singleOutputFileName": "1.css"
+    },
+    {
+      "projectName": "2",
+      "inputPaths": ["2.html"],
+      "outputDirPath": ".",
+      "singleOutputFileName": "2.css"
+    },
+    {
+      "projectName": "3",
+      "inputPaths": ["3.html"],
+      "outputDirPath": ".",
+      "singleOutputFileName": "3.css"
+    },
+    {
+      "projectName": "4",
+      "inputPaths": ["4.html"],
+      "outputDirPath": ".",
+      "singleOutputFileName": "4.css"
+    },
+    {
+      "projectName": "5",
+      "inputPaths": ["5.html"],
+      "outputDirPath": ".",
+      "singleOutputFileName": "5.css"
+    },
+    {
+      "projectName": "6",
+      "inputPaths": ["6.html"],
+      "outputDirPath": ".",
+      "singleOutputFileName": "6.css"
+    }
+  ],
+  "shared": null,
+  "critical": null,
+  "lock": null
+}

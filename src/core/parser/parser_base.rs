@@ -99,66 +99,89 @@ impl Parser {
         result.into_iter().collect()
     }
 
-    /// Collects class names from content based on the given regular expression and optional predicate/splitter functions.
+    /// Collects class names from content based on the given regular expression.
     ///
     /// # Arguments
     ///
     /// * `content` - The content to be parsed.
     /// * `regex` - A regular expression used to search for class names.
-    /// * `predicate` - An optional function used to filter the results.
-    /// * `splitter` - An optional function used to split the result into multiple class names.
-    /// * `class_names` - A mutable reference to a vector to store the collected class names.
+    /// * `split_by_whitespace` - Whether to split the matched value by whitespace.
+    /// * `class_names` - A mutable reference to a vector to store the collected class names and their spans.
     /// * `seen_class_names` - A mutable reference to a `HashSet` used to track seen class names.
+    /// * `collection_type` - The type of collection being performed.
     ///
     /// # Errors
     ///
-    /// Returns a `GrimoireCSSError` if there is an issue during processing.
-    fn collect_classes<P, S>(
+    /// Returns a `GrimoireCssError` if there is an issue during processing.
+    fn collect_classes(
         content: &str,
         regex: &Regex,
-        mut predicate: Option<P>,
-        mut splitter: Option<S>,
-        class_names: &mut Vec<String>,
+        split_by_whitespace: bool,
+        class_names: &mut Vec<(String, (usize, usize))>,
         seen_class_names: &mut HashSet<String>,
         collection_type: CollectionType,
-    ) -> Result<(), GrimoireCssError>
-    where
-        P: FnMut(&str) -> bool,
-        S: FnMut(&str) -> Vec<String>,
-    {
+    ) -> Result<(), GrimoireCssError> {
         for cap in regex.captures_iter(content) {
-            let class_value = match collection_type {
-                CollectionType::TemplatedSpell => cap.get(1).map(|m| m.as_str()).unwrap_or(""),
-                CollectionType::CurlyClass => cap.get(1).map(|m| m.as_str()).unwrap_or(""),
-                CollectionType::RegularClass => cap
-                    .get(2)
-                    .or_else(|| cap.get(3))
-                    .or_else(|| cap.get(4))
-                    .map(|m| m.as_str())
-                    .unwrap_or(""),
-            };
-
-            let classes = if let Some(splitter_fn) = &mut splitter {
-                let splitted = splitter_fn(class_value);
-
-                if matches!(collection_type, CollectionType::CurlyClass) {
-                    splitted
-                        .into_iter()
-                        .map(|s| Self::clean_unpaired_brackets(&s))
-                        .collect()
-                } else {
-                    splitted
+            let match_obj = match collection_type {
+                CollectionType::TemplatedSpell => cap.get(1),
+                CollectionType::CurlyClass => cap.get(1),
+                CollectionType::RegularClass => {
+                    cap.get(2).or_else(|| cap.get(3)).or_else(|| cap.get(4))
                 }
-            } else {
-                vec![class_value.to_string()]
             };
 
-            for class in classes {
-                let should_include = predicate.as_mut().is_none_or(|p| p(&class));
+            if let Some(m) = match_obj {
+                let full_value = m.as_str();
+                let base_offset = m.start();
 
-                if should_include && !seen_class_names.contains(&class) {
-                    seen_class_names.insert(class.clone());
-                    class_names.push(class);
+                if split_by_whitespace {
+                    for part in full_value.split_whitespace() {
+                        // Calculate the offset of the part within the full content
+                        let part_start = part.as_ptr() as usize - full_value.as_ptr() as usize;
+                        let start = base_offset + part_start;
+                        let length = part.len();
+
+                        let mut class_string = part.to_string();
+
+                        if matches!(collection_type, CollectionType::CurlyClass) {
+                            class_string = Self::clean_unpaired_brackets(&class_string);
+                        }
+
+                        if !class_string.is_empty() && !seen_class_names.contains(&class_string) {
+                            seen_class_names.insert(class_string.clone());
+                            class_names.push((class_string, (start, length)));
+                        }
+                    }
+                } else {
+                    let start = base_offset;
+                    let length = full_value.len();
+                    let class_string = full_value.to_string();
+
+                    if class_string.contains(' ') {
+                        // IMPORTANT:
+                        // - In HTML attributes, spaces are class separators, not part of a single class token.
+                        // - If a user tries to encode a value that contains spaces (e.g. calc(100vh - 50px)),
+                        //   the correct Grimoire convention is to use underscores instead: calc(100vh_-_50px).
+                        //
+                        // We return a Diagnostic-style error so the CLI can render it like rustc.
+                        return Err(GrimoireCssError::CompileError {
+                            message: "Spaces are not allowed inside a single spell token.".to_string(),
+                            span: (start, length),
+                            label: "Error in this spell".to_string(),
+                            help: Some(format!(
+                                "You likely wrote a value with spaces inside a class attribute (HTML treats spaces as class separators).\n\
+Fix: replace spaces with '_' inside the value, e.g.:\n\
+    h=calc(100vh - 50px)  ->  h=calc(100vh_-_50px)\n\n\
+Offending spell: '{class_string}'"
+                            )),
+                            source_file: None,
+                        });
+                    }
+
+                    if !class_string.is_empty() && !seen_class_names.contains(&class_string) {
+                        seen_class_names.insert(class_string.clone());
+                        class_names.push((class_string, (start, length)));
+                    }
                 }
             }
         }
@@ -171,7 +194,7 @@ impl Parser {
     /// # Arguments
     ///
     /// * `content` - The content to parse
-    /// * `class_names` - A mutable reference to a vector that stores the collected class names
+    /// * `class_names` - A mutable reference to a vector that stores the collected class names and their spans
     /// * `seen_class_names` - A mutable reference to a HashSet for tracking seen class names
     ///
     /// # Returns
@@ -180,66 +203,54 @@ impl Parser {
     pub fn collect_candidates(
         &self,
         content: &str,
-        class_names: &mut Vec<String>,
+        class_names: &mut Vec<(String, (usize, usize))>,
         seen_class_names: &mut HashSet<String>,
     ) -> Result<(), GrimoireCssError> {
-        let whitespace_splitter = |input: &str| {
-            input
-                .split_whitespace()
-                .map(String::from)
-                .collect::<Vec<String>>()
-        };
-
         // Collect all 'className' matches
-        Self::collect_classes::<fn(&str) -> bool, fn(&str) -> Vec<String>>(
+        Self::collect_classes(
             content,
             &self.class_name_regex,
-            None,
-            Some(whitespace_splitter),
+            true,
             class_names,
             seen_class_names,
             CollectionType::RegularClass,
         )?;
 
         // Collect all 'class' matches
-        Self::collect_classes::<fn(&str) -> bool, fn(&str) -> Vec<String>>(
+        Self::collect_classes(
             content,
             &self.class_regex,
-            None,
-            Some(whitespace_splitter),
+            true,
             class_names,
             seen_class_names,
             CollectionType::RegularClass,
         )?;
 
         // Collect all 'templated class' (starts with 'g!', ends with ';') matches
-        Self::collect_classes::<fn(&str) -> bool, fn(&str) -> Vec<String>>(
+        Self::collect_classes(
             content,
             &self.tepmplated_spell_regex,
-            None,
-            None,
+            false,
             class_names,
             seen_class_names,
             CollectionType::TemplatedSpell,
         )?;
 
         // Collect all curly 'className' matches
-        Self::collect_classes::<fn(&str) -> bool, fn(&str) -> Vec<String>>(
+        Self::collect_classes(
             content,
             &self.curly_class_name_regex,
-            None,
-            Some(whitespace_splitter),
+            true,
             class_names,
             seen_class_names,
             CollectionType::CurlyClass,
         )?;
 
         // Collect all curly 'class' matches
-        Self::collect_classes::<fn(&str) -> bool, fn(&str) -> Vec<String>>(
+        Self::collect_classes(
             content,
             &self.curly_class_regex,
-            None,
-            Some(whitespace_splitter),
+            true,
             class_names,
             seen_class_names,
             CollectionType::CurlyClass,
@@ -271,11 +282,13 @@ mod tests {
             .unwrap();
 
         assert_eq!(class_names.len(), 5);
-        assert!(class_names.contains(&"test1".to_string()));
-        assert!(class_names.contains(&"test2".to_string()));
-        assert!(class_names.contains(&"test3".to_string()));
-        assert!(class_names.contains(&"test4".to_string()));
-        assert!(class_names.contains(&"g!display=block;".to_string()));
+
+        let names: Vec<String> = class_names.iter().map(|(n, _)| n.clone()).collect();
+        assert!(names.contains(&"test1".to_string()));
+        assert!(names.contains(&"test2".to_string()));
+        assert!(names.contains(&"test3".to_string()));
+        assert!(names.contains(&"test4".to_string()));
+        assert!(names.contains(&"g!display=block;".to_string()));
     }
 
     #[test]
@@ -295,8 +308,9 @@ mod tests {
             .unwrap();
 
         assert_eq!(class_names.len(), 2);
-        assert!(class_names.contains(&"g!display=flex;".to_string()));
-        assert!(class_names.contains(&"g!color=red;".to_string()));
+        let names: Vec<String> = class_names.iter().map(|(n, _)| n.clone()).collect();
+        assert!(names.contains(&"g!display=flex;".to_string()));
+        assert!(names.contains(&"g!color=red;".to_string()));
     }
 
     #[test]
@@ -319,8 +333,9 @@ mod tests {
             .unwrap();
 
         assert_eq!(class_names.len(), 6);
+        let names: Vec<String> = class_names.iter().map(|(n, _)| n.clone()).collect();
         for i in 1..=6 {
-            assert!(class_names.contains(&format!("test{i}")));
+            assert!(names.contains(&format!("test{i}")));
         }
     }
 
@@ -341,15 +356,16 @@ mod tests {
 
         assert_eq!(class_names.len(), 9);
 
-        assert!(class_names.contains(&"isError".to_string()));
-        assert!(class_names.contains(&"?".to_string()));
-        assert!(class_names.contains(&"color=red".to_string()));
-        assert!(class_names.contains(&"regular-class-error".to_string()));
-        assert!(class_names.contains(&":".to_string()));
-        assert!(class_names.contains(&"color=green".to_string()));
-        assert!(class_names.contains(&"regular-class-success".to_string()));
-        assert!(class_names.contains(&"display=grid".to_string()));
-        assert!(class_names.contains(&"state-${state}".to_string()));
+        let names: Vec<String> = class_names.iter().map(|(n, _)| n.clone()).collect();
+        assert!(names.contains(&"isError".to_string()));
+        assert!(names.contains(&"?".to_string()));
+        assert!(names.contains(&"color=red".to_string()));
+        assert!(names.contains(&"regular-class-error".to_string()));
+        assert!(names.contains(&":".to_string()));
+        assert!(names.contains(&"color=green".to_string()));
+        assert!(names.contains(&"regular-class-success".to_string()));
+        assert!(names.contains(&"display=grid".to_string()));
+        assert!(names.contains(&"state-${state}".to_string()));
     }
 
     #[test]
@@ -368,13 +384,38 @@ mod tests {
             .unwrap();
 
         // Should clean unpaired brackets and quotes
-        assert!(class_names.contains(&"class-with-{unpaired}".to_string()));
-        assert!(class_names.contains(&"brackets".to_string()));
-        assert!(class_names.contains(&"and".to_string()));
-        assert!(class_names.contains(&"quotes".to_string()));
-        assert!(class_names.contains(&"normal-class".to_string()));
-        assert!(class_names.contains(&"{paired}".to_string()));
-        assert!(class_names.contains(&"[brackets]".to_string()));
-        assert!(class_names.contains(&"(work)".to_string()));
+        let names: Vec<String> = class_names.iter().map(|(n, _)| n.clone()).collect();
+        assert!(names.contains(&"class-with-{unpaired}".to_string()));
+        assert!(names.contains(&"brackets".to_string()));
+        assert!(names.contains(&"and".to_string()));
+        assert!(names.contains(&"quotes".to_string()));
+        assert!(names.contains(&"normal-class".to_string()));
+        assert!(names.contains(&"{paired}".to_string()));
+        assert!(names.contains(&"[brackets]".to_string()));
+        assert!(names.contains(&"(work)".to_string()));
+    }
+
+    #[test]
+    fn test_spans() {
+        let parser = Parser::new();
+        let mut class_names = Vec::new();
+        let mut seen_class_names = HashSet::new();
+
+        let content = r#"<div class="foo bar"></div>"#;
+        //           012345678901234567890123456
+        // foo is at 12..15
+        // bar is at 16..19
+
+        parser
+            .collect_candidates(content, &mut class_names, &mut seen_class_names)
+            .unwrap();
+
+        assert_eq!(class_names.len(), 2);
+
+        let foo = class_names.iter().find(|(n, _)| n == "foo").unwrap();
+        assert_eq!(foo.1, (12, 3));
+
+        let bar = class_names.iter().find(|(n, _)| n == "bar").unwrap();
+        assert_eq!(bar.1, (16, 3));
     }
 }
