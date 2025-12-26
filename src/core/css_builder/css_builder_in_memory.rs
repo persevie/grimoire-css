@@ -4,10 +4,12 @@
 //! and is suitable for environments where file I/O is not desired.
 
 use std::collections::HashSet;
+use std::sync::Arc;
 
 use crate::core::{
     CssOptimizer, GrimoireCssError, compiled_css::CompiledCssInMemory,
-    config::config_in_memory::ConfigInMemory, parser::Parser, spell::Spell,
+    config::config_in_memory::ConfigInMemory, parser::Parser, source_file::SourceFile,
+    spell::Spell,
 };
 
 use super::CssBuilder;
@@ -63,11 +65,15 @@ impl<'a> CssBuilderInMemory<'a> {
             self.parser
                 .collect_candidates(&content, &mut class_names, &mut seen_class_names)?;
 
+            let source = Arc::new(SourceFile::new(None, project.name.clone(), content));
+
             // Generate spells using empty shared_spells set since we're working in memory
             let spells = Spell::generate_spells_from_classes(
                 class_names,
                 &HashSet::new(),
                 &self.config.scrolls,
+                None,
+                Some(source),
             )?;
 
             // Combine spells into CSS
@@ -96,6 +102,10 @@ mod tests {
     impl CssOptimizer for MockOptimizer {
         fn optimize(&self, css: &str) -> Result<String, GrimoireCssError> {
             Ok(css.to_string())
+        }
+
+        fn validate(&self, _css: &str) -> Result<(), GrimoireCssError> {
+            Ok(())
         }
     }
 

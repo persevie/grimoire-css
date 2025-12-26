@@ -13,7 +13,8 @@ use crate::{
     buffer::add_message,
     core::{
         ConfigFs, ConfigFsCssCustomProperties, CssOptimizer, GrimoireCssError,
-        build_info::BuildInfo, file_tracker::FileTracker, parser::ParserFs, spell::Spell,
+        build_info::BuildInfo, file_tracker::FileTracker, parser::ParserFs,
+        source_file::SourceFile, spell::Spell,
     },
 };
 use regex::Regex;
@@ -21,6 +22,7 @@ use std::{
     collections::HashSet,
     fs,
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use super::CssBuilder;
@@ -82,35 +84,63 @@ impl<'a> CssBuilderFs<'a> {
                 .unwrap_or_else(|| self.current_dir.join("grimoire/dist"));
 
             if let Some(single_output_file_name) = &project.single_output_file_name {
-                let classes = self
+                let parsing_results = self
                     .parser
                     .collect_classes_single_output(&project.input_paths)?;
                 let bundle_output_full_path = project_output_dir_path.join(single_output_file_name);
 
-                let spells = Spell::generate_spells_from_classes(
-                    classes,
-                    &self.config.shared_spells,
-                    &self.config.scrolls,
-                )?;
+                let mut all_spells = Vec::new();
+                let mut seen_spells = std::collections::HashSet::new();
 
-                project_build_info.push(BuildInfo {
-                    file_path: bundle_output_full_path,
-                    spells,
-                });
-            } else {
-                let classes = self.parser.collect_classes_multiple_output(
-                    &project.input_paths,
-                    &project_output_dir_path,
-                )?;
-
-                for (file_path, classes) in classes {
+                for (file_path, content, classes) in parsing_results {
+                    let source = Arc::new(SourceFile::new(
+                        Some(file_path.clone()),
+                        file_path.to_string_lossy().to_string(),
+                        content,
+                    ));
                     let spells = Spell::generate_spells_from_classes(
                         classes,
                         &self.config.shared_spells,
                         &self.config.scrolls,
+                        Some(file_path),
+                        Some(source),
                     )?;
 
-                    project_build_info.push(BuildInfo { file_path, spells });
+                    for spell in spells {
+                        if seen_spells.insert(spell.clone()) {
+                            all_spells.push(spell);
+                        }
+                    }
+                }
+
+                project_build_info.push(BuildInfo {
+                    file_path: bundle_output_full_path,
+                    spells: all_spells,
+                });
+            } else {
+                let parsing_results = self.parser.collect_classes_multiple_output(
+                    &project.input_paths,
+                    &project_output_dir_path,
+                )?;
+
+                for (output_file_path, source_path, content, classes) in parsing_results {
+                    let source = Arc::new(SourceFile::new(
+                        Some(source_path.clone()),
+                        source_path.to_string_lossy().to_string(),
+                        content,
+                    ));
+                    let spells = Spell::generate_spells_from_classes(
+                        classes,
+                        &self.config.shared_spells,
+                        &self.config.scrolls,
+                        Some(source_path),
+                        Some(source),
+                    )?;
+
+                    project_build_info.push(BuildInfo {
+                        file_path: output_file_path,
+                        spells,
+                    });
                 }
             }
         }
@@ -379,9 +409,14 @@ impl<'a> CssBuilderFs<'a> {
                         )));
                     }
                 }
-            } else if let Some(spell) =
-                Spell::new(item, &self.config.shared_spells, &self.config.scrolls)?
-            {
+            } else if let Some(spell) = Spell::new(
+                item,
+                &self.config.shared_spells,
+                &self.config.scrolls,
+                (0, 0),
+                None,
+                None,
+            )? {
                 spells.push(spell);
             }
         }
@@ -463,6 +498,10 @@ mod tests {
         fn optimize(&self, css: &str) -> Result<String, GrimoireCssError> {
             Ok(css.to_string() + "_optimized")
         }
+
+        fn validate(&self, _raw_css: &str) -> Result<(), GrimoireCssError> {
+            Ok(())
+        }
     }
 
     fn create_test_config() -> ConfigFs {
@@ -489,6 +528,9 @@ mod tests {
         let build_info = BuildInfo {
             file_path: PathBuf::from("test_output.css"),
             spells: vec![Spell {
+                file_path: None,
+                span: (0, 0),
+                source: None,
                 raw_spell: "d=grid".to_string(),
                 component: "display".to_string(),
                 component_target: "grid".to_string(),
@@ -515,6 +557,9 @@ mod tests {
         let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
         let spells = vec![Spell {
+            file_path: None,
+            span: (0, 0),
+            source: None,
             raw_spell: "d=grid".to_string(),
             component: "display".to_string(),
             component_target: "grid".to_string(),

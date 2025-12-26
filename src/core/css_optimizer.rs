@@ -39,4 +39,16 @@ pub trait CssOptimizer: Sync + Send {
     /// * `Ok(String)` - The optimized and minified CSS string.
     /// * `Err(GrimoireCSSError)` - An error indicating that the optimization process failed.
     fn optimize(&self, raw_css: &str) -> Result<String, GrimoireCssError>;
+
+    /// Validates a given raw CSS string.
+    ///
+    /// # Arguments
+    ///
+    /// * `raw_css` - A string containing the raw CSS code that needs to be validated.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If the CSS is valid.
+    /// * `Err(GrimoireCssError)` - An error indicating that the validation failed.
+    fn validate(&self, raw_css: &str) -> Result<(), GrimoireCssError>;
 }

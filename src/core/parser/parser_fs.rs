@@ -2,12 +2,20 @@
 //! with filesystem-specific functionality for collecting CSS classes from files and directories.
 
 use super::Parser;
+use crate::core::SourceFile;
 use crate::{buffer::add_message, core::GrimoireCssError};
 use std::{
     collections::HashSet,
     fs,
     path::{Path, PathBuf},
+    sync::Arc,
 };
+
+type Span = (usize, usize);
+type ClassWithSpan = (String, Span);
+
+type SingleOutputFileResult = (PathBuf, String, Vec<ClassWithSpan>);
+type MultiOutputFileResult = (PathBuf, PathBuf, String, Vec<ClassWithSpan>);
 
 /// `ParserFs` extends the base `Parser` with filesystem-specific functionality.
 /// It handles file reading, directory traversal, and path resolution.
@@ -37,7 +45,7 @@ impl ParserFs {
     ///
     /// # Returns
     ///
-    /// A vector of unique class names found in the input files.
+    /// A vector of tuples containing file path, file content, and found classes with spans.
     ///
     /// # Errors
     ///
@@ -45,16 +53,16 @@ impl ParserFs {
     pub fn collect_classes_single_output(
         &self,
         input_paths: &Vec<String>,
-    ) -> Result<Vec<String>, GrimoireCssError> {
-        let mut class_names: Vec<String> = Vec::new();
+    ) -> Result<Vec<SingleOutputFileResult>, GrimoireCssError> {
+        let mut results = Vec::new();
         let mut seen_class_names: HashSet<String> = HashSet::new();
 
         for input_path in input_paths {
             let path = self.current_dir.join(input_path);
-            self.collect_spells_from_path(&path, &mut class_names, &mut seen_class_names)?;
+            self.collect_spells_from_path(&path, &mut results, &mut seen_class_names)?;
         }
 
-        Ok(class_names)
+        Ok(results)
     }
 
     /// Collects class names or templated spells from multiple input paths, producing multiple outputs.
@@ -66,7 +74,7 @@ impl ParserFs {
     ///
     /// # Returns
     ///
-    /// A vector of tuples, where each tuple contains the path to the output CSS file and a vector of class names.
+    /// A vector of tuples: (OutputCssPath, InputSourcePath, InputSourceContent, ClassesWithSpans).
     ///
     /// # Errors
     ///
@@ -75,14 +83,14 @@ impl ParserFs {
         &self,
         input_paths: &Vec<String>,
         output_dir_path: &Path,
-    ) -> Result<Vec<(PathBuf, Vec<String>)>, GrimoireCssError> {
-        let mut res: Vec<(PathBuf, Vec<String>)> = Vec::new();
+    ) -> Result<Vec<MultiOutputFileResult>, GrimoireCssError> {
+        let mut res = Vec::new();
 
         for input_path_string in input_paths {
             let path = self.current_dir.join(input_path_string);
 
             if path.is_file() {
-                let mut class_names: Vec<String> = Vec::new();
+                let mut class_names = Vec::new();
                 let mut seen_class_names: HashSet<String> = HashSet::new();
 
                 let output_file_path = path.with_extension("css");
@@ -92,13 +100,20 @@ impl ParserFs {
                     })?);
 
                 let file_content = fs::read_to_string(&path)?;
-                self.base_parser.collect_candidates(
+                if let Err(e) = self.base_parser.collect_candidates(
                     &file_content,
                     &mut class_names,
                     &mut seen_class_names,
-                )?;
+                ) {
+                    let src = Arc::new(SourceFile::new(
+                        Some(path.clone()),
+                        path.to_string_lossy().to_string(),
+                        file_content.clone(),
+                    ));
+                    return Err(e.with_source(src));
+                }
 
-                res.push((bundle_output_full_path, class_names));
+                res.push((bundle_output_full_path, path, file_content, class_names));
             } else if path.is_dir() {
                 let entries = &self.get_sorted_directory_entries(&path)?;
 
@@ -128,7 +143,7 @@ impl ParserFs {
     /// # Arguments
     ///
     /// * `path` - The path of the file or directory to process.
-    /// * `class_names` - A mutable reference to a vector that stores the collected class names.
+    /// * `results` - A mutable reference to a vector that stores the collected results.
     /// * `seen_class_names` - A mutable reference to a HashSet for tracking seen class names.
     ///
     /// # Errors
@@ -137,18 +152,34 @@ impl ParserFs {
     fn collect_spells_from_path(
         &self,
         path: &Path,
-        class_names: &mut Vec<String>,
+        results: &mut Vec<SingleOutputFileResult>,
         seen_class_names: &mut HashSet<String>,
     ) -> Result<(), GrimoireCssError> {
         if path.is_file() {
             let file_content = fs::read_to_string(path)?;
-            self.base_parser
-                .collect_candidates(&file_content, class_names, seen_class_names)?;
+            let mut class_names = Vec::new();
+
+            if let Err(e) = self.base_parser.collect_candidates(
+                &file_content,
+                &mut class_names,
+                seen_class_names,
+            ) {
+                let src = Arc::new(SourceFile::new(
+                    Some(path.to_path_buf()),
+                    path.to_string_lossy().to_string(),
+                    file_content.clone(),
+                ));
+                return Err(e.with_source(src));
+            }
+
+            if !class_names.is_empty() {
+                results.push((path.to_path_buf(), file_content, class_names));
+            }
         } else if path.is_dir() {
             let entries = &self.get_sorted_directory_entries(path)?;
 
             for entry in entries {
-                self.collect_spells_from_path(entry, class_names, seen_class_names)?;
+                self.collect_spells_from_path(entry, results, seen_class_names)?;
             }
         } else {
             add_message(format!("Invalid path: {}", path.display()));
@@ -188,7 +219,7 @@ impl ParserFs {
         let mut seen = std::collections::HashSet::new();
         self.base_parser
             .collect_candidates(content, &mut raw_spells, &mut seen)?;
-        Ok(raw_spells)
+        Ok(raw_spells.into_iter().map(|(s, _)| s).collect())
     }
 }
 
@@ -213,11 +244,16 @@ mod tests {
             parser.collect_classes_single_output(&vec![test_file.to_str().unwrap().to_string()]);
 
         assert!(result.is_ok());
-        let classes = result.unwrap();
+        let results = result.unwrap();
+        assert_eq!(results.len(), 1);
+        let (path, _, classes) = &results[0];
+        assert_eq!(path, &test_file);
         assert_eq!(classes.len(), 3);
-        assert!(classes.contains(&"test1".to_string()));
-        assert!(classes.contains(&"test2".to_string()));
-        assert!(classes.contains(&"test3".to_string()));
+
+        let class_names: Vec<String> = classes.iter().map(|(n, _)| n.clone()).collect();
+        assert!(class_names.contains(&"test1".to_string()));
+        assert!(class_names.contains(&"test2".to_string()));
+        assert!(class_names.contains(&"test3".to_string()));
     }
 
     #[test]
@@ -246,12 +282,14 @@ mod tests {
         assert_eq!(outputs.len(), 2);
 
         // Check first file output
-        assert_eq!(outputs[0].1.len(), 1);
-        assert!(outputs[0].1.contains(&"file1-class".to_string()));
+        let (_, _, _, classes1) = &outputs[0];
+        assert_eq!(classes1.len(), 1);
+        assert_eq!(classes1[0].0, "file1-class");
 
         // Check second file output
-        assert_eq!(outputs[1].1.len(), 1);
-        assert!(outputs[1].1.contains(&"file2-class".to_string()));
+        let (_, _, _, classes2) = &outputs[1];
+        assert_eq!(classes2.len(), 1);
+        assert_eq!(classes2[0].0, "file2-class");
     }
 
     #[test]
@@ -271,9 +309,11 @@ mod tests {
             parser.collect_classes_single_output(&vec![sub_dir.to_str().unwrap().to_string()]);
 
         assert!(result.is_ok());
-        let classes = result.unwrap();
+        let results = result.unwrap();
+        assert_eq!(results.len(), 1);
+        let (_, _, classes) = &results[0];
         assert_eq!(classes.len(), 1);
-        assert!(classes.contains(&"nested-class".to_string()));
+        assert_eq!(classes[0].0, "nested-class");
     }
 
     #[test]
