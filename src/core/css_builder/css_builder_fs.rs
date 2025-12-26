@@ -619,7 +619,7 @@ mod tests {
         let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
         let spell = Spell::new(
-            "d=grid",
+            "display=grid",
             &config.shared_spells,
             &config.scrolls,
             (0, 0),
@@ -637,7 +637,10 @@ mod tests {
         assert!(result.is_ok());
 
         let compiled_css = result.unwrap();
-        assert_eq!(compiled_css[0].1, ".d\\=grid{display:grid;}_optimized");
+        assert_eq!(
+            compiled_css[0].1,
+            ".display\\=grid{display:grid;}_optimized"
+        );
     }
 
     #[test]
@@ -648,7 +651,7 @@ mod tests {
         let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
         let spell = Spell::new(
-            "d=grid",
+            "display=grid",
             &config.shared_spells,
             &config.scrolls,
             (0, 0),
@@ -663,19 +666,22 @@ mod tests {
         assert!(result.is_ok());
 
         let assembled_css = result.unwrap();
-        assert_eq!(assembled_css, ".d\\=grid{display:grid;}");
+        assert_eq!(assembled_css, ".display\\=grid{display:grid;}");
     }
 
     #[test]
     fn test_cssbuilder_write_compiled_css() {
         let file_path = PathBuf::from("test_output.css");
-        let css = vec![(file_path.clone(), ".d\\=grid{display:grid;}".to_string())];
+        let css = vec![(
+            file_path.clone(),
+            ".display\\=grid{display:grid;}".to_string(),
+        )];
 
         let result = CssBuilderFs::write_compiled_css(&css);
         assert!(result.is_ok());
 
         let written_content = std::fs::read_to_string(&file_path).unwrap();
-        assert_eq!(written_content, ".d\\=grid{display:grid;}");
+        assert_eq!(written_content, ".display\\=grid{display:grid;}");
 
         std::fs::remove_file(file_path).unwrap();
     }
@@ -687,12 +693,12 @@ mod tests {
         let optimizer = MockOptimizer;
         let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
-        let raw_css = ".d\\=grid{display:grid;}";
+        let raw_css = ".display\\=grid{display:grid;}";
         let result = builder.css_builder.optimize_css(raw_css);
         assert!(result.is_ok());
 
         let optimized_css = result.unwrap();
-        assert_eq!(optimized_css, ".d\\=grid{display:grid;}_optimized");
+        assert_eq!(optimized_css, ".display\\=grid{display:grid;}_optimized");
     }
 
     #[test]
@@ -702,9 +708,11 @@ mod tests {
         let optimizer = MockOptimizer;
         let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
-        let raw = builder.compose_extra_css(&["d=grid".to_string()]).unwrap();
+        let raw = builder
+            .compose_extra_css(&["display=grid".to_string()])
+            .unwrap();
         // compose_extra_css returns raw CSS; optimization is the caller's responsibility.
-        assert_eq!(raw, ".d\\=grid{display:grid;}");
+        assert_eq!(raw, ".display\\=grid{display:grid;}");
     }
 
     #[test]
@@ -712,7 +720,7 @@ mod tests {
         let mut config = create_test_config();
         config.critical = Some(vec![ConfigFsCritical {
             file_to_inline_paths: vec!["a.html".to_string(), "b.html".to_string()],
-            styles: Some(vec!["d=grid".to_string()]),
+            styles: Some(vec!["display=grid".to_string()]),
             css_custom_properties: None,
         }]);
 
@@ -723,7 +731,10 @@ mod tests {
         let compiled = builder.compile_critical_css().unwrap().unwrap();
         assert_eq!(compiled.len(), 2);
         assert!(Arc::ptr_eq(&compiled[0].1, &compiled[1].1));
-        assert_eq!(compiled[0].1.as_ref(), ".d\\=grid{display:grid;}_optimized");
+        assert_eq!(
+            compiled[0].1.as_ref(),
+            ".display\\=grid{display:grid;}_optimized"
+        );
     }
 
     #[test]
