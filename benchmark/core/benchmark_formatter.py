@@ -267,6 +267,10 @@ def generate_pretty_results(input_file):
         }
     }
 
+    jobs_value = raw_results.get("system_info", {}).get("benchmark", {}).get("grimoire_css_jobs", None)
+    if jobs_value is not None:
+        pretty_results["metadata"]["system"]["grimoire_css_jobs"] = jobs_value
+
     return pretty_results
 
 

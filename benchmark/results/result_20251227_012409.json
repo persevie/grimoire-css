@@ -1,0 +1,140 @@
+{
+  "system_info": {
+    "os": {
+      "name": "Darwin",
+      "version": "Darwin Kernel Version 25.2.0: Tue Nov 18 21:07:05 PST 2025; root:xnu-12377.61.12~1/RELEASE_ARM64_T6020",
+      "release": "25.2.0"
+    },
+    "benchmark": {
+      "grimoire_css_jobs": 2
+    },
+    "cpu": {
+      "name": "arm",
+      "cores_logical": 12,
+      "cores_physical": 12
+    },
+    "memory": {
+      "total_gb": 32.0
+    },
+    "psutil_version": "7.0.0",
+    "git": {
+      "sha": "8f60e2643076e9065a21408a98d0da64b5aea71b",
+      "dirty": true
+    },
+    "python_version": "3.14.2",
+    "timestamp": 1766795049.0435998,
+    "timestamp_human": "2025-12-27 01:24:09"
+  },
+  "grimoire": {
+    "input": {
+      "unique_class_count": 400006,
+      "total_input_size_bytes": 49487280,
+      "file_count": 100000
+    },
+    "output": {
+      "file_count": 10,
+      "total_size_bytes": 5296800,
+      "total_size_kb": 5172.65625,
+      "avg_size_bytes": 529680.0,
+      "avg_size_kb": 517.265625
+    },
+    "process": {
+      "memory": {
+        "peak_bytes": 156024832,
+        "peak_mb": 148.796875,
+        "avg_bytes": 96777847.82978724,
+        "avg_mb": 92.29454787234043,
+        "measurement": "rss",
+        "rss_peak_bytes": 156024832,
+        "rss_peak_mb": 148.796875,
+        "rss_avg_bytes": 96777847.82978724,
+        "rss_avg_mb": 92.29454787234043,
+        "uss_peak_bytes": 91914240,
+        "uss_peak_mb": 87.65625,
+        "uss_avg_bytes": 44642042.55319149,
+        "uss_avg_mb": 42.57396941489362,
+        "uss_is_complete": true,
+        "uss_partial_peak_bytes": 91914240,
+        "uss_partial_peak_mb": 87.65625,
+        "uss_partial_avg_bytes": 44642042.55319149,
+        "uss_partial_avg_mb": 42.57396941489362,
+        "uss_coverage_avg": 1.0,
+        "uss_process_count_avg": 1,
+        "uss_process_count_max": 1,
+        "uss_available_count_avg": 1,
+        "uss_available_count_max": 1,
+        "std_dev_mb": 42.757697156760315
+      },
+      "cpu": {
+        "user_time": 0.8715153340000001,
+        "system_time": 2.1863928049999997,
+        "total_time": 3.057908139
+      },
+      "io": {
+        "read_bytes": 49487280,
+        "read_mb": 47.19474792480469,
+        "write_bytes": 5296800,
+        "write_mb": 5.051422119140625
+      }
+    },
+    "throughput": {
+      "build_time_seconds": 1.5986220836639404,
+      "classes_per_second": 250219.23823497523,
+      "memory_efficiency": 2688.2688228499424,
+      "bytes_processed_per_second": 30956209.41666106,
+      "bytes_generated_per_second": 3313353.452405756
+    },
+    "exit_code": 0,
+    "success": true,
+    "run": {
+      "executable": "../target/release/grimoire_css",
+      "argv": [
+        "../target/release/grimoire_css",
+        "build"
+      ]
+    }
+  },
+  "tailwind": {
+    "input": {
+      "unique_class_count": 400006,
+      "total_input_size_bytes": 49487280,
+      "file_count": 100000
+    },
+    "output": {
+      "file_count": 10,
+      "total_size_bytes": 5937710,
+      "total_size_kb": 5798.544921875,
+      "avg_size_bytes": 593771.0,
+      "avg_size_kb": 579.8544921875
+    },
+    "process": {
+      "memory": {
+        "peak_bytes": 325632000,
+        "peak_mb": 310.546875,
+        "avg_bytes": 172060098.1642512,
+        "avg_mb": 164.08929649758454,
+        "std_dev_mb": 70.69412801340499
+      },
+      "cpu": {
+        "user_time": 8.739942736000001,
+        "system_time": 42.878009256999995,
+        "total_time": 51.617951993
+      },
+      "io": {
+        "read_bytes": 49487280,
+        "read_mb": 47.19474792480469,
+        "write_bytes": 5937710,
+        "write_mb": 5.662641525268555
+      }
+    },
+    "throughput": {
+      "build_time_seconds": 9.343071699142456,
+      "classes_per_second": 42813.114667279515,
+      "memory_efficiency": 1288.0696352201257,
+      "bytes_processed_per_second": 5296682.032798928,
+      "bytes_generated_per_second": 635520.1149259066
+    },
+    "exit_code": 0,
+    "success": true
+  }
+}

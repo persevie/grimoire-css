@@ -3,7 +3,7 @@
 ================================================================================================================================================================
 GRIMOIRE PERFORMANCE BENCHMARK REPORT
 ================================================================================
-Generated: 2025-12-26 15:59:01
+Generated: 2025-12-27 01:25:14
 
 SYSTEM INFORMATION
 --------------------------------------------------------------------------------
@@ -11,6 +11,7 @@ OS:      Darwin 25.2.0
 CPU:     arm
 Cores:   12 physical, 12 logical
 Memory:  32.0 GB
+GRIMOIRE_CSS_JOBS: 10
 
 INPUT SUMMARY
 --------------------------------------------------------------------------------
@@ -20,27 +21,27 @@ Input HTML Files: 100000
 
 PERFORMANCE METRICS
 --------------------------------------------------------------------------------
-Build Time: 1.81 s
-Processing Speed: 220674.85 classes/second
+Build Time: 2.49 s
+Processing Speed: 160865.80 classes/second
 
 MEMORY USAGE
 --------------------------------------------------------------------------------
-Peak Memory: 180.98 MB
-Average Memory: 105.77 MB
-Peak RSS: 180.98 MB
-Average RSS: 105.77 MB
-Peak USS: 96.25 MB
-Average USS: 51.81 MB
+Peak Memory: 259.06 MB
+Average Memory: 60.94 MB
+Peak RSS: 259.06 MB
+Average RSS: 60.94 MB
+Peak USS: 185.98 MB
+Average USS: 50.83 MB
 Primary Memory Metric: rss
-Memory Efficiency: 2210.17 classes/MB
-Memory Stability (Std Dev): 53.65 MB
-Memory per Class: 474.43 bytes/class
+Memory Efficiency: 1544.05 classes/MB
+Memory Stability (Std Dev): 41.61 MB
+Memory per Class: 679.11 bytes/class
 
 CPU USAGE
 --------------------------------------------------------------------------------
-User CPU Time: 924.24 ms
-System CPU Time: 2.51 s
-Total CPU Time: 3.44 s
+User CPU Time: 1.14 s
+System CPU Time: 21.18 s
+Total CPU Time: 22.33 s
 
 I/O & OUTPUT METRICS
 --------------------------------------------------------------------------------
@@ -52,7 +53,7 @@ Output Size: 5.05 MB
 ================================================================================
 TAILWIND PERFORMANCE BENCHMARK REPORT
 ================================================================================
-Generated: 2025-12-26 15:59:01
+Generated: 2025-12-27 01:25:14
 
 SYSTEM INFORMATION
 --------------------------------------------------------------------------------
@@ -60,6 +61,7 @@ OS:      Darwin 25.2.0
 CPU:     arm
 Cores:   12 physical, 12 logical
 Memory:  32.0 GB
+GRIMOIRE_CSS_JOBS: 10
 
 INPUT SUMMARY
 --------------------------------------------------------------------------------
@@ -69,22 +71,22 @@ Input HTML Files: 100000
 
 PERFORMANCE METRICS
 --------------------------------------------------------------------------------
-Build Time: 7.91 s
-Processing Speed: 50561.33 classes/second
+Build Time: 9.34 s
+Processing Speed: 42827.24 classes/second
 
 MEMORY USAGE
 --------------------------------------------------------------------------------
-Peak Memory: 309.62 MB
-Average Memory: 157.30 MB
-Memory Efficiency: 1291.90 classes/MB
-Memory Stability (Std Dev): 75.63 MB
-Memory per Class: 811.65 bytes/class
+Peak Memory: 305.55 MB
+Average Memory: 164.15 MB
+Memory Efficiency: 1309.15 classes/MB
+Memory Stability (Std Dev): 70.51 MB
+Memory per Class: 800.96 bytes/class
 
 CPU USAGE
 --------------------------------------------------------------------------------
-User CPU Time: 8.84 s
-System CPU Time: 20.87 s
-Total CPU Time: 29.71 s
+User CPU Time: 8.66 s
+System CPU Time: 42.96 s
+Total CPU Time: 51.63 s
 
 I/O & OUTPUT METRICS
 --------------------------------------------------------------------------------
@@ -96,7 +98,7 @@ Output Size: 5.66 MB
 ================================================================================
 CSS FRAMEWORKS PERFORMANCE COMPARISON
 ================================================================================
-Generated: 2025-12-26 15:59:01
+Generated: 2025-12-27 01:25:14
 
 SYSTEM INFORMATION
 --------------------------------------------------------------------------------
@@ -104,15 +106,16 @@ OS:      Darwin 25.2.0
 CPU:     arm
 Cores:   12 physical, 12 logical
 Memory:  32.0 GB
+GRIMOIRE_CSS_JOBS: 10
 
 PERFORMANCE COMPARISON
 --------------------------------------------------------------------------------
 Metric            | Grimoire CSS       | Tailwind CSS       | Difference        | Ratio (G/T)
 ------------------------------------------------------------------------------------------------
-Build Time        | 1.81 s             | 7.91 s             | 6.10 s            | 4.36x      
-Classes/sec       | 220674.85          | 50561.33           | 170113.52         | 4.36x      
-Peak Memory       | 180.98 MB          | 309.62 MB          | 128.64 MB         | 1.71x      
-Memory Efficiency | 2210.17 classes/MB | 1291.90 classes/MB | 918.26 classes/MB | 1.71x      
+Build Time        | 2.49 s             | 9.34 s             | 6.85 s            | 3.76x      
+Classes/sec       | 160865.80          | 42827.24           | 118038.56         | 3.76x      
+Peak Memory       | 259.06 MB          | 305.55 MB          | 46.48 MB          | 1.18x      
+Memory Efficiency | 1544.05 classes/MB | 1309.15 classes/MB | 234.90 classes/MB | 1.18x      
 Output Size       | 5.05 MB            | 5.66 MB            | 625.89 KB         | 1.12x      
 
 Notes:

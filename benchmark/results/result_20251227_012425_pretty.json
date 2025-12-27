@@ -5,65 +5,65 @@
       "chartTitle": "Build Time",
       "chartSubtitle": "Total time taken to compile CSS (lower is better)",
       "chartId": "chart_time",
-      "highlightText": "5.7x faster",
-      "grimoireHeight": 14.791126688824901,
+      "highlightText": "7.8x faster",
+      "grimoireHeight": 10.920086928292807,
       "tailwindHeight": 85.0,
-      "grimoireValue": "1.38s",
-      "tailwindValue": "7.95s",
-      "grimoireRawValue": 1.38,
-      "tailwindRawValue": 7.95
+      "grimoireValue": "1.20s",
+      "tailwindValue": "9.37s",
+      "grimoireRawValue": 1.2,
+      "tailwindRawValue": 9.37
     },
     {
       "title": "Grimoire CSS vs Tailwind CSS - Peak Memory Usage",
       "chartTitle": "Peak Memory Usage",
       "chartSubtitle": "Maximum memory consumed during compilation (lower is better)",
       "chartId": "chart_peak_memory",
-      "highlightText": "1.6x less",
-      "grimoireHeight": 54.18586789554532,
+      "highlightText": "1.2x less",
+      "grimoireHeight": 71.67148088925569,
       "tailwindHeight": 85.0,
-      "grimoireValue": "194.53 MB",
-      "tailwindValue": "305.16 MB",
-      "grimoireRawValue": 194.53,
-      "tailwindRawValue": 305.16
+      "grimoireValue": "255.42 MB",
+      "tailwindValue": "302.92 MB",
+      "grimoireRawValue": 255.42,
+      "tailwindRawValue": 302.92
     },
     {
       "title": "Grimoire CSS vs Tailwind CSS - Average Memory Usage",
       "chartTitle": "Average Memory Usage",
       "chartSubtitle": "Average memory consumed during compilation (lower is better)",
       "chartId": "chart_avg_memory",
-      "highlightText": "1.7x less",
-      "grimoireHeight": 48.79584174256903,
+      "highlightText": "1.4x less",
+      "grimoireHeight": 62.186894050071736,
       "tailwindHeight": 85.0,
-      "grimoireValue": "90.07 MB",
-      "tailwindValue": "156.9 MB",
-      "grimoireRawValue": 90.07,
-      "tailwindRawValue": 156.9
+      "grimoireValue": "121.15 MB",
+      "tailwindValue": "165.59 MB",
+      "grimoireRawValue": 121.15,
+      "tailwindRawValue": 165.59
     },
     {
       "title": "Grimoire CSS vs Tailwind CSS - CPU Usage (User Time)",
       "chartTitle": "CPU Usage (User Time)",
       "chartSubtitle": "CPU time spent in user mode during compilation (lower is better)",
       "chartId": "chart_cpu_user",
-      "highlightText": "9.0x less",
-      "grimoireHeight": 9.398148677893031,
+      "highlightText": "9.4x less",
+      "grimoireHeight": 8.997005544604335,
       "tailwindHeight": 85.0,
-      "grimoireValue": "977.39ms",
-      "tailwindValue": "8.84s",
-      "grimoireRawValue": 0.98,
-      "tailwindRawValue": 8.84
+      "grimoireValue": "922.85ms",
+      "tailwindValue": "8.72s",
+      "grimoireRawValue": 0.92,
+      "tailwindRawValue": 8.72
     },
     {
       "title": "Grimoire CSS vs Tailwind CSS - CPU Usage (System Time)",
       "chartTitle": "CPU Usage (System Time)",
       "chartSubtitle": "CPU time spent in system mode during compilation (lower is better)",
       "chartId": "chart_cpu_system",
-      "highlightText": "4.2x less",
-      "grimoireHeight": 20.177199349796638,
+      "highlightText": "15.5x less",
+      "grimoireHeight": 5.489235917923912,
       "tailwindHeight": 85.0,
-      "grimoireValue": "5.16s",
-      "tailwindValue": "21.72s",
-      "grimoireRawValue": 5.16,
-      "tailwindRawValue": 21.72
+      "grimoireValue": "2.79s",
+      "tailwindValue": "43.22s",
+      "grimoireRawValue": 2.79,
+      "tailwindRawValue": 43.22
     },
     {
       "title": "Grimoire CSS vs Tailwind CSS - Output Size",
@@ -83,36 +83,37 @@
       "chartTitle": "Processing Speed",
       "chartSubtitle": "Number of utility classes processed per second (higher is better)",
       "chartId": "chart_classes_per_second",
-      "highlightText": "5.7x faster",
+      "highlightText": "7.8x faster",
       "grimoireHeight": 85.0,
-      "tailwindHeight": 14.791126688824901,
-      "grimoireValue": "289229.43 classes/s",
-      "tailwindValue": "50329.76 classes/s",
-      "grimoireRawValue": 289229.43,
-      "tailwindRawValue": 50329.76
+      "tailwindHeight": 10.92008692829281,
+      "grimoireValue": "332246.82 classes/s",
+      "tailwindValue": "42684.28 classes/s",
+      "grimoireRawValue": 332246.82,
+      "tailwindRawValue": 42684.28
     },
     {
       "title": "Grimoire CSS vs Tailwind CSS - Memory Efficiency",
       "chartTitle": "Memory Efficiency",
       "chartSubtitle": "Number of utility classes processed per MB of memory (higher is better)",
       "chartId": "chart_memory_efficiency",
-      "highlightText": "1.6x more efficient",
+      "highlightText": "1.2x more efficient",
       "grimoireHeight": 85.0,
-      "tailwindHeight": 54.18586789554531,
-      "grimoireValue": "2056.26 classes/MB",
-      "tailwindValue": "1310.82 classes/MB",
-      "grimoireRawValue": 2056.26,
-      "tailwindRawValue": 1310.82
+      "tailwindHeight": 71.67148088925569,
+      "grimoireValue": "1566.06 classes/MB",
+      "tailwindValue": "1320.49 classes/MB",
+      "grimoireRawValue": 1566.06,
+      "tailwindRawValue": 1320.49
     }
   ],
   "metadata": {
-    "timestamp": 1766761088.047711,
-    "timestamp_human": "2025-12-26 15:58:08",
+    "timestamp": 1766795065.6670752,
+    "timestamp_human": "2025-12-27 01:24:25",
     "system": {
       "os": "Darwin 25.2.0",
       "cpu": "arm",
       "cores": "12 physical, 12 logical",
-      "memory": "32.0 GB"
+      "memory": "32.0 GB",
+      "grimoire_css_jobs": 4
     }
   }
 }

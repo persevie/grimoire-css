@@ -64,6 +64,10 @@ def generate_report(results):
         lines.append(
             f"Memory:  {system_info.get('memory', {}).get('total_gb', 'Unknown')} GB")
 
+        jobs_value = system_info.get('benchmark', {}).get('grimoire_css_jobs', None)
+        if jobs_value is not None:
+            lines.append(f"GRIMOIRE_CSS_JOBS: {jobs_value}")
+
     # Input summary
     lines.append("\nINPUT SUMMARY")
     lines.append("-" * 80)
@@ -190,6 +194,10 @@ def generate_comparison_report(results):
             f"Cores:   {system_info.get('cpu', {}).get('cores_physical', 'Unknown')} physical, {system_info.get('cpu', {}).get('cores_logical', 'Unknown')} logical")
         lines.append(
             f"Memory:  {system_info.get('memory', {}).get('total_gb', 'Unknown')} GB")
+
+        jobs_value = system_info.get('benchmark', {}).get('grimoire_css_jobs', None)
+        if jobs_value is not None:
+            lines.append(f"GRIMOIRE_CSS_JOBS: {jobs_value}")
 
     # Performance comparison
     lines.append("\nPERFORMANCE COMPARISON")

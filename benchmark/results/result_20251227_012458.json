@@ -5,6 +5,9 @@
       "version": "Darwin Kernel Version 25.2.0: Tue Nov 18 21:07:05 PST 2025; root:xnu-12377.61.12~1/RELEASE_ARM64_T6020",
       "release": "25.2.0"
     },
+    "benchmark": {
+      "grimoire_css_jobs": 8
+    },
     "cpu": {
       "name": "arm",
       "cores_logical": 12,
@@ -15,12 +18,12 @@
     },
     "psutil_version": "7.0.0",
     "git": {
-      "sha": "bafd6c9b745de683c9007c3ec0d40e900d23867c",
+      "sha": "8f60e2643076e9065a21408a98d0da64b5aea71b",
       "dirty": true
     },
     "python_version": "3.14.2",
-    "timestamp": 1766761166.7450528,
-    "timestamp_human": "2025-12-26 15:59:26"
+    "timestamp": 1766795098.173505,
+    "timestamp_human": "2025-12-27 01:24:58"
   },
   "grimoire": {
     "input": {
@@ -37,35 +40,35 @@
     },
     "process": {
       "memory": {
-        "peak_bytes": 166019072,
-        "peak_mb": 158.328125,
-        "avg_bytes": 99309645.7721519,
-        "avg_mb": 94.7090585443038,
+        "peak_bytes": 181878784,
+        "peak_mb": 173.453125,
+        "avg_bytes": 90574532.92307693,
+        "avg_mb": 86.37860576923077,
         "measurement": "rss",
-        "rss_peak_bytes": 166019072,
-        "rss_peak_mb": 158.328125,
-        "rss_avg_bytes": 99309645.7721519,
-        "rss_avg_mb": 94.7090585443038,
-        "uss_peak_bytes": 138428416,
-        "uss_peak_mb": 132.015625,
-        "uss_avg_bytes": 74744637.56962025,
-        "uss_avg_mb": 71.2820411392405,
+        "rss_peak_bytes": 181878784,
+        "rss_peak_mb": 173.453125,
+        "rss_avg_bytes": 90574532.92307693,
+        "rss_avg_mb": 86.37860576923077,
+        "uss_peak_bytes": 108969984,
+        "uss_peak_mb": 103.921875,
+        "uss_avg_bytes": 28411326.35897436,
+        "uss_avg_mb": 27.095152243589745,
         "uss_is_complete": true,
-        "uss_partial_peak_bytes": 138428416,
-        "uss_partial_peak_mb": 132.015625,
-        "uss_partial_avg_bytes": 74744637.56962025,
-        "uss_partial_avg_mb": 71.2820411392405,
+        "uss_partial_peak_bytes": 108969984,
+        "uss_partial_peak_mb": 103.921875,
+        "uss_partial_avg_bytes": 28411326.35897436,
+        "uss_partial_avg_mb": 27.095152243589745,
         "uss_coverage_avg": 1.0,
         "uss_process_count_avg": 1,
         "uss_process_count_max": 1,
         "uss_available_count_avg": 1,
         "uss_available_count_max": 1,
-        "std_dev_mb": 39.95781605477421
+        "std_dev_mb": 55.383478271518264
       },
       "cpu": {
-        "user_time": 0.835245733,
-        "system_time": 1.974512151,
-        "total_time": 2.809757884
+        "user_time": 0.92461585,
+        "system_time": 4.9346328239999995,
+        "total_time": 5.859248674
       },
       "io": {
         "read_bytes": 49487280,
@@ -75,11 +78,11 @@
       }
     },
     "throughput": {
-      "build_time_seconds": 2.8290228843688965,
-      "classes_per_second": 141393.69540279772,
-      "memory_efficiency": 2526.4367906839043,
-      "bytes_processed_per_second": 17492711.09591597,
-      "bytes_generated_per_second": 1872307.2299153986
+      "build_time_seconds": 1.3175179958343506,
+      "classes_per_second": 303605.7201986728,
+      "memory_efficiency": 2306.1331411584542,
+      "bytes_processed_per_second": 37560989.797836475,
+      "bytes_generated_per_second": 4020286.6425711866
     },
     "exit_code": 0,
     "success": true,
@@ -106,16 +109,16 @@
     },
     "process": {
       "memory": {
-        "peak_bytes": 317325312,
-        "peak_mb": 302.625,
-        "avg_bytes": 165314706.2857143,
-        "avg_mb": 157.65638950892858,
-        "std_dev_mb": 75.3255305454726
+        "peak_bytes": 319864832,
+        "peak_mb": 305.046875,
+        "avg_bytes": 173194673.23076922,
+        "avg_mb": 165.17131159855768,
+        "std_dev_mb": 71.40594682739257
       },
       "cpu": {
-        "user_time": 8.904139656,
-        "system_time": 21.150147192,
-        "total_time": 30.054286848
+        "user_time": 8.87050304,
+        "system_time": 41.328194268000004,
+        "total_time": 50.19869730800001
       },
       "io": {
         "read_bytes": 49487280,
@@ -125,11 +128,11 @@
       }
     },
     "throughput": {
-      "build_time_seconds": 8.003226041793823,
-      "classes_per_second": 49980.59506393045,
-      "memory_efficiency": 1321.7876910367618,
-      "bytes_processed_per_second": 6183416.504990785,
-      "bytes_generated_per_second": 741914.5690740901
+      "build_time_seconds": 9.233954429626465,
+      "classes_per_second": 43319.035527900174,
+      "memory_efficiency": 1311.2935511960252,
+      "bytes_processed_per_second": 5359272.712157177,
+      "bytes_generated_per_second": 643030.0306604605
     },
     "exit_code": 0,
     "success": true
