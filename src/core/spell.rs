@@ -132,9 +132,62 @@ impl Spell {
         // Template spell: keep outer spell and parse inner spells.
         if with_template && !raw_spell_split.is_empty() {
             let mut scroll_spells: Vec<Spell> = Vec::new();
+
             for rs in raw_spell_split {
                 if let Some(spell) = Spell::new(rs, shared_spells, scrolls, span, source.clone())? {
-                    scroll_spells.push(spell);
+                    let mut spell = spell;
+
+                    // If a template part is a scroll invocation (e.g. complex-card=120px_red_100px),
+                    // `Spell::new` will produce a *container spell* whose `scroll_spells` are the
+                    // real property spells.
+                    //
+                    // For templates we want to flatten those property spells into the template list
+                    // so the builder can generate CSS and unify the class name to the outer template.
+                    let area = spell.area().to_string();
+                    let focus = spell.focus().to_string();
+                    let effects = spell.effects().to_string();
+
+                    if let Some(inner_scroll_spells) = spell.scroll_spells.take() {
+                        let has_prefix =
+                            !area.is_empty() || !focus.is_empty() || !effects.is_empty();
+
+                        if has_prefix {
+                            let mut prefix = String::new();
+
+                            if !area.is_empty() {
+                                prefix.push_str(&area);
+                                prefix.push_str("__");
+                            }
+
+                            if !focus.is_empty() {
+                                prefix.push('{');
+                                prefix.push_str(&focus);
+                                prefix.push('}');
+                            }
+
+                            if !effects.is_empty() {
+                                prefix.push_str(&effects);
+                                prefix.push(':');
+                            }
+
+                            for inner in inner_scroll_spells {
+                                let combined = format!("{prefix}{}", inner.raw_spell);
+                                if let Some(reparsed) = Spell::new(
+                                    &combined,
+                                    shared_spells,
+                                    scrolls,
+                                    span,
+                                    source.clone(),
+                                )? {
+                                    scroll_spells.push(reparsed);
+                                }
+                            }
+                        } else {
+                            scroll_spells.extend(inner_scroll_spells);
+                        }
+                    } else {
+                        scroll_spells.push(spell);
+                    }
                 }
             }
 
@@ -451,6 +504,34 @@ mod tests {
         assert_eq!(spells[0].component_target(), "red");
         assert_eq!(spells[1].component(), "display");
         assert_eq!(spells[1].component_target(), "flex");
+    }
+
+    #[test]
+    fn test_scroll_can_be_used_inside_template_attribute() {
+        let shared_spells = HashSet::new();
+        let mut scrolls_map: HashMap<String, Vec<String>> = HashMap::new();
+        scrolls_map.insert(
+            "complex-card".to_string(),
+            vec!["h=$".to_string(), "c=$".to_string(), "w=$".to_string()],
+        );
+        let scrolls = Some(scrolls_map);
+
+        // This is the desired HTML usage pattern: use scroll invocation via g! ... ;
+        // (i.e. not inside class="...").
+        let raw = "g!complex-card=120px_red_100px;";
+        let spell = Spell::new(raw, &shared_spells, &scrolls, (0, 0), None)
+            .expect("parse ok")
+            .expect("not None");
+
+        assert!(spell.with_template);
+        let spells = spell.scroll_spells.as_ref().expect("template spells");
+        assert_eq!(spells.len(), 3);
+        assert_eq!(spells[0].component(), "h");
+        assert_eq!(spells[0].component_target(), "120px");
+        assert_eq!(spells[1].component(), "c");
+        assert_eq!(spells[1].component_target(), "red");
+        assert_eq!(spells[2].component(), "w");
+        assert_eq!(spells[2].component_target(), "100px");
     }
 
     #[test]
