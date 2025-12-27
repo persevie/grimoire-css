@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json",
+  "variables": null,
+  "scrolls": [
+    {
+      "name": "complex-card",
+      "spells": ["h=$", "c=$", "w=$", "hover:c=blue", "md__h=10px"]
+    },
+    { "name": "simple-box", "spells": ["w=50px", "h=50px", "c=green"] }
+  ],
+  "projects": [
+    {
+      "projectName": "1",
+      "inputPaths": ["templated_scroll.html"],
+      "outputDirPath": ".",
+      "singleOutputFileName": "1.css"
+    }
+  ],
+  "shared": null,
+  "critical": null,
+  "lock": null
+}

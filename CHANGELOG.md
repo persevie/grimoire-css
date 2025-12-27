@@ -1,5 +1,45 @@
 # Changelog
 
+## [v1.7.0] - 2025-12-27
+
+> Full release notes: [releases/v1.7.0.md](./releases/v1.7.0.md)
+
+### Added
+
+- **Scroll templates in `g!…;`**: Use config-defined `scrolls` inside templated syntax with variable arguments.
+- **Rustc-like diagnostics**: File/snippet output with labeled spans and optional help text.
+- **Opt-in parallel builds**: Enable multi-core filesystem builds via `GRIMOIRE_CSS_JOBS`.
+- **Repro sandbox**: Added `repro/` scenarios for quickly validating features and diagnostics.
+- **Contributor instructions**: Added `.github/copilot-instructions.md` describing the repo’s architecture conventions.
+
+### Improved
+
+- Deterministic scroll expansion under templated selectors, including correct propagation of prefixes (`md__`, `{...}`, `hover:`).
+- Reduced redundant work and lowered clone/allocation pressure in hot paths (output unchanged).
+
+### Fixed
+
+- Malformed function-like spell values now produce clearer, earlier errors.
+- Color function argument validation now returns a proper error instead of being silently ignored.
+
+---
+
+## [v1.6.0] - 2025-07-21
+
+> Full release notes: [releases/v1.6.0.md](./releases/v1.6.0.md)
+
+### Added
+
+- Extracted the color module into `grimoire_css_color_toolkit` for independent usage.
+- Comprehensive support for curly-bracket class syntax (`class={}`, `className={}`) with nested bracket handling.
+
+### Improved
+
+- Migrated unit handling from `u32` to `f64` for better precision in responsive calculations.
+- Upgraded to Rust Edition 2024 and set MSRV to Rust 1.88.
+
+---
+
 ## [v1.5.0] - 2025-05-19
 
 > Full release notes: [releases/v1.5.0.md](./releases/v1.5.0.md)
