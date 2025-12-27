@@ -53,6 +53,13 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
+          components: clippy,rustfmt
+
+      - name: Print Rust toolchain versions
+        run: |
+          rustup show active-toolchain
+          rustc --version
+          cargo --version
 
       - name: Install llvm-tools-preview
         run: rustup component add llvm-tools-preview
@@ -134,6 +141,13 @@ jobs:
           profile: minimal
           toolchain: stable
           target: ${{ matrix.target }}
+          components: clippy,rustfmt
+
+      - name: Print Rust toolchain versions
+        run: |
+          rustup show active-toolchain
+          rustc --version
+          cargo --version
 
       - name: Cache Cargo registry
         uses: actions/cache@v4
@@ -187,6 +201,13 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
+          components: clippy,rustfmt
+
+      - name: Print Rust toolchain versions
+        run: |
+          rustup show active-toolchain
+          rustc --version
+          cargo --version
 
       - name: Cache Cargo registry
         uses: actions/cache@v4

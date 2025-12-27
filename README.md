@@ -4,11 +4,9 @@
 </div>
 
 ---
-
 <!-- END HERO IMAGE -->
 
 <!-- START BADGES -->
-
 [![Current Crates.io Version](https://img.shields.io/crates/v/grimoire_css.svg)](https://crates.io/crates/grimoire_css)
 [![Crates.io Downloads](https://img.shields.io/crates/d/grimoire_css.svg)](https://crates.io/crates/grimoire_css)
 [![Test Status](https://github.com/persevie/grimoire-css/actions/workflows/quality.yml/badge.svg)](https://github.com/persevie/grimoire-css/actions/workflows/quality.yml)
@@ -16,13 +14,10 @@
 ![license](https://shields.io/badge/license-MIT-blue)
 
 ---
-
 <!-- END BADGES -->
 
 <!-- START NOTE -->
-
 > For the best experience and access to advanced features like playgrounds and interactive previews, please visit the [Grimoire CSS site](https://grimoirecss.com). The documentation is the same in both places.
-
 <!-- END NOTE -->
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -316,7 +311,6 @@ For example, the predefined scroll `g-anim` allows you to apply an animation and
   <summary>Full Animations List (use [grimoirecss.com](https://grimoirecss.com) for better experience with preview)</summary>
 
 <!-- START ANIMATIONS LIST  -->
-
 - back-in-down
 - back-in-left
 - back-in-right
@@ -1047,9 +1041,9 @@ For example, the predefined scroll `g-anim` allows you to apply an animation and
 - zoom-out-left
 - zoom-out-right
 - zoom-out-up
-  <!-- END ANIMATIONS LIST -->
-  </details>
-  <!-- END ANIMATIONS SECTION -->
+<!-- END ANIMATIONS LIST -->
+</details>
+<!-- END ANIMATIONS SECTION -->
 
 ## Create Your Own Animations
 
@@ -1097,6 +1091,8 @@ This means you’re not limited by file types or formats - you define the `input
 ## Spells in Plain Text with Template Syntax
 
 If you want to use spells outside the traditional `class` or `className` attributes, Grimoire CSS provides a clever solution with its **template syntax**: `g!<spell>;`. This syntax lets you wrap your spell in a template, enabling the parser to collect spells from any text-based content.
+
+Template syntax works for scrolls too, by the same rules as spells (including prefixes and modifiers). For example: `g!complex-card=120px_red_100px;`.
 
 Let’s say you have both a classic spell and a templated spell that are essentially the same. Don’t worry - Grimoire CSS is smart enough to combine them into one, as long as it doesn’t affect the CSS cascade. The result? Clean, efficient CSS output like this:
 
@@ -1437,6 +1433,21 @@ There are only 3 commands you need to know:
 - **`build`**: Kicks off the build process, parsing all your input files and generating the compiled CSS. If you haven’t already run `init`, the `build` command will handle that for you automatically.
 - **`shorten`**: Automatically converts all full-length component names in your spells (as defined in your config) to their corresponding shorthand forms. This helps keep your code concise and consistent. Run this command to refactor your files, making your spell syntax as brief as possible without losing clarity or functionality.
 
+**Optional parallel project builds**
+
+If your config defines multiple independent projects (multiple output files), Grimoire CSS can build them in parallel.
+
+- Enable by setting the `GRIMOIRE_CSS_JOBS` environment variable to a positive integer (e.g. `4`).
+- Default is `1` (fully sequential; same behavior as before).
+- Values are capped to the machine’s available parallelism.
+- Higher values can reduce wall-clock build time, but may increase peak memory usage due to multiple optimizations running simultaneously.
+
+Example:
+
+```bash
+GRIMOIRE_CSS_JOBS=4 grimoire_css build
+```
+
 Grimoire CSS’s CLI is built for developers who want power without bloat. It’s direct, no-nonsense, and integrates smoothly into any project or bundler.
 
 Here’s a refined version of the remaining parts, keeping the technical depth and making them more engaging and polished:
@@ -1449,6 +1460,8 @@ Migrating to Grimoire CSS is simple thanks to the Grimoire CSS Transmutator. You
 - In the Web UI, either write CSS in the editor and view the JSON output in a separate tab or upload your CSS files and download the transmuted JSON.
 
 In both modes, the Transmutator returns JSON that conforms to the external Scrolls convention by default, so you can immediately leverage your existing CSS classes as Grimoire CSS Scrolls.
+
+You can also run the compiled CSS from Tailwind or any other framework through the Transmutator, include the produced JSON as external scrolls alongside your config, and keep using your existing class names powered by Grimoire CSS.
 
 ```json
 {
@@ -1512,9 +1525,7 @@ The core of Grimoire CSS is architected entirely in Rust, ensuring top-notch per
 The `grimoire-css-js` takes the core crate and wraps it into a Node.js-compatible interface, which is then compiled into an npm package. Whether you’re working with Rust, Node.js, or need a direct CLI, Grimoire CSS is ready to integrate into your workflow and bring powerful CSS management wherever you need it.
 
 <!-- START DESK -->
-
 > For the best experience and access to online playground and transmutator (aka **Desk**), please visit the [Grimoire CSS site](https://grimoirecss.com). The documentation is the same in both places.
-
 <!-- END DESK -->
 
 ## Installation
@@ -1571,7 +1582,6 @@ grimoire-css-js build
 ```
 
 <!-- START CIRCLE -->
-
 # The Arcane Circle
 
 Grimoire CSS gives you the freedom to create styles that work exactly the way you want them to - no rigid rules or constraints. Whether you’re crafting dynamic interactions or fine-tuning layouts, Grimoire adapts to your needs, making each step straightforward and rewarding.
@@ -1584,18 +1594,16 @@ The Arcane Circle, or simply the Circle, is a place where you can share your con
 
 ## The First Member
 
-Hello! My name is Dmitrii Shatokhin, and I am the creator of Grimoire CSS. I invented the Spell concept and all the other ideas behind the project. Grimoire CSS is the result of countless hours of work and dedication, and I am proud to have made it open source.
+Hello! My name is [Dmitrii Shatokhin](https://dmtrshat.github.io/), and I am the creator of Grimoire CSS. I invented the Spell concept and all the other ideas behind the project. Grimoire CSS is the result of countless hours of work and dedication, and I am proud to have made it open source.
 
 But this is just the beginning. I am committed to the ongoing development of Grimoire CSS and its entire ecosystem - there are many plans and tasks ahead, which I strive to manage transparently on GitHub. My vision is to grow the Arcane Circle community and bring all these ideas to life.
 
 I would be truly grateful for any support you can offer - whether it’s starring the project on GitHub, leaving feedback, recommending it to others, contributing to its development, helping to promote Grimoire CSS, or even sponsoring the project or my work.
 
 Thank you!
-
 <!-- END CIRCLE -->
 
 <!-- START RELEASE INFO -->
-
 # Release Information
 
 ## Release Notes
@@ -1605,11 +1613,8 @@ For detailed information about each release, including new features, improvement
 ### Changelog
 
 A concise list of version-specific changes can be found in our [Changelog](https://github.com/persevie/grimoire-css/blob/main/CHANGELOG.md).
-
 <!-- END RELEASE INFO -->
 
 <!-- START SLOGAN -->
-
 Craft Your Code, Cast Your Spells
-
 <!-- END SLOGAN -->

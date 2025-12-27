@@ -19,6 +19,7 @@ import statistics
 from pathlib import Path
 import platform
 import traceback
+import os
 
 
 class ProcessMonitor:
@@ -28,12 +29,29 @@ class ProcessMonitor:
         """Initialize the process monitor."""
         self.is_windows = platform.system() == "Windows"
         self.is_macos = platform.system() == "Darwin"
+        # Backward-compatible primary memory series.
         self.memory_samples = []
         self.peak_memory_bytes = 0
+        # Additional memory series for better cross-run comparability.
+        self.memory_samples_rss = []
+        self.peak_memory_bytes_rss = 0
+        self.memory_samples_uss = []
+        self.peak_memory_bytes_uss = 0
+        # Partial USS series: sums USS only for processes where psutil reports it.
+        # This is useful on macOS where USS may be unavailable for some children.
+        self.memory_samples_uss_partial = []
+        self.peak_memory_bytes_uss_partial = 0
+        self.uss_coverage_samples = []  # fraction in [0..1]
+        self.process_count_samples = []
+        self.uss_available_count_samples = []
         self.cpu_user_time = 0
         self.cpu_system_time = 0
         self.io_read_bytes = 0
         self.io_write_bytes = 0
+        # Which memory measurement is used for the backward-compatible primary fields.
+        # - macOS/Linux: prefer 'uss' if available for the whole process tree, else 'rss'
+        # - Windows: prefer 'private' if available, else 'rss'
+        self.memory_measurement = "unknown"
         # Tracks all processes we're monitoring
         self.monitored_processes = set()
         # Maps PIDs to their last CPU times for delta calculations
@@ -49,10 +67,20 @@ class ProcessMonitor:
         # Reset metrics for new monitoring session
         self.memory_samples = []
         self.peak_memory_bytes = 0
+        self.memory_samples_rss = []
+        self.peak_memory_bytes_rss = 0
+        self.memory_samples_uss = []
+        self.peak_memory_bytes_uss = 0
+        self.memory_samples_uss_partial = []
+        self.peak_memory_bytes_uss_partial = 0
+        self.uss_coverage_samples = []
+        self.process_count_samples = []
+        self.uss_available_count_samples = []
         self.cpu_user_time = 0
         self.cpu_system_time = 0
         self.io_read_bytes = 0
         self.io_write_bytes = 0
+        self.memory_measurement = "unknown"
 
         try:
             # Store initial process state
@@ -107,7 +135,13 @@ class ProcessMonitor:
                 self._update_process_list()
 
                 # Reset per-iteration counters
-                current_total_memory = 0
+                current_total_primary = 0
+                current_total_rss = 0
+                current_total_uss = 0
+                uss_valid_for_all = True
+                current_total_uss_partial = 0
+                uss_available_count = 0
+                process_count = 0
 
                 # Check all processes in our monitoring list
                 for proc in list(self.monitored_processes):
@@ -117,9 +151,23 @@ class ProcessMonitor:
                             self.monitored_processes.remove(proc)
                             continue
 
-                        # Measure memory using the appropriate platform-specific method
-                        memory_used = self._get_process_memory(proc)
-                        current_total_memory += memory_used
+                        process_count += 1
+
+                        # Measure memory
+                        rss_bytes, uss_bytes, private_bytes = self._get_process_memory_components(proc)
+
+                        # RSS is always available.
+                        current_total_rss += rss_bytes
+
+                        # USS is only valid if available for *all* monitored processes.
+                        if uss_bytes is None:
+                            uss_valid_for_all = False
+                        else:
+                            current_total_uss += uss_bytes
+                            current_total_uss_partial += uss_bytes
+                            uss_available_count += 1
+
+                        # Primary metric is chosen after the loop based on platform and availability.
 
                         # Measure CPU time delta
                         self._update_cpu_times(proc)
@@ -130,11 +178,61 @@ class ProcessMonitor:
                         # Process no longer exists or can't be accessed
                         self.monitored_processes.discard(proc)
 
-                # Update memory metrics only if we got a valid reading
-                if current_total_memory > 0:
-                    self.memory_samples.append(current_total_memory)
-                    self.peak_memory_bytes = max(
-                        self.peak_memory_bytes, current_total_memory)
+                # Choose a stable primary memory metric per-run to avoid mixing RSS/USS
+                # across samples (which makes peak comparisons meaningless).
+                #
+                # - macOS/Linux: primary is RSS (always available)
+                # - Windows: primary is private working set if available, otherwise RSS
+                if self.is_windows:
+                    # Prefer summing private memory if psutil provides it.
+                    current_total_private = 0
+                    private_valid_for_all = True
+                    for proc in list(self.monitored_processes):
+                        try:
+                            if proc.is_running():
+                                _, _, p = self._get_process_memory_components(proc)
+                                if p is None:
+                                    private_valid_for_all = False
+                                    break
+                                current_total_private += p
+                        except (psutil.NoSuchProcess, psutil.AccessDenied):
+                            private_valid_for_all = False
+                            break
+
+                    if private_valid_for_all and current_total_private > 0:
+                        self.memory_measurement = "private"
+                        current_total_primary = current_total_private
+                    else:
+                        self.memory_measurement = "rss"
+                        current_total_primary = current_total_rss
+                else:
+                    self.memory_measurement = "rss"
+                    current_total_primary = current_total_rss
+
+                # Update memory metrics only if we got a valid reading.
+                if current_total_primary > 0:
+                    self.memory_samples.append(current_total_primary)
+                    self.peak_memory_bytes = max(self.peak_memory_bytes, current_total_primary)
+
+                if current_total_rss > 0:
+                    self.memory_samples_rss.append(current_total_rss)
+                    self.peak_memory_bytes_rss = max(self.peak_memory_bytes_rss, current_total_rss)
+
+                if uss_valid_for_all and current_total_uss > 0:
+                    self.memory_samples_uss.append(current_total_uss)
+                    self.peak_memory_bytes_uss = max(self.peak_memory_bytes_uss, current_total_uss)
+
+                # Always record partial-USS (may undercount) and coverage.
+                if current_total_uss_partial > 0:
+                    self.memory_samples_uss_partial.append(current_total_uss_partial)
+                    self.peak_memory_bytes_uss_partial = max(
+                        self.peak_memory_bytes_uss_partial, current_total_uss_partial
+                    )
+
+                if process_count > 0:
+                    self.uss_coverage_samples.append(uss_available_count / process_count)
+                    self.process_count_samples.append(process_count)
+                    self.uss_available_count_samples.append(uss_available_count)
 
                 time.sleep(sampling_interval)
 
@@ -145,6 +243,32 @@ class ProcessMonitor:
         except Exception as e:
             print(f"Error in monitoring thread: {e}")
             traceback.print_exc()
+
+    def _get_process_memory_components(self, proc):
+        """Return (rss_bytes, uss_bytes_or_None, private_bytes_or_None)."""
+        try:
+            memory_info = proc.memory_info()
+            rss = getattr(memory_info, 'rss', 0) or 0
+
+            uss = None
+            private = None
+
+            # Windows: private working set.
+            if self.is_windows:
+                private = getattr(memory_info, 'private', None)
+                return rss, uss, private
+
+            # macOS/Linux: try USS if available.
+            try:
+                memory_full = proc.memory_full_info()
+                if hasattr(memory_full, 'uss'):
+                    uss = getattr(memory_full, 'uss')
+            except Exception:
+                uss = None
+
+            return rss, uss, private
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            return 0, None, None
 
     def _update_process_list(self):
         """Update the list of processes we're monitoring to include new children."""
@@ -183,6 +307,7 @@ class ProcessMonitor:
         try:
             if self.is_windows:
                 # On Windows, use private working set for exclusive memory usage
+                self.memory_measurement = "private"
                 return proc.memory_info().private
             elif self.is_macos:
                 # On macOS, use rss - shared memory for better accuracy
@@ -190,14 +315,22 @@ class ProcessMonitor:
                 try:
                     # Try to get more accurate measurement on macOS if available
                     memory_full = proc.memory_full_info()
-                    return getattr(memory_full, 'uss', memory_info.rss)
+                    if hasattr(memory_full, 'uss'):
+                        self.memory_measurement = "uss"
+                        return getattr(memory_full, 'uss')
+
+                    self.memory_measurement = "rss"
+                    return memory_info.rss
                 except:
+                    self.memory_measurement = "rss"
                     return memory_info.rss
             else:
                 # On Linux, USS (Unique Set Size) is most accurate
                 try:
+                    self.memory_measurement = "uss"
                     return proc.memory_full_info().uss
                 except:
+                    self.memory_measurement = "rss"
                     return proc.memory_info().rss
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return 0
@@ -263,7 +396,27 @@ class ProcessMonitor:
                 "peak_bytes": self.peak_memory_bytes,
                 "peak_mb": self.peak_memory_bytes / (1024 * 1024),
                 "avg_bytes": statistics.mean(self.memory_samples) if self.memory_samples else 0,
-                "avg_mb": statistics.mean(self.memory_samples) / (1024 * 1024) if self.memory_samples else 0
+                "avg_mb": statistics.mean(self.memory_samples) / (1024 * 1024) if self.memory_samples else 0,
+                "measurement": self.memory_measurement,
+                # Additional series (may be empty if not measurable).
+                "rss_peak_bytes": self.peak_memory_bytes_rss,
+                "rss_peak_mb": self.peak_memory_bytes_rss / (1024 * 1024),
+                "rss_avg_bytes": statistics.mean(self.memory_samples_rss) if self.memory_samples_rss else 0,
+                "rss_avg_mb": statistics.mean(self.memory_samples_rss) / (1024 * 1024) if self.memory_samples_rss else 0,
+                "uss_peak_bytes": self.peak_memory_bytes_uss,
+                "uss_peak_mb": self.peak_memory_bytes_uss / (1024 * 1024),
+                "uss_avg_bytes": statistics.mean(self.memory_samples_uss) if self.memory_samples_uss else 0,
+                "uss_avg_mb": statistics.mean(self.memory_samples_uss) / (1024 * 1024) if self.memory_samples_uss else 0,
+                "uss_is_complete": bool(self.memory_samples_uss),
+                "uss_partial_peak_bytes": self.peak_memory_bytes_uss_partial,
+                "uss_partial_peak_mb": self.peak_memory_bytes_uss_partial / (1024 * 1024),
+                "uss_partial_avg_bytes": statistics.mean(self.memory_samples_uss_partial) if self.memory_samples_uss_partial else 0,
+                "uss_partial_avg_mb": statistics.mean(self.memory_samples_uss_partial) / (1024 * 1024) if self.memory_samples_uss_partial else 0,
+                "uss_coverage_avg": statistics.mean(self.uss_coverage_samples) if self.uss_coverage_samples else 0,
+                "uss_process_count_avg": statistics.mean(self.process_count_samples) if self.process_count_samples else 0,
+                "uss_process_count_max": max(self.process_count_samples) if self.process_count_samples else 0,
+                "uss_available_count_avg": statistics.mean(self.uss_available_count_samples) if self.uss_available_count_samples else 0,
+                "uss_available_count_max": max(self.uss_available_count_samples) if self.uss_available_count_samples else 0,
             },
             "cpu": {
                 "user_time": self.cpu_user_time,
@@ -487,7 +640,23 @@ class GrimoireMetricsCollector(MetricsCollector):
     def __init__(self, output_dir="grimoire_css_output", executable="../target/release/grimoire_css"):
         """Initialize the Grimoire CSS metrics collector."""
         super().__init__(output_dir)
-        self.executable = executable
+        # Allow overriding the binary path for profiling / custom builds.
+        # By default we run the release binary to keep benchmarks comparable.
+        #
+        # Priority order:
+        # 1) GRIMOIRE_CSS_EXECUTABLE: explicit path wins.
+        # 2) GRIMOIRE_CSS_USE_PROFILING=1: prefer ../target/profiling/grimoire_css if present.
+        # 3) Fallback to the default release binary.
+        overridden = os.environ.get("GRIMOIRE_CSS_EXECUTABLE")
+        use_profiling = os.environ.get("GRIMOIRE_CSS_USE_PROFILING") == "1"
+
+        if overridden:
+            self.executable = overridden
+        elif use_profiling:
+            profiling_candidate = Path("../target/profiling/grimoire_css")
+            self.executable = str(profiling_candidate) if profiling_candidate.exists() else executable
+        else:
+            self.executable = executable
 
     def run_benchmark(self):
         """Run the Grimoire CSS benchmark and collect metrics."""
@@ -501,6 +670,11 @@ class GrimoireMetricsCollector(MetricsCollector):
             process, elapsed_time, process_metrics, stdout, stderr = self.run_process(
                 cmd)
 
+            # dhat (heap profiling) drastically slows execution and changes allocation behavior.
+            # If it's enabled, the reported build time is not comparable to normal runs.
+            if stderr and "dhat:" in stderr:
+                print("Warning: dhat heap profiling detected in Grimoire process output. Build time is not comparable; disable heap profiling for performance benchmarks.")
+
             # Step 3: Analyze output files
             output_metrics = self.output_analyzer.analyze()
             self.output_files_size = output_metrics["total_size_bytes"]
@@ -513,6 +687,12 @@ class GrimoireMetricsCollector(MetricsCollector):
                 output_metrics,
                 process
             )
+
+            # Add run metadata for reproducibility.
+            result["run"] = {
+                "executable": str(self.executable),
+                "argv": cmd,
+            }
 
             return result
         except Exception as e:

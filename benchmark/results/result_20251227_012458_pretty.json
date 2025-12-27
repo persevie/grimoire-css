@@ -1,0 +1,119 @@
+{
+  "charts": [
+    {
+      "title": "Grimoire CSS vs Tailwind CSS - Build Time",
+      "chartTitle": "Build Time",
+      "chartSubtitle": "Total time taken to compile CSS (lower is better)",
+      "chartId": "chart_time",
+      "highlightText": "7.0x faster",
+      "grimoireHeight": 12.12795996551718,
+      "tailwindHeight": 85.0,
+      "grimoireValue": "1.32s",
+      "tailwindValue": "9.23s",
+      "grimoireRawValue": 1.32,
+      "tailwindRawValue": 9.23
+    },
+    {
+      "title": "Grimoire CSS vs Tailwind CSS - Peak Memory Usage",
+      "chartTitle": "Peak Memory Usage",
+      "chartSubtitle": "Maximum memory consumed during compilation (lower is better)",
+      "chartId": "chart_peak_memory",
+      "highlightText": "1.8x less",
+      "grimoireHeight": 48.331967423039494,
+      "tailwindHeight": 85.0,
+      "grimoireValue": "173.45 MB",
+      "tailwindValue": "305.05 MB",
+      "grimoireRawValue": 173.45,
+      "tailwindRawValue": 305.05
+    },
+    {
+      "title": "Grimoire CSS vs Tailwind CSS - Average Memory Usage",
+      "chartTitle": "Average Memory Usage",
+      "chartSubtitle": "Average memory consumed during compilation (lower is better)",
+      "chartId": "chart_avg_memory",
+      "highlightText": "1.9x less",
+      "grimoireHeight": 44.451917341611335,
+      "tailwindHeight": 85.0,
+      "grimoireValue": "86.38 MB",
+      "tailwindValue": "165.17 MB",
+      "grimoireRawValue": 86.38,
+      "tailwindRawValue": 165.17
+    },
+    {
+      "title": "Grimoire CSS vs Tailwind CSS - CPU Usage (User Time)",
+      "chartTitle": "CPU Usage (User Time)",
+      "chartSubtitle": "CPU time spent in user mode during compilation (lower is better)",
+      "chartId": "chart_cpu_user",
+      "highlightText": "9.6x less",
+      "grimoireHeight": 8.859965088293349,
+      "tailwindHeight": 85.0,
+      "grimoireValue": "924.62ms",
+      "tailwindValue": "8.87s",
+      "grimoireRawValue": 0.92,
+      "tailwindRawValue": 8.87
+    },
+    {
+      "title": "Grimoire CSS vs Tailwind CSS - CPU Usage (System Time)",
+      "chartTitle": "CPU Usage (System Time)",
+      "chartSubtitle": "CPU time spent in system mode during compilation (lower is better)",
+      "chartId": "chart_cpu_system",
+      "highlightText": "8.4x less",
+      "grimoireHeight": 10.149095489632145,
+      "tailwindHeight": 85.0,
+      "grimoireValue": "4.93s",
+      "tailwindValue": "41.33s",
+      "grimoireRawValue": 4.93,
+      "tailwindRawValue": 41.33
+    },
+    {
+      "title": "Grimoire CSS vs Tailwind CSS - Output Size",
+      "chartTitle": "Output Size",
+      "chartSubtitle": "Size of the generated CSS file (lower is better)",
+      "chartId": "chart_output",
+      "highlightText": "1.1x less",
+      "grimoireHeight": 75.82519186689818,
+      "tailwindHeight": 85.0,
+      "grimoireValue": "5.05 MB",
+      "tailwindValue": "5.66 MB",
+      "grimoireRawValue": 5172.66,
+      "tailwindRawValue": 5798.54
+    },
+    {
+      "title": "Grimoire CSS vs Tailwind CSS - Processing Speed",
+      "chartTitle": "Processing Speed",
+      "chartSubtitle": "Number of utility classes processed per second (higher is better)",
+      "chartId": "chart_classes_per_second",
+      "highlightText": "7.0x faster",
+      "grimoireHeight": 85.0,
+      "tailwindHeight": 12.127959965517183,
+      "grimoireValue": "303605.72 classes/s",
+      "tailwindValue": "43319.04 classes/s",
+      "grimoireRawValue": 303605.72,
+      "tailwindRawValue": 43319.04
+    },
+    {
+      "title": "Grimoire CSS vs Tailwind CSS - Memory Efficiency",
+      "chartTitle": "Memory Efficiency",
+      "chartSubtitle": "Number of utility classes processed per MB of memory (higher is better)",
+      "chartId": "chart_memory_efficiency",
+      "highlightText": "1.8x more efficient",
+      "grimoireHeight": 85.0,
+      "tailwindHeight": 48.331967423039494,
+      "grimoireValue": "2306.13 classes/MB",
+      "tailwindValue": "1311.29 classes/MB",
+      "grimoireRawValue": 2306.13,
+      "tailwindRawValue": 1311.29
+    }
+  ],
+  "metadata": {
+    "timestamp": 1766795098.173505,
+    "timestamp_human": "2025-12-27 01:24:58",
+    "system": {
+      "os": "Darwin 25.2.0",
+      "cpu": "arm",
+      "cores": "12 physical, 12 logical",
+      "memory": "32.0 GB",
+      "grimoire_css_jobs": 8
+    }
+  }
+}

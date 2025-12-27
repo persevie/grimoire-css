@@ -18,7 +18,9 @@ pub mod css_builder;
 pub mod css_optimizer;
 pub mod grimoire_css_error;
 pub mod parser;
+pub mod source_file;
 pub mod spell;
+pub mod spell_value_validator;
 
 pub use compiled_css::*;
 pub use config::*;
@@ -26,5 +28,6 @@ pub use css_builder::*;
 pub use css_optimizer::*;
 pub use filesystem::*;
 pub use grimoire_css_error::*;
+pub use source_file::*;
 // Exception: This external dependency was part of the Grimoire CSS and is now included as a separate crate, but should still be part of the main module and available for use.
 pub use grimoire_css_color_toolkit_lib::*;

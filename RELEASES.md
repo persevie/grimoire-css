@@ -4,6 +4,85 @@
 
 This document combines all release notes in chronological order, providing a comprehensive view of Grimoire CSS's evolution.
 
+
+---
+
+# v1.7.0 Scryforge: Deterministic Scrollcraft
+
+Grimoire CSS sharpens both **power** and **clarity** with **Scryforge** — a release focused on templated scroll composition, rustc-like diagnostics, and measurable performance wins. Spells now expand more deterministically under templated selectors, errors read like a compiler, and large projects build faster with an opt-in multi-core path.
+
+## Key Highlights
+
+- **Scroll Templates Inside `g!…;`**: Use config-defined `scrolls` directly in `g!…;` with variable arguments (e.g. `g!complex-card=120px_red_100px;`) while keeping output deterministic.
+- **Prefix-Safe Expansion**: Prefix modifiers like `md__`, focus blocks `{...}`, and `hover:` are preserved by applying them to each expanded spell.
+- **Rustc-like Diagnostics**: Errors render with file context + labeled span + optional help text, powered by a structured error model and `miette` diagnostics.
+- **Faster Builds (Same Output)**: Reduced redundant work and clone/allocation pressure; optional parallel project builds via `GRIMOIRE_CSS_JOBS`.
+- **Better Repro & Contributor UX**: Added a `repro/` sandbox for feature/error scenarios and added `.github/copilot-instructions.md` as an architecture guide.
+
+## Full Details
+
+### Scroll Templates Inside `g!…;`
+
+You can now reference scrolls in templated `g!…;` syntax, including argument passing:
+
+- Example: `g!complex-card=120px_red_100px;`
+- Supports variable-like arguments and prefix modifiers.
+- Scroll expansion is flattened into real property spells so generated CSS is emitted under the *outer templated selector*.
+- Output remains deterministic and the template-flattening path avoids unnecessary cloning.
+
+### Prefix Semantics Preserved
+
+Scrolls expanded under templates keep the semantics that made Grimoire CSS predictable in complex UIs:
+
+- Responsive prefixes like `md__`.
+- Focus blocks using `{...}`.
+- Effects like `hover:`.
+
+These prefixes apply to each expanded spell during flattening so behavior matches user intent.
+
+### Rustc-like Diagnostics (File + Span)
+
+This release substantially upgrades the error/reporting system:
+
+- Introduced `SourceFile` to carry file identity + full content, enabling readable snippets for every error.
+- Parsing now tracks spans (`start`, `len`) for each extracted class/spell token and propagates them through spell generation.
+- Error model upgraded from plain strings to structured compile errors (message / label / help / span / source).
+- Added a diagnostics adapter mapping `GrimoireCssError` to `miette::Diagnostic` for polished CLI output.
+
+User-facing validation got stricter and clearer:
+
+- Better errors for malformed function-like values / parentheses (`spell_value_validator`).
+- Color function argument validation now returns a proper error instead of being silently ignored.
+
+### Performance Improvements + Opt-in Parallelism
+
+Grimoire CSS stays output-stable while getting faster and leaner:
+
+- Reduced redundant passes and duplicated work.
+- Lowered allocation and clone pressure in hot paths.
+- Added opt-in parallelism for filesystem builds via `GRIMOIRE_CSS_JOBS`.
+
+Safe default remains single-threaded; scaling is opt-in based on machine and project size.
+
+### Repro Sandbox + Architecture Guide
+
+To improve maintenance and debugging velocity:
+
+- Added `repro/` containing minimal scenarios for reproducing features and diagnostics.
+- Added `.github/copilot-instructions.md` documenting the project’s architecture conventions.
+
+## Migration Notes
+
+### For Users
+
+- **Optional parallel builds**: Set `GRIMOIRE_CSS_JOBS` to enable multi-core builds in filesystem mode. Without it, behavior remains unchanged.
+- **Stricter validation**: Invalid color function arguments that were previously ignored now raise proper errors (with spans and help text).
+
+### For Contributors
+
+- Prefer adding/using minimal scenarios under `repro/` when improving parser/diagnostics behavior.
+- Follow the architecture guide in `.github/copilot-instructions.md` when introducing new commands, core pipeline changes, or infrastructure glue.
+
 ---
 
 # v1.6.0 Chromaspire: The Color Convergence
@@ -174,19 +253,16 @@ Grimoire CSS enhances its magical arsenal with the **v1.4.0 Aetheric Flow** rele
 ### Enhancements
 
 #### Argument Handling Improvements
-
 - Replaced `&[String]` with `Vec<String>` for more flexible argument processing
 - Enhanced compatibility with NodeJS wrapper implementation
 - Improved argument collection and processing through `env::args()`
 
 #### Visual Feedback Enhancement
-
 - Added new spinner variations for different operation states
 - Enhanced progress visualization during lengthy operations
 - Improved user experience with more engaging loading indicators
 
 #### CLI Flow Optimization
-
 - Streamlined `start_as_cli` workflow for better usability
 - Enhanced command processing and execution flow
 - Improved overall CLI interaction experience
