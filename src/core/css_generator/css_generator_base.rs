@@ -153,13 +153,13 @@ Fix options:\n\
         let css_class_name = self
             .generate_css_class_name(
                 &spell.raw_spell,
-                &spell.effects,
-                &spell.focus,
+                spell.effects(),
+                spell.focus(),
                 spell.with_template,
             )
             .map_err(|e| self.create_compile_error(spell, e))?;
 
-        let component_str = spell.component.as_str();
+        let component_str = spell.component();
 
         // match component and get css property
         let css_property: Option<&str> = if component_str.starts_with("--") {
@@ -173,7 +173,7 @@ Fix options:\n\
             Some(css_property) => {
                 // adapt target
                 let adapted_target = self
-                    .adapt_targets(&spell.component_target, self.variables)
+                    .adapt_targets(spell.component_target(), self.variables)
                     .map_err(|e| self.create_compile_error(spell, e))?;
                 // generate base css without any media queries (except for the mrs function)
                 let (base_css, additional_css) = self
@@ -184,9 +184,9 @@ Fix options:\n\
                     )
                     .map_err(|e| self.create_compile_error(spell, e))?;
 
-                if !spell.area.is_empty() {
+                if !spell.area().is_empty() {
                     return Ok(Some((
-                        self.wrap_base_css_with_media_query(&spell.area, &base_css),
+                        self.wrap_base_css_with_media_query(spell.area(), &base_css),
                         css_class_name,
                         additional_css,
                     )));
@@ -1194,19 +1194,12 @@ mod tests {
         let config = ConfigFs::default();
         let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
-        let spell = Spell {
-            file_path: None,
-            span: (0, 0),
-            source: None,
-            raw_spell: "bg-c=pink".to_string(),
-            component: "bg-c".to_string(),
-            component_target: "pink".to_string(),
-            effects: "".to_string(),
-            area: "".to_string(),
-            focus: "".to_string(),
-            with_template: false,
-            scroll_spells: None,
-        };
+        let shared_spells = std::collections::HashSet::new();
+        let scrolls: Option<std::collections::HashMap<String, Vec<String>>> = None;
+
+        let spell = Spell::new("bg-c=pink", &shared_spells, &scrolls, (0, 0), None)
+            .unwrap()
+            .unwrap();
 
         let result = generator.generate_css(&spell);
 
@@ -1222,19 +1215,15 @@ mod tests {
 
         // --- COMPLEX ---
 
-        let spell_complex = Spell {
-            file_path: None,
-            span: (0, 0),
-            source: None,
-            raw_spell: "{[data-theme='light']_p}font-sz=mrs(14px_16px_380px_800px)".to_string(),
-            component: "font-sz".to_string(),
-            component_target: "mrs(14px_16px_380px_800px)".to_string(),
-            effects: "".to_string(),
-            area: "".to_string(),
-            focus: "[data-theme='light']_p".to_string(),
-            with_template: true,
-            scroll_spells: None,
-        };
+        let spell_complex = Spell::new(
+            "{[data-theme='light']_p}font-sz=mrs(14px_16px_380px_800px)",
+            &shared_spells,
+            &scrolls,
+            (0, 0),
+            None,
+        )
+        .unwrap()
+        .unwrap();
 
         let result = generator.generate_css(&spell_complex);
 
@@ -1248,7 +1237,7 @@ mod tests {
 
         assert_eq!(
             css,
-            r".g\!\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size:14px;}@media screen and (min-width: 380px) {.g\!\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size: calc(14px + 2 * ((100vw - 380px) / 420));}}@media screen and (min-width: 800px) {.g\!\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)\;[data-theme='light'] p{font-size: 16px;}}"
+            r".\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)[data-theme='light'] p{font-size:14px;}@media screen and (min-width: 380px) {.\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)[data-theme='light'] p{font-size: calc(14px + 2 * ((100vw - 380px) / 420));}}@media screen and (min-width: 800px) {.\{\[data-theme\=\'light\'\]\_p\}font-sz\=mrs\(14px\_16px\_380px\_800px\)[data-theme='light'] p{font-size: 16px;}}"
         );
     }
 

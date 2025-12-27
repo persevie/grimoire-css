@@ -4,7 +4,7 @@ use std::{path::PathBuf, sync::Arc};
 pub struct SourceFile {
     pub name: String,
     pub path: Option<PathBuf>,
-    pub content: Arc<String>,
+    pub content: Option<Arc<String>>,
 }
 
 impl SourceFile {
@@ -12,7 +12,15 @@ impl SourceFile {
         Self {
             name,
             path,
-            content: Arc::new(content),
+            content: Some(Arc::new(content)),
+        }
+    }
+
+    pub fn new_path_only(path: Option<PathBuf>, name: String) -> Self {
+        Self {
+            name,
+            path,
+            content: None,
         }
     }
 }

@@ -7,6 +7,13 @@
 use grimoire_css_lib::start_as_cli;
 use std::env;
 
+#[cfg(feature = "heap-profile")]
+use dhat::Alloc;
+
+#[cfg(feature = "heap-profile")]
+#[global_allocator]
+static ALLOC: Alloc = Alloc;
+
 /// The entry point for the Grimoire CSS system (CLI).
 ///
 /// This function:
@@ -15,6 +22,9 @@ use std::env;
 ///   logging, error styling, spinners, and time measurements.
 /// - If an error is encountered, it exits with a non-zero status code.
 fn main() {
+    #[cfg(feature = "heap-profile")]
+    let _profiler = dhat::Profiler::new_heap();
+
     let args: Vec<String> = env::args().collect();
 
     // By calling `start_as_cli`, we rely on the library's built-in logging,

@@ -64,6 +64,10 @@ def generate_report(results):
         lines.append(
             f"Memory:  {system_info.get('memory', {}).get('total_gb', 'Unknown')} GB")
 
+        jobs_value = system_info.get('benchmark', {}).get('grimoire_css_jobs', None)
+        if jobs_value is not None:
+            lines.append(f"GRIMOIRE_CSS_JOBS: {jobs_value}")
+
     # Input summary
     lines.append("\nINPUT SUMMARY")
     lines.append("-" * 80)
@@ -89,6 +93,35 @@ def generate_report(results):
         f"Peak Memory: {metrics['process']['memory']['peak_mb']:.2f} MB")
     lines.append(
         f"Average Memory: {metrics['process']['memory']['avg_mb']:.2f} MB")
+
+    mem = metrics.get('process', {}).get('memory', {})
+    # If available, show both RSS and USS for better comparability.
+    if 'rss_peak_mb' in mem:
+        lines.append(f"Peak RSS: {mem.get('rss_peak_mb', 0.0):.2f} MB")
+        lines.append(f"Average RSS: {mem.get('rss_avg_mb', 0.0):.2f} MB")
+
+    # USS may be unavailable for some processes on macOS; if so, report a partial total + coverage.
+    if mem.get('uss_is_complete') and 'uss_peak_mb' in mem:
+        lines.append(f"Peak USS: {mem.get('uss_peak_mb', 0.0):.2f} MB")
+        lines.append(f"Average USS: {mem.get('uss_avg_mb', 0.0):.2f} MB")
+    elif 'uss_coverage_avg' in mem:
+        coverage_pct = float(mem.get('uss_coverage_avg', 0.0)) * 100.0
+        proc_avg = float(mem.get('uss_process_count_avg', 0.0))
+        proc_max = int(mem.get('uss_process_count_max', 0) or 0)
+        uss_avg = float(mem.get('uss_available_count_avg', 0.0))
+        uss_max = int(mem.get('uss_available_count_max', 0) or 0)
+
+        if mem.get('uss_partial_peak_bytes', 0) and 'uss_partial_peak_mb' in mem:
+            lines.append(f"Peak USS (partial): {mem.get('uss_partial_peak_mb', 0.0):.2f} MB")
+            lines.append(f"Average USS (partial): {mem.get('uss_partial_avg_mb', 0.0):.2f} MB")
+        else:
+            lines.append("USS: unavailable for monitored process tree")
+
+        lines.append(
+            f"USS Coverage (avg): {coverage_pct:.1f}% (avg {uss_avg:.1f}/{proc_avg:.1f} procs, max {uss_max}/{proc_max})"
+        )
+    if mem.get('measurement'):
+        lines.append(f"Primary Memory Metric: {mem.get('measurement')}")
     if "memory_efficiency" in metrics["throughput"]:
         lines.append(
             f"Memory Efficiency: {metrics['throughput']['memory_efficiency']:.2f} classes/MB")
@@ -161,6 +194,10 @@ def generate_comparison_report(results):
             f"Cores:   {system_info.get('cpu', {}).get('cores_physical', 'Unknown')} physical, {system_info.get('cpu', {}).get('cores_logical', 'Unknown')} logical")
         lines.append(
             f"Memory:  {system_info.get('memory', {}).get('total_gb', 'Unknown')} GB")
+
+        jobs_value = system_info.get('benchmark', {}).get('grimoire_css_jobs', None)
+        if jobs_value is not None:
+            lines.append(f"GRIMOIRE_CSS_JOBS: {jobs_value}")
 
     # Performance comparison
     lines.append("\nPERFORMANCE COMPARISON")

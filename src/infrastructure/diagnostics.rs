@@ -4,7 +4,15 @@ use std::sync::Arc;
 use thiserror::Error;
 
 fn named_source_from(source: &Arc<SourceFile>) -> miette::NamedSource<String> {
-    miette::NamedSource::new(source.name.clone(), (*source.content).clone())
+    let content = if let Some(content) = &source.content {
+        (**content).clone()
+    } else if let Some(path) = &source.path {
+        std::fs::read_to_string(path).unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    miette::NamedSource::new(source.name.clone(), content)
 }
 
 #[derive(Debug, Error)]

@@ -28,6 +28,8 @@ import platform
 import psutil
 import time
 import datetime
+import subprocess
+import os
 from pathlib import Path
 
 from core.project_creator import create_benchmark_projects
@@ -66,11 +68,45 @@ def parse_args():
 
 def collect_system_info():
     """Collect information about the system for benchmark context."""
+    # Benchmark configuration (captured as part of system info so it is persisted
+    # into all output formats).
+    jobs_raw = os.environ.get("GRIMOIRE_CSS_JOBS")
+    jobs_value = None
+    if jobs_raw is not None:
+        jobs_raw = jobs_raw.strip()
+        if jobs_raw == "":
+            jobs_value = None
+        else:
+            try:
+                jobs_value = int(jobs_raw)
+            except ValueError:
+                jobs_value = jobs_raw
+
+    # Best-effort git metadata to make benchmark results reproducible.
+    git_sha = None
+    git_dirty = None
+    try:
+        git_sha = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        git_dirty = subprocess.call(
+            ["git", "diff", "--quiet"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ) != 0
+    except Exception:
+        pass
+
     return {
         "os": {
             "name": platform.system(),
             "version": platform.version(),
             "release": platform.release()
+        },
+        "benchmark": {
+            "grimoire_css_jobs": jobs_value,
         },
         "cpu": {
             "name": platform.processor() or platform.machine(),
@@ -79,6 +115,11 @@ def collect_system_info():
         },
         "memory": {
             "total_gb": round(psutil.virtual_memory().total / (1024**3), 1)
+        },
+        "psutil_version": getattr(psutil, "__version__", "unknown"),
+        "git": {
+            "sha": git_sha,
+            "dirty": git_dirty,
         },
         "python_version": platform.python_version(),
         "timestamp": time.time(),
@@ -232,6 +273,8 @@ def main():
     print(f"OS: {system_info['os']['name']} {system_info['os']['release']}")
     print(f"CPU: {system_info['cpu']['name']}")
     print(f"Memory: {system_info['memory']['total_gb']} GB")
+    jobs_value = system_info.get('benchmark', {}).get('grimoire_css_jobs', None)
+    print(f"GRIMOIRE_CSS_JOBS: {jobs_value if jobs_value is not None else '(unset)'}")
 
     # Run benchmarks
     framework_results = run_framework_benchmark(args.framework, system_info)

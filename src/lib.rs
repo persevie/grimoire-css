@@ -193,10 +193,7 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
             print!("\r\x1b[2K{GRIMM_CURSED}\n");
 
             println!();
-            println!(
-                "{} Something went wrong...",
-                style(" Cursed! ").white().on_red().bright()
-            );
+            println!("{}", style(" Cursed! ").white().on_red().bright());
             println!();
 
             let diagnostic: GrimoireCssDiagnostic = (&e).into();

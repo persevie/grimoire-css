@@ -7,7 +7,7 @@ use lightningcss::{
     stylesheet::{MinifyOptions, ParserOptions, StyleSheet},
     targets::{Browsers, Targets},
 };
-use std::{env, fs, path::Path};
+use std::{fs, path::Path};
 
 use crate::{
     buffer::add_message,
@@ -45,12 +45,6 @@ impl LightningCssOptimizer {
                 .expect("Failed to create '.browserslistrc' with defaults");
 
             add_message("Created missing '.browserslistrc' file with 'defaults'".to_string());
-        }
-
-        // SAFETY: We're setting an environment variable in a controlled manner.
-        // This is safe as long as no other threads are concurrently reading this variable.
-        unsafe {
-            env::set_var("BROWSERSLIST_CONFIG", &browserslist_config_path);
         }
 
         let content = fs::read_to_string(&browserslist_config_path)

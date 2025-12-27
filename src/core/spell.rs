@@ -27,7 +27,6 @@
 
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use super::{
@@ -35,28 +34,27 @@ use super::{
 };
 
 #[derive(Debug, Clone)]
+struct SpellParts {
+    area: std::ops::Range<usize>,
+    focus: std::ops::Range<usize>,
+    effects: std::ops::Range<usize>,
+    component: std::ops::Range<usize>,
+    component_target: std::ops::Range<usize>,
+}
+
+#[derive(Debug, Clone)]
 pub struct Spell {
     pub raw_spell: String,
-    pub component: String,
-    pub component_target: String,
-    pub effects: String,
-    pub area: String,
-    pub focus: String,
     pub with_template: bool,
     pub scroll_spells: Option<Vec<Spell>>,
     pub span: (usize, usize),
-    pub file_path: Option<PathBuf>,
     pub source: Option<Arc<SourceFile>>,
+    parts: Option<SpellParts>,
 }
 
 impl PartialEq for Spell {
     fn eq(&self, other: &Self) -> bool {
         self.raw_spell == other.raw_spell
-            && self.component == other.component
-            && self.component_target == other.component_target
-            && self.effects == other.effects
-            && self.area == other.area
-            && self.focus == other.focus
             && self.with_template == other.with_template
             && self.scroll_spells == other.scroll_spells
     }
@@ -67,24 +65,53 @@ impl Eq for Spell {}
 impl Hash for Spell {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.raw_spell.hash(state);
-        self.component.hash(state);
-        self.component_target.hash(state);
-        self.effects.hash(state);
-        self.area.hash(state);
-        self.focus.hash(state);
         self.with_template.hash(state);
         self.scroll_spells.hash(state);
     }
 }
 
 impl Spell {
+    pub fn area(&self) -> &str {
+        self.parts
+            .as_ref()
+            .map(|p| &self.raw_spell[p.area.clone()])
+            .unwrap_or("")
+    }
+
+    pub fn focus(&self) -> &str {
+        self.parts
+            .as_ref()
+            .map(|p| &self.raw_spell[p.focus.clone()])
+            .unwrap_or("")
+    }
+
+    pub fn effects(&self) -> &str {
+        self.parts
+            .as_ref()
+            .map(|p| &self.raw_spell[p.effects.clone()])
+            .unwrap_or("")
+    }
+
+    pub fn component(&self) -> &str {
+        self.parts
+            .as_ref()
+            .map(|p| &self.raw_spell[p.component.clone()])
+            .unwrap_or("")
+    }
+
+    pub fn component_target(&self) -> &str {
+        self.parts
+            .as_ref()
+            .map(|p| &self.raw_spell[p.component_target.clone()])
+            .unwrap_or("")
+    }
+
     /// Example input: "md__{_>_p}hover:display=none"
     pub fn new(
         raw_spell: &str,
         shared_spells: &HashSet<String>,
         scrolls: &Option<HashMap<String, Vec<String>>>,
         span: (usize, usize),
-        file_path: Option<PathBuf>,
         source: Option<Arc<SourceFile>>,
     ) -> Result<Option<Self>, GrimoireCssError> {
         let with_template = Self::check_for_template(raw_spell);
@@ -102,51 +129,67 @@ impl Spell {
             .filter(|s| !s.is_empty())
             .collect();
 
+        // Template spell: keep outer spell and parse inner spells.
         if with_template && !raw_spell_split.is_empty() {
             let mut scroll_spells: Vec<Spell> = Vec::new();
             for rs in raw_spell_split {
-                if let Some(spell) = Spell::new(
-                    rs,
-                    shared_spells,
-                    scrolls,
-                    span,
-                    file_path.clone(),
-                    source.clone(),
-                )? {
+                if let Some(spell) = Spell::new(rs, shared_spells, scrolls, span, source.clone())? {
                     scroll_spells.push(spell);
                 }
             }
 
             return Ok(Some(Spell {
                 raw_spell: raw_spell_cleaned.to_string(),
-                component: String::new(),
-                component_target: String::new(),
-                effects: String::new(),
-                area: String::new(),
-                focus: String::new(),
                 with_template,
                 scroll_spells: Some(scroll_spells),
                 span,
-                file_path,
                 source,
+                parts: None,
             }));
         }
 
-        // Split the input string by "__" to separate the area (screen size) and the rest
-        let (area, rest) = raw_spell_cleaned
-            .split_once("__")
-            .unwrap_or(("", raw_spell_cleaned));
+        let raw = raw_spell_cleaned.to_string();
 
-        // Split the raw spell by "}" to get the focus and the rest
-        let (focus, rest) = rest
-            .split_once('}')
-            .map_or(("", rest), |(f, r)| (f.strip_prefix('{').unwrap_or(f), r));
+        // Parse into byte ranges within `raw`.
+        let mut area_range = 0..0;
+        let mut focus_range = 0..0;
+        let mut effects_range = 0..0;
 
-        // Split the rest by ":" to get the effects (pseudo-class) and the rest
-        let (effects, rest) = rest.split_once(':').unwrap_or(("", rest));
+        let mut rest_start = 0usize;
+        if let Some(pos) = raw.find("__") {
+            area_range = 0..pos;
+            rest_start = pos + 2;
+        }
 
-        // Split the rest by "=" to separate the component (property) and component_target (value)
-        if let Some((component, component_target)) = rest.split_once("=") {
+        let mut after_focus_start = rest_start;
+        if rest_start < raw.len()
+            && let Some(close_rel) = raw[rest_start..].find('}')
+        {
+            let focus_part_start = if raw.as_bytes().get(rest_start) == Some(&b'{') {
+                rest_start + 1
+            } else {
+                rest_start
+            };
+            focus_range = focus_part_start..(rest_start + close_rel);
+            after_focus_start = rest_start + close_rel + 1;
+        }
+
+        let mut after_effects_start = after_focus_start;
+        if after_focus_start < raw.len()
+            && let Some(colon_rel) = raw[after_focus_start..].find(':')
+        {
+            effects_range = after_focus_start..(after_focus_start + colon_rel);
+            after_effects_start = after_focus_start + colon_rel + 1;
+        }
+
+        // component=target
+        if after_effects_start <= raw.len()
+            && let Some(eq_rel) = raw[after_effects_start..].find('=')
+        {
+            let component_range = after_effects_start..(after_effects_start + eq_rel);
+            let component_target_range = (after_effects_start + eq_rel + 1)..raw.len();
+
+            let component_target = &raw[component_target_range.clone()];
             if let Some(err) = spell_value_validator::validate_component_target(component_target) {
                 let message = match err {
                     spell_value_validator::SpellValueValidationError::UnexpectedClosingParen => {
@@ -182,99 +225,105 @@ Use '_' inside spell values to represent spaces."
                 return Err(GrimoireCssError::InvalidInput(message));
             }
 
+            let parts = SpellParts {
+                area: area_range,
+                focus: focus_range,
+                effects: effects_range,
+                component: component_range.clone(),
+                component_target: component_target_range.clone(),
+            };
+
             let mut spell = Spell {
-                raw_spell: raw_spell_cleaned.to_string(),
-                component: component.to_string(),
-                component_target: component_target.to_string(),
-                effects: effects.to_string(),
-                area: area.to_string(),
-                focus: focus.to_string(),
+                raw_spell: raw,
                 with_template,
                 scroll_spells: None,
                 span,
-                file_path: file_path.clone(),
                 source: source.clone(),
+                parts: Some(parts),
             };
 
-            if let Some(raw_scroll_spells) =
-                Self::check_raw_scroll_spells(&spell.component, scrolls)
-            {
+            let component = spell.component();
+
+            if let Some(raw_scroll_spells) = Self::check_raw_scroll_spells(component, scrolls) {
                 spell.scroll_spells = Self::parse_scroll(
                     component,
                     raw_scroll_spells,
-                    &spell.component_target,
+                    spell.component_target(),
                     shared_spells,
                     scrolls,
                     span,
-                    &file_path,
-                    source.clone(),
+                    source,
                 )?;
-            } else if !spell.component.starts_with("--")
-                && get_css_property(&spell.component).is_none()
-            {
-                let message = format!("Unknown component or scroll: '{}'", spell.component);
+            } else if !component.starts_with("--") && get_css_property(component).is_none() {
+                let message = format!("Unknown component or scroll: '{component}'");
                 if let Some(src) = &source {
                     return Err(GrimoireCssError::InvalidSpellFormat {
-                        message,
-                        span,
-                        label: "Error in this spell".to_string(),
-                        help: Some(
-                            "Check that the component name exists (built-in CSS property alias) or that the scroll is defined in config.scrolls."
-                                .to_string(),
-                        ),
-                        source_file: Some(src.clone()),
-                    });
+                            message,
+                            span,
+                            label: "Error in this spell".to_string(),
+                            help: Some(
+                                "Check that the component name exists (built-in CSS property alias) or that the scroll is defined in config.scrolls."
+                                    .to_string(),
+                            ),
+                            source_file: Some(src.clone()),
+                        });
                 } else {
                     return Err(GrimoireCssError::InvalidInput(message));
                 }
             }
 
             return Ok(Some(spell));
-        } else if let Some(raw_scroll_spells) = Self::check_raw_scroll_spells(rest, scrolls) {
-            return Ok(Some(Spell {
-                raw_spell: raw_spell_cleaned.to_string(),
-                component: rest.to_string(),
-                component_target: String::new(),
-                effects: effects.to_string(),
-                area: area.to_string(),
-                focus: focus.to_string(),
+        }
+
+        // scroll (no '=')
+        if after_effects_start <= raw.len()
+            && let Some(raw_scroll_spells) =
+                Self::check_raw_scroll_spells(&raw[after_effects_start..], scrolls)
+        {
+            let component_range = after_effects_start..raw.len();
+            let parts = SpellParts {
+                area: area_range,
+                focus: focus_range,
+                effects: effects_range,
+                component: component_range.clone(),
+                component_target: 0..0,
+            };
+
+            let mut spell = Spell {
+                raw_spell: raw,
                 with_template,
-                scroll_spells: Self::parse_scroll(
-                    rest,
-                    raw_scroll_spells,
-                    "",
-                    shared_spells,
-                    scrolls,
-                    span,
-                    &file_path,
-                    source.clone(),
-                )?,
+                scroll_spells: None,
                 span,
-                file_path,
+                source: source.clone(),
+                parts: Some(parts),
+            };
+
+            let component = spell.component();
+            spell.scroll_spells = Self::parse_scroll(
+                component,
+                raw_scroll_spells,
+                "",
+                shared_spells,
+                scrolls,
+                span,
                 source,
-            }));
+            )?;
+
+            return Ok(Some(spell));
         }
 
         Ok(None) // Return None if format is invalid
     }
 
-    fn check_for_template(class_name: &str) -> bool {
-        class_name.starts_with("g!") && class_name.ends_with(";")
+    fn check_for_template(raw_spell: &str) -> bool {
+        raw_spell.starts_with("g!") && raw_spell.ends_with(';')
     }
 
     fn check_raw_scroll_spells<'a>(
-        spell_component: &'a str,
+        scroll_name: &str,
         scrolls: &'a Option<HashMap<String, Vec<String>>>,
     ) -> Option<&'a Vec<String>> {
-        if get_css_property(spell_component).is_some() {
-            return None;
-        }
-
-        if let Some(scrolls) = scrolls {
-            return scrolls.get(spell_component);
-        };
-
-        None
+        scrolls.as_ref()?.get(scroll_name)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -285,7 +334,6 @@ Use '_' inside spell values to represent spaces."
         shared_spells: &HashSet<String>,
         scrolls: &Option<HashMap<String, Vec<String>>>,
         span: (usize, usize),
-        file_path: &Option<PathBuf>,
         source: Option<Arc<SourceFile>>,
     ) -> Result<Option<Vec<Spell>>, GrimoireCssError> {
         if raw_scroll_spells.is_empty() {
@@ -304,7 +352,7 @@ Use '_' inside spell values to represent spaces."
 
         for raw_spell in raw_scroll_spells.iter() {
             if raw_spell.contains("=$") {
-                if count_of_used_variables > scroll_variables.len() - 1 {
+                if count_of_used_variables > scroll_variables.len().saturating_sub(1) {
                     break;
                 }
 
@@ -318,21 +366,15 @@ Use '_' inside spell values to represent spaces."
                     shared_spells,
                     scrolls,
                     span,
-                    file_path.clone(),
                     source.clone(),
                 ) {
                     spells.push(spell);
                 }
 
                 count_of_used_variables += 1;
-            } else if let Ok(Some(spell)) = Spell::new(
-                raw_spell,
-                shared_spells,
-                scrolls,
-                span,
-                file_path.clone(),
-                source.clone(),
-            ) {
+            } else if let Ok(Some(spell)) =
+                Spell::new(raw_spell, shared_spells, scrolls, span, source.clone())
+            {
                 spells.push(spell);
             }
         }
@@ -370,21 +412,13 @@ Example: complex-card=arg1_arg2_arg3"
         css_classes: Vec<(String, (usize, usize))>,
         shared_spells: &HashSet<String>,
         scrolls: &Option<HashMap<String, Vec<String>>>,
-        file_path: Option<PathBuf>,
         source: Option<Arc<SourceFile>>,
     ) -> Result<Vec<Spell>, GrimoireCssError> {
         let mut spells = Vec::with_capacity(css_classes.len());
 
         for (cs, span) in css_classes {
             if !shared_spells.contains(&cs)
-                && let Some(spell) = Spell::new(
-                    &cs,
-                    shared_spells,
-                    scrolls,
-                    span,
-                    file_path.clone(),
-                    source.clone(),
-                )?
+                && let Some(spell) = Spell::new(&cs, shared_spells, scrolls, span, source.clone())?
             {
                 spells.push(spell);
             }
@@ -406,17 +440,17 @@ mod tests {
         let shared_spells = HashSet::new();
         let scrolls: Option<HashMap<String, Vec<String>>> = None;
         let raw = "g!color=red--display=flex;";
-        let spell = Spell::new(raw, &shared_spells, &scrolls, (0, 0), None, None)
+        let spell = Spell::new(raw, &shared_spells, &scrolls, (0, 0), None)
             .expect("parse ok")
             .expect("not None");
         assert!(spell.with_template);
         assert!(spell.scroll_spells.is_some());
         let spells = spell.scroll_spells.as_ref().unwrap();
         assert_eq!(spells.len(), 2);
-        assert_eq!(spells[0].component, "color");
-        assert_eq!(spells[0].component_target, "red");
-        assert_eq!(spells[1].component, "display");
-        assert_eq!(spells[1].component_target, "flex");
+        assert_eq!(spells[0].component(), "color");
+        assert_eq!(spells[0].component_target(), "red");
+        assert_eq!(spells[1].component(), "display");
+        assert_eq!(spells[1].component_target(), "flex");
     }
 
     #[test]
@@ -430,7 +464,6 @@ mod tests {
             &shared_spells,
             &scrolls,
             (12, 3),
-            None,
             Some(Arc::new(SourceFile::new(
                 None,
                 "test".to_string(),

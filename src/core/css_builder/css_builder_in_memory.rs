@@ -72,14 +72,14 @@ impl<'a> CssBuilderInMemory<'a> {
                 class_names,
                 &HashSet::new(),
                 &self.config.scrolls,
-                None,
                 Some(source),
             )?;
 
             // Combine spells into CSS
-            let assembled_spells = self.css_builder.combine_spells_to_css(&spells)?;
-            let raw_css = assembled_spells.join("");
-            let css = self.css_builder.optimize_css(&raw_css)?;
+            // Avoid validate() + optimize() double-parsing for the common success path.
+            let css = self
+                .css_builder
+                .combine_spells_to_optimized_css_string(&spells)?;
 
             results.push(CompiledCssInMemory {
                 name: project.name.clone(),

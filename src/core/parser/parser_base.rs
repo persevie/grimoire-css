@@ -141,6 +141,15 @@ impl Parser {
                         let start = base_offset + part_start;
                         let length = part.len();
 
+                        // For regular `class` / `className` tokens we can check the HashSet
+                        // by `&str` first to avoid allocating `String` for duplicates.
+                        if !matches!(collection_type, CollectionType::CurlyClass)
+                            && !part.is_empty()
+                            && seen_class_names.contains(part)
+                        {
+                            continue;
+                        }
+
                         let mut class_string = part.to_string();
 
                         if matches!(collection_type, CollectionType::CurlyClass) {

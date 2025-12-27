@@ -5,12 +5,6 @@ pub enum SpellValueValidationError {
 }
 
 pub fn validate_component_target(component_target: &str) -> Option<SpellValueValidationError> {
-    // Intentionally minimal and cheap validation to surface common HTML class tokenization mistakes
-    // (e.g. h=calc(100vh - 50px) becomes h=calc(100vh).
-    //
-    // We only treat parentheses as syntax when NOT inside CSS string literals.
-    // In CSS, string literals are only single/double quotes.
-
     let mut depth: i32 = 0;
     let mut in_single_quote = false;
     let mut in_double_quote = false;

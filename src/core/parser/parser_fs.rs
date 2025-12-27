@@ -13,9 +13,10 @@ use std::{
 
 type Span = (usize, usize);
 type ClassWithSpan = (String, Span);
+type ClassesWithSpans = Vec<ClassWithSpan>;
 
-type SingleOutputFileResult = (PathBuf, String, Vec<ClassWithSpan>);
-type MultiOutputFileResult = (PathBuf, PathBuf, String, Vec<ClassWithSpan>);
+type SingleOutputFileClasses = (PathBuf, ClassesWithSpans);
+type MultipleOutputFileClasses = (PathBuf, PathBuf, ClassesWithSpans);
 
 /// `ParserFs` extends the base `Parser` with filesystem-specific functionality.
 /// It handles file reading, directory traversal, and path resolution.
@@ -45,7 +46,7 @@ impl ParserFs {
     ///
     /// # Returns
     ///
-    /// A vector of tuples containing file path, file content, and found classes with spans.
+    /// A vector of tuples containing file path and found classes with spans.
     ///
     /// # Errors
     ///
@@ -53,7 +54,7 @@ impl ParserFs {
     pub fn collect_classes_single_output(
         &self,
         input_paths: &Vec<String>,
-    ) -> Result<Vec<SingleOutputFileResult>, GrimoireCssError> {
+    ) -> Result<Vec<SingleOutputFileClasses>, GrimoireCssError> {
         let mut results = Vec::new();
         let mut seen_class_names: HashSet<String> = HashSet::new();
 
@@ -74,16 +75,17 @@ impl ParserFs {
     ///
     /// # Returns
     ///
-    /// A vector of tuples: (OutputCssPath, InputSourcePath, InputSourceContent, ClassesWithSpans).
+    /// A vector of tuples: (OutputCssPath, InputSourcePath, ClassesWithSpans).
     ///
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if any file or directory cannot be processed.
+    #[allow(dead_code)]
     pub fn collect_classes_multiple_output(
         &self,
         input_paths: &Vec<String>,
         output_dir_path: &Path,
-    ) -> Result<Vec<MultiOutputFileResult>, GrimoireCssError> {
+    ) -> Result<Vec<MultipleOutputFileClasses>, GrimoireCssError> {
         let mut res = Vec::new();
 
         for input_path_string in input_paths {
@@ -113,7 +115,7 @@ impl ParserFs {
                     return Err(e.with_source(src));
                 }
 
-                res.push((bundle_output_full_path, path, file_content, class_names));
+                res.push((bundle_output_full_path, path, class_names));
             } else if path.is_dir() {
                 let entries = &self.get_sorted_directory_entries(&path)?;
 
@@ -138,6 +140,75 @@ impl ParserFs {
         Ok(res)
     }
 
+    /// Streaming variant of `collect_classes_multiple_output`.
+    ///
+    /// Calls `visitor` once per input file instead of building a large in-memory vector.
+    pub fn for_each_classes_multiple_output<F>(
+        &self,
+        input_paths: &Vec<String>,
+        output_dir_path: &Path,
+        mut visitor: F,
+    ) -> Result<(), GrimoireCssError>
+    where
+        F: FnMut(PathBuf, PathBuf, ClassesWithSpans) -> Result<(), GrimoireCssError>,
+    {
+        for input_path_string in input_paths {
+            let path = self.current_dir.join(input_path_string);
+            self.visit_classes_multiple_output_path(&path, output_dir_path, &mut visitor)?;
+        }
+
+        Ok(())
+    }
+
+    fn visit_classes_multiple_output_path<F>(
+        &self,
+        path: &Path,
+        output_dir_path: &Path,
+        visitor: &mut F,
+    ) -> Result<(), GrimoireCssError>
+    where
+        F: FnMut(PathBuf, PathBuf, ClassesWithSpans) -> Result<(), GrimoireCssError>,
+    {
+        if path.is_file() {
+            let mut class_names = Vec::new();
+            let mut seen_class_names: HashSet<String> = HashSet::new();
+
+            let output_file_path = path.with_extension("css");
+            let bundle_output_full_path =
+                output_dir_path.join(output_file_path.file_name().ok_or_else(|| {
+                    GrimoireCssError::InvalidPath(output_file_path.to_string_lossy().into())
+                })?);
+
+            let file_content = fs::read_to_string(path)?;
+            if let Err(e) = self.base_parser.collect_candidates(
+                &file_content,
+                &mut class_names,
+                &mut seen_class_names,
+            ) {
+                let src = Arc::new(SourceFile::new(
+                    Some(path.to_path_buf()),
+                    path.to_string_lossy().to_string(),
+                    file_content.clone(),
+                ));
+                return Err(e.with_source(src));
+            }
+
+            visitor(bundle_output_full_path, path.to_path_buf(), class_names)?;
+            return Ok(());
+        }
+
+        if path.is_dir() {
+            let entries = self.get_sorted_directory_entries(path)?;
+            for entry in entries {
+                self.visit_classes_multiple_output_path(&entry, output_dir_path, visitor)?;
+            }
+            return Ok(());
+        }
+
+        add_message(format!("Invalid path: {}", path.display()));
+        Ok(())
+    }
+
     /// Recursively collects CSS class names or templated spells from a given file or directory path.
     ///
     /// # Arguments
@@ -152,7 +223,7 @@ impl ParserFs {
     fn collect_spells_from_path(
         &self,
         path: &Path,
-        results: &mut Vec<SingleOutputFileResult>,
+        results: &mut Vec<SingleOutputFileClasses>,
         seen_class_names: &mut HashSet<String>,
     ) -> Result<(), GrimoireCssError> {
         if path.is_file() {
@@ -173,7 +244,7 @@ impl ParserFs {
             }
 
             if !class_names.is_empty() {
-                results.push((path.to_path_buf(), file_content, class_names));
+                results.push((path.to_path_buf(), class_names));
             }
         } else if path.is_dir() {
             let entries = &self.get_sorted_directory_entries(path)?;
@@ -187,7 +258,6 @@ impl ParserFs {
 
         Ok(())
     }
-
     /// Retrieves and sorts all entries in a given directory.
     ///
     /// # Arguments
@@ -246,7 +316,7 @@ mod tests {
         assert!(result.is_ok());
         let results = result.unwrap();
         assert_eq!(results.len(), 1);
-        let (path, _, classes) = &results[0];
+        let (path, classes) = &results[0];
         assert_eq!(path, &test_file);
         assert_eq!(classes.len(), 3);
 
@@ -282,12 +352,12 @@ mod tests {
         assert_eq!(outputs.len(), 2);
 
         // Check first file output
-        let (_, _, _, classes1) = &outputs[0];
+        let (_, _, classes1) = &outputs[0];
         assert_eq!(classes1.len(), 1);
         assert_eq!(classes1[0].0, "file1-class");
 
         // Check second file output
-        let (_, _, _, classes2) = &outputs[1];
+        let (_, _, classes2) = &outputs[1];
         assert_eq!(classes2.len(), 1);
         assert_eq!(classes2[0].0, "file2-class");
     }
@@ -311,7 +381,7 @@ mod tests {
         assert!(result.is_ok());
         let results = result.unwrap();
         assert_eq!(results.len(), 1);
-        let (_, _, classes) = &results[0];
+        let (_, classes) = &results[0];
         assert_eq!(classes.len(), 1);
         assert_eq!(classes[0].0, "nested-class");
     }
@@ -333,5 +403,27 @@ mod tests {
         let result = parser.collect_classes_single_output(&vec!["empty.html".to_string()]);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 0);
+    }
+
+    #[test]
+    fn test_collect_classes_single_output_dedups_across_files() {
+        let temp_dir = tempdir().unwrap();
+        let a = temp_dir.path().join("a.html");
+        let b = temp_dir.path().join("b.html");
+
+        // Same token appears in both files.
+        fs::write(&a, r#"<div class="h=10px"></div>"#).unwrap();
+        fs::write(&b, r#"<div class="h=10px"></div>"#).unwrap();
+
+        let parser = ParserFs::new(temp_dir.path());
+        let input_paths = vec!["a.html".to_string(), "b.html".to_string()];
+
+        let results = parser.collect_classes_single_output(&input_paths).unwrap();
+
+        // Dedup is global across all inputs in single-output mode.
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].0, a);
+        assert_eq!(results[0].1.len(), 1);
+        assert_eq!(results[0].1[0].0, "h=10px".to_string());
     }
 }

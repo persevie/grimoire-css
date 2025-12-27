@@ -20,19 +20,22 @@ use crate::{
 use regex::Regex;
 use std::{
     collections::HashSet,
-    fs,
+    env, fs,
     path::{Path, PathBuf},
     sync::Arc,
+    thread,
 };
 
 use super::CssBuilder;
+
+type CriticalCssEntries = Vec<(PathBuf, Arc<str>)>;
+type CriticalCssResult = Option<CriticalCssEntries>;
 
 /// Manages the process of compiling and building CSS files with filesystem persistence.
 pub struct CssBuilderFs<'a> {
     css_builder: CssBuilder<'a>,
     config: &'a ConfigFs,
     current_dir: &'a Path,
-    parser: ParserFs,
     inline_css_regex: Regex,
 }
 
@@ -54,14 +57,12 @@ impl<'a> CssBuilderFs<'a> {
         optimizer: &'a O,
     ) -> Result<Self, GrimoireCssError> {
         let css_builder = CssBuilder::new(optimizer, &config.variables, &config.custom_animations)?;
-        let parser = ParserFs::new(current_dir);
         let inline_css_regex = Regex::new(r#"(?s)<style data-grimoire-critical-css>.*?</style>"#)?;
 
         Ok(Self {
             css_builder,
             config,
             current_dir,
-            parser,
             inline_css_regex,
         })
     }
@@ -74,95 +75,80 @@ impl<'a> CssBuilderFs<'a> {
     ///
     /// Returns a `GrimoireCSSError` if any step in the build process fails.
     pub fn build(&mut self) -> Result<(), GrimoireCssError> {
-        let mut project_build_info = Vec::new();
+        let lock_enabled = self.config.lock.unwrap_or(false);
 
-        for project in &self.config.projects {
-            let project_output_dir_path = project
-                .output_dir_path
-                .as_deref()
-                .map(|d| self.current_dir.join(d))
-                .unwrap_or_else(|| self.current_dir.join("grimoire/dist"));
+        let jobs = Self::jobs_from_env()?;
 
-            if let Some(single_output_file_name) = &project.single_output_file_name {
-                let parsing_results = self
-                    .parser
-                    .collect_classes_single_output(&project.input_paths)?;
-                let bundle_output_full_path = project_output_dir_path.join(single_output_file_name);
+        // Only collect output paths when we actually need them for file tracking.
+        let mut compiled_project_paths: Option<Vec<PathBuf>> = lock_enabled.then(Vec::new);
 
-                let mut all_spells = Vec::new();
-                let mut seen_spells = std::collections::HashSet::new();
+        if jobs <= 1 || self.config.projects.len() <= 1 {
+            for project in &self.config.projects {
+                let outputs = self.build_project(project)?;
+                if let Some(paths) = &mut compiled_project_paths {
+                    paths.extend(outputs);
+                }
+            }
+        } else {
+            let mut all_outputs: Vec<PathBuf> = Vec::new();
+            let this: &CssBuilderFs<'a> = &*self;
 
-                for (file_path, content, classes) in parsing_results {
-                    let source = Arc::new(SourceFile::new(
-                        Some(file_path.clone()),
-                        file_path.to_string_lossy().to_string(),
-                        content,
-                    ));
-                    let spells = Spell::generate_spells_from_classes(
-                        classes,
-                        &self.config.shared_spells,
-                        &self.config.scrolls,
-                        Some(file_path),
-                        Some(source),
-                    )?;
+            // NOTE: Parallelism is intentionally limited to project-level isolation. Each project
+            // builds its own parser/builder instances to avoid shared mutable state.
+            thread::scope(|scope| {
+                let projects = &self.config.projects;
+                let chunk_size = projects.len().div_ceil(jobs);
+                let mut handles = Vec::new();
 
-                    for spell in spells {
-                        if seen_spells.insert(spell.clone()) {
-                            all_spells.push(spell);
+                for chunk in projects.chunks(chunk_size) {
+                    handles.push(scope.spawn(move || {
+                        let mut outputs = Vec::new();
+                        for project in chunk {
+                            outputs.extend(this.build_project(project)?);
+                        }
+                        Ok::<_, GrimoireCssError>(outputs)
+                    }));
+                }
+
+                for h in handles {
+                    match h.join() {
+                        Ok(Ok(outputs)) => all_outputs.extend(outputs),
+                        Ok(Err(e)) => return Err(e),
+                        Err(_) => {
+                            return Err(GrimoireCssError::InvalidInput(
+                                "Project build thread panicked".to_string(),
+                            ));
                         }
                     }
                 }
 
-                project_build_info.push(BuildInfo {
-                    file_path: bundle_output_full_path,
-                    spells: all_spells,
-                });
-            } else {
-                let parsing_results = self.parser.collect_classes_multiple_output(
-                    &project.input_paths,
-                    &project_output_dir_path,
-                )?;
+                Ok(())
+            })?;
 
-                for (output_file_path, source_path, content, classes) in parsing_results {
-                    let source = Arc::new(SourceFile::new(
-                        Some(source_path.clone()),
-                        source_path.to_string_lossy().to_string(),
-                        content,
-                    ));
-                    let spells = Spell::generate_spells_from_classes(
-                        classes,
-                        &self.config.shared_spells,
-                        &self.config.scrolls,
-                        Some(source_path),
-                        Some(source),
-                    )?;
-
-                    project_build_info.push(BuildInfo {
-                        file_path: output_file_path,
-                        spells,
-                    });
-                }
+            if let Some(paths) = &mut compiled_project_paths {
+                paths.extend(all_outputs);
             }
         }
-
-        let compiled_css: Vec<(PathBuf, String)> = self.compile_css(&project_build_info)?;
         let compiled_shared_css: Option<Vec<(PathBuf, String)>> = self.compile_shared_css()?;
-        let compiled_critical_css: Option<Vec<(PathBuf, String)>> = self.compile_critical_css()?;
-
-        Self::write_compiled_css(&compiled_css)?;
+        let compiled_critical_css: CriticalCssResult = self.compile_critical_css()?;
 
         if let Some(compiled_shared_css) = &compiled_shared_css {
             Self::write_compiled_css(compiled_shared_css)?;
         }
 
         // Track file changes if locking is enabled
-        if self.config.lock.unwrap_or(false) {
-            let all_compiled_paths = compiled_css.iter().map(|(path, _)| path.as_path()).chain(
-                compiled_shared_css
-                    .as_ref()
-                    .into_iter()
-                    .flat_map(|css| css.iter().map(|(path, _)| path.as_path())),
-            );
+        if lock_enabled {
+            let all_compiled_paths = compiled_project_paths
+                .as_ref()
+                .expect("compiled_project_paths must be collected when lock is enabled")
+                .iter()
+                .map(|p| p.as_path())
+                .chain(
+                    compiled_shared_css
+                        .as_ref()
+                        .into_iter()
+                        .flat_map(|css| css.iter().map(|(path, _)| path.as_path())),
+                );
 
             FileTracker::track(self.current_dir, all_compiled_paths)?;
         }
@@ -187,6 +173,7 @@ impl<'a> CssBuilderFs<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if spell assembly or CSS optimization fails.
+    #[allow(dead_code)]
     fn compile_css(
         &self,
         project_build_info: &[BuildInfo],
@@ -194,14 +181,9 @@ impl<'a> CssBuilderFs<'a> {
         let compiled_css: Result<Vec<(PathBuf, String)>, GrimoireCssError> = project_build_info
             .iter()
             .map(|build_info| {
-                let assembled_spells =
-                    self.css_builder.combine_spells_to_css(&build_info.spells)?;
-                let raw_css = if assembled_spells.len() == 1 {
-                    assembled_spells[0].clone()
-                } else {
-                    assembled_spells.concat()
-                };
-                let css = self.css_builder.optimize_css(&raw_css)?;
+                let css = self
+                    .css_builder
+                    .combine_spells_to_optimized_css_string(&build_info.spells)?;
                 Ok((build_info.file_path.clone(), css))
             })
             .collect();
@@ -293,9 +275,9 @@ impl<'a> CssBuilderFs<'a> {
     /// # Errors
     ///
     /// Returns a `GrimoireCSSError` if CSS composition or optimization fails.
-    fn compile_critical_css(&self) -> Result<Option<Vec<(PathBuf, String)>>, GrimoireCssError> {
+    fn compile_critical_css(&self) -> Result<CriticalCssResult, GrimoireCssError> {
         self.config.critical.as_ref().map_or(Ok(None), |critical| {
-            let mut compiled_critical_css = Vec::new();
+            let mut compiled_critical_css: CriticalCssEntries = Vec::new();
 
             for critical_item in critical {
                 if critical_item.file_to_inline_paths.is_empty() {
@@ -317,11 +299,12 @@ impl<'a> CssBuilderFs<'a> {
                 }
 
                 if !composed_css.is_empty() {
-                    let optimized_css = self.css_builder.optimize_css(&composed_css)?;
+                    let optimized_css: Arc<str> =
+                        Arc::from(self.css_builder.optimize_css(&composed_css)?);
 
                     for path_to_inline in &critical_item.file_to_inline_paths {
                         compiled_critical_css
-                            .push((PathBuf::from(&path_to_inline), optimized_css.clone()));
+                            .push((PathBuf::from(&path_to_inline), Arc::clone(&optimized_css)));
                     }
                 }
             }
@@ -377,7 +360,7 @@ impl<'a> CssBuilderFs<'a> {
         )
     }
 
-    /// Composes additional CSS from shared styles.
+    /// Composes additional (raw, unoptimized) CSS from shared styles.
     ///
     /// # Arguments
     ///
@@ -385,7 +368,7 @@ impl<'a> CssBuilderFs<'a> {
     ///
     /// # Returns
     ///
-    /// Composed and optimized CSS string.
+    /// Composed (raw) CSS string.
     ///
     /// # Errors
     ///
@@ -415,20 +398,21 @@ impl<'a> CssBuilderFs<'a> {
                 &self.config.scrolls,
                 (0, 0),
                 None,
-                None,
             )? {
                 spells.push(spell);
             }
         }
 
-        let assembled_spells = self.css_builder.combine_spells_to_css(&spells)?;
-        let mut raw_css = assembled_spells.join("");
+        let mut raw_css = self.css_builder.combine_spells_to_css_string(&spells)?;
 
         if !files_content.is_empty() {
-            raw_css.push_str(&files_content.join(""));
+            for contents in files_content {
+                raw_css.push_str(&contents);
+            }
         }
 
-        self.css_builder.optimize_css(&raw_css)
+        // Important: callers are responsible for running optimization exactly once.
+        Ok(raw_css)
     }
 
     /// Injects critical CSS into HTML files.
@@ -442,11 +426,11 @@ impl<'a> CssBuilderFs<'a> {
     /// Returns a `GrimoireCSSError` if reading or writing HTML files fails.
     fn inject_critical_css_into_html(
         &self,
-        inline_shared_css: &[(PathBuf, String)],
+        inline_shared_css: &[(PathBuf, Arc<str>)],
     ) -> Result<(), GrimoireCssError> {
         for (file_path, css) in inline_shared_css {
             let path = self.current_dir.join(file_path);
-            self.embed_critical_css(&path, css)?;
+            self.embed_critical_css(&path, css.as_ref())?;
         }
 
         Ok(())
@@ -485,11 +469,120 @@ impl<'a> CssBuilderFs<'a> {
         fs::write(html_file_path, updated_html_content)?;
         Ok(())
     }
+
+    fn build_project(
+        &self,
+        project: &'a crate::core::ConfigFsProject,
+    ) -> Result<Vec<PathBuf>, GrimoireCssError> {
+        let project_output_dir_path = project
+            .output_dir_path
+            .as_deref()
+            .map(|d| self.current_dir.join(d))
+            .unwrap_or_else(|| self.current_dir.join("grimoire/dist"));
+
+        let parser = ParserFs::new(self.current_dir);
+
+        let mut outputs = Vec::new();
+
+        if let Some(single_output_file_name) = &project.single_output_file_name {
+            let parsing_results = parser.collect_classes_single_output(&project.input_paths)?;
+            let bundle_output_full_path = project_output_dir_path.join(single_output_file_name);
+
+            let mut all_spells = Vec::new();
+            for (file_path, classes) in parsing_results {
+                let source = Arc::new(SourceFile::new_path_only(
+                    Some(file_path.clone()),
+                    file_path.to_string_lossy().to_string(),
+                ));
+                let spells = Spell::generate_spells_from_classes(
+                    classes,
+                    &self.config.shared_spells,
+                    &self.config.scrolls,
+                    Some(source),
+                )?;
+
+                // `ParserFs::collect_classes_single_output` already deduplicates class tokens.
+                all_spells.extend(spells);
+            }
+
+            let css = self
+                .css_builder
+                .combine_spells_to_optimized_css_string(&all_spells)?;
+
+            Self::create_output_directory_if_needed(&bundle_output_full_path)?;
+            fs::write(&bundle_output_full_path, css)?;
+            outputs.push(bundle_output_full_path);
+        } else {
+            let mut out_paths = Vec::new();
+            parser.for_each_classes_multiple_output(
+                &project.input_paths,
+                &project_output_dir_path,
+                |output_file_path, source_path, classes| {
+                    let source = Arc::new(SourceFile::new_path_only(
+                        Some(source_path.clone()),
+                        source_path.to_string_lossy().to_string(),
+                    ));
+                    let spells = Spell::generate_spells_from_classes(
+                        classes,
+                        &self.config.shared_spells,
+                        &self.config.scrolls,
+                        Some(source),
+                    )?;
+
+                    let css = self
+                        .css_builder
+                        .combine_spells_to_optimized_css_string(&spells)?;
+                    Self::create_output_directory_if_needed(&output_file_path)?;
+                    fs::write(&output_file_path, css)?;
+                    out_paths.push(output_file_path);
+                    Ok(())
+                },
+            )?;
+            outputs.extend(out_paths);
+        }
+
+        Ok(outputs)
+    }
+
+    fn jobs_from_env() -> Result<usize, GrimoireCssError> {
+        match env::var("GRIMOIRE_CSS_JOBS") {
+            Ok(v) => Self::parse_jobs(&v).map(Self::cap_jobs_to_machine),
+            Err(env::VarError::NotPresent) => Ok(1),
+            Err(e) => Err(GrimoireCssError::InvalidInput(format!(
+                "Failed to read GRIMOIRE_CSS_JOBS: {e}"
+            ))),
+        }
+    }
+
+    fn parse_jobs(raw: &str) -> Result<usize, GrimoireCssError> {
+        let trimmed = raw.trim();
+        let jobs: usize = trimmed.parse().map_err(|_| {
+            GrimoireCssError::InvalidInput(format!(
+                "Invalid GRIMOIRE_CSS_JOBS value '{trimmed}': expected a positive integer"
+            ))
+        })?;
+
+        if jobs == 0 {
+            return Err(GrimoireCssError::InvalidInput(
+                "GRIMOIRE_CSS_JOBS must be >= 1".to_string(),
+            ));
+        }
+
+        Ok(jobs)
+    }
+
+    fn cap_jobs_to_machine(requested: usize) -> usize {
+        let max = thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
+        requested.clamp(1, max)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::ConfigFsCritical;
     use std::path::Path;
 
     struct MockOptimizer;
@@ -525,28 +618,29 @@ mod tests {
         let optimizer = MockOptimizer;
         let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
+        let spell = Spell::new(
+            "display=grid",
+            &config.shared_spells,
+            &config.scrolls,
+            (0, 0),
+            None,
+        )
+        .unwrap()
+        .unwrap();
+
         let build_info = BuildInfo {
             file_path: PathBuf::from("test_output.css"),
-            spells: vec![Spell {
-                file_path: None,
-                span: (0, 0),
-                source: None,
-                raw_spell: "d=grid".to_string(),
-                component: "display".to_string(),
-                component_target: "grid".to_string(),
-                effects: String::new(),
-                area: String::new(),
-                focus: String::new(),
-                with_template: false,
-                scroll_spells: None,
-            }],
+            spells: vec![spell],
         };
 
         let result = builder.compile_css(&[build_info]);
         assert!(result.is_ok());
 
         let compiled_css = result.unwrap();
-        assert_eq!(compiled_css[0].1, ".d\\=grid{display:grid;}_optimized");
+        assert_eq!(
+            compiled_css[0].1,
+            ".display\\=grid{display:grid;}_optimized"
+        );
     }
 
     #[test]
@@ -556,37 +650,38 @@ mod tests {
         let optimizer = MockOptimizer;
         let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
-        let spells = vec![Spell {
-            file_path: None,
-            span: (0, 0),
-            source: None,
-            raw_spell: "d=grid".to_string(),
-            component: "display".to_string(),
-            component_target: "grid".to_string(),
-            effects: String::new(),
-            area: String::new(),
-            focus: String::new(),
-            with_template: false,
-            scroll_spells: None,
-        }];
+        let spell = Spell::new(
+            "display=grid",
+            &config.shared_spells,
+            &config.scrolls,
+            (0, 0),
+            None,
+        )
+        .unwrap()
+        .unwrap();
 
-        let result = builder.css_builder.combine_spells_to_css(&spells);
+        let spells = vec![spell];
+
+        let result = builder.css_builder.combine_spells_to_css_string(&spells);
         assert!(result.is_ok());
 
         let assembled_css = result.unwrap();
-        assert_eq!(assembled_css[0], ".d\\=grid{display:grid;}");
+        assert_eq!(assembled_css, ".display\\=grid{display:grid;}");
     }
 
     #[test]
     fn test_cssbuilder_write_compiled_css() {
         let file_path = PathBuf::from("test_output.css");
-        let css = vec![(file_path.clone(), ".d\\=grid{display:grid;}".to_string())];
+        let css = vec![(
+            file_path.clone(),
+            ".display\\=grid{display:grid;}".to_string(),
+        )];
 
         let result = CssBuilderFs::write_compiled_css(&css);
         assert!(result.is_ok());
 
         let written_content = std::fs::read_to_string(&file_path).unwrap();
-        assert_eq!(written_content, ".d\\=grid{display:grid;}");
+        assert_eq!(written_content, ".display\\=grid{display:grid;}");
 
         std::fs::remove_file(file_path).unwrap();
     }
@@ -598,11 +693,56 @@ mod tests {
         let optimizer = MockOptimizer;
         let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
 
-        let raw_css = ".d\\=grid{display:grid;}";
+        let raw_css = ".display\\=grid{display:grid;}";
         let result = builder.css_builder.optimize_css(raw_css);
         assert!(result.is_ok());
 
         let optimized_css = result.unwrap();
-        assert_eq!(optimized_css, ".d\\=grid{display:grid;}_optimized");
+        assert_eq!(optimized_css, ".display\\=grid{display:grid;}_optimized");
+    }
+
+    #[test]
+    fn test_compose_extra_css_is_raw_not_optimized() {
+        let config = create_test_config();
+        let current_dir = Path::new(".");
+        let optimizer = MockOptimizer;
+        let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
+
+        let raw = builder
+            .compose_extra_css(&["display=grid".to_string()])
+            .unwrap();
+        // compose_extra_css returns raw CSS; optimization is the caller's responsibility.
+        assert_eq!(raw, ".display\\=grid{display:grid;}");
+    }
+
+    #[test]
+    fn test_compile_critical_css_shares_payload_across_files() {
+        let mut config = create_test_config();
+        config.critical = Some(vec![ConfigFsCritical {
+            file_to_inline_paths: vec!["a.html".to_string(), "b.html".to_string()],
+            styles: Some(vec!["display=grid".to_string()]),
+            css_custom_properties: None,
+        }]);
+
+        let current_dir = Path::new(".");
+        let optimizer = MockOptimizer;
+        let builder = CssBuilderFs::new(&config, current_dir, &optimizer).unwrap();
+
+        let compiled = builder.compile_critical_css().unwrap().unwrap();
+        assert_eq!(compiled.len(), 2);
+        assert!(Arc::ptr_eq(&compiled[0].1, &compiled[1].1));
+        assert_eq!(
+            compiled[0].1.as_ref(),
+            ".display\\=grid{display:grid;}_optimized"
+        );
+    }
+
+    #[test]
+    fn test_parse_jobs_defaults_and_validation() {
+        assert_eq!(CssBuilderFs::parse_jobs("1").unwrap(), 1);
+        assert_eq!(CssBuilderFs::parse_jobs("  4 ").unwrap(), 4);
+        assert!(CssBuilderFs::parse_jobs("0").is_err());
+        assert!(CssBuilderFs::parse_jobs("-1").is_err());
+        assert!(CssBuilderFs::parse_jobs("abc").is_err());
     }
 }
