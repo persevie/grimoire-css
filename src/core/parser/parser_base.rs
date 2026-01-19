@@ -31,7 +31,7 @@ impl Parser {
     pub fn new() -> Self {
         let class_name_regex = Regex::new(r#"className=("([^"]*)"|'([^']*)'|`([^`]*)`)"#).unwrap();
         let class_regex = Regex::new(r#"class=("([^"]*)"|'([^']*)'|`([^`]*)`)"#).unwrap();
-        let tepmplated_spell_regex = Regex::new(r#"(g![^;]*;)"#).unwrap();
+        let tepmplated_spell_regex = Regex::new(r#"(?:^|[^A-Za-z0-9_])(g![^;]*;)"#).unwrap();
         let curly_class_name_regex = Regex::new(r#"className=\{((?:[^{}]|\{[^}]*\})*)\}"#).unwrap();
         let curly_class_regex = Regex::new(r#"class=\{((?:[^{}]|\{[^}]*\})*)\}"#).unwrap();
 
@@ -376,6 +376,29 @@ mod tests {
         assert!(names.contains(&"regular-class-success".to_string()));
         assert!(names.contains(&"display=grid".to_string()));
         assert!(names.contains(&"state-${state}".to_string()));
+    }
+
+    #[test]
+    fn test_do_not_collect_templated_spells_in_rust_macros_ending_with_g() {
+        let parser = Parser::new();
+        let mut class_names = Vec::new();
+        let mut seen_class_names = HashSet::new();
+
+        let content = r#"
+            async fn foo() {
+                log::debug!(
+                    \"Saved template {} {:?}\",
+                    result.rows_affected,
+                    result.last_insert_id
+                );
+            }
+        "#;
+
+        parser
+            .collect_candidates(content, &mut class_names, &mut seen_class_names)
+            .unwrap();
+
+        assert!(class_names.is_empty());
     }
 
     #[test]
