@@ -74,6 +74,19 @@
             "type": "string"
           }
         },
+        "spellsByArgs": {
+          "type": "object",
+          "description": "Optional overloads selected by argument count (keys: '0', '1', ...)",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
         "extends": {
           "type": "array",
           "description": "Optional list of other scrolls this one extends",

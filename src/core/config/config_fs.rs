@@ -2,7 +2,7 @@
 
 use crate::{
     buffer::add_message,
-    core::{Filesystem, GrimoireCssError},
+    core::{Filesystem, GrimoireCssError, ScrollDefinition},
 };
 use glob::glob;
 use serde::{Deserialize, Serialize};
@@ -16,7 +16,7 @@ use std::{
 #[derive(Debug, Clone)]
 pub struct ConfigFs {
     pub variables: Option<Vec<(String, String)>>,
-    pub scrolls: Option<HashMap<String, Vec<String>>>,
+    pub scrolls: Option<HashMap<String, ScrollDefinition>>,
     pub projects: Vec<ConfigFsProject>,
     pub shared: Option<Vec<ConfigFsShared>>,
     pub critical: Option<Vec<ConfigFsCritical>>,
@@ -86,6 +86,8 @@ struct ConfigFsJSON {
 pub struct ConfigFsScrollJSON {
     pub name: String,
     pub spells: Vec<String>,
+    #[serde(rename = "spellsByArgs")]
+    pub spells_by_args: Option<HashMap<String, Vec<String>>>,
     pub extends: Option<Vec<String>>,
 }
 
@@ -306,21 +308,44 @@ impl ConfigFs {
 
     fn scrolls_from_json(
         scrolls: Option<Vec<ConfigFsScrollJSON>>,
-    ) -> Option<HashMap<String, Vec<String>>> {
+    ) -> Option<HashMap<String, ScrollDefinition>> {
         scrolls.map(|scrolls_vec| {
             let mut scrolls_map = HashMap::new();
 
             for scroll in &scrolls_vec {
-                let mut scroll_spells = Vec::new();
+                let mut base_spells = Vec::new();
+                let mut spells_by_args: HashMap<String, Vec<String>> = HashMap::new();
 
-                // Recursively resolve parent spells
-                Self::resolve_spells(scroll, &scrolls_vec, &mut scroll_spells);
+                // Recursively resolve parent spells (base + overloads)
+                Self::resolve_spells(scroll, &scrolls_vec, &mut base_spells);
+                Self::resolve_spells_by_args(scroll, &scrolls_vec, &mut spells_by_args);
 
                 // Add the spells of the current scroll
-                scroll_spells.extend_from_slice(&scroll.spells);
+                base_spells.extend_from_slice(&scroll.spells);
 
-                // Insert the resolved spells into the map
-                scrolls_map.insert(scroll.name.clone(), scroll_spells);
+                // Add overloads of the current scroll (child after parent)
+                if let Some(own) = &scroll.spells_by_args {
+                    for (k, v) in own {
+                        spells_by_args
+                            .entry(k.clone())
+                            .or_default()
+                            .extend(v.iter().cloned());
+                    }
+                }
+
+                let spells_by_args = if spells_by_args.is_empty() {
+                    None
+                } else {
+                    Some(spells_by_args)
+                };
+
+                scrolls_map.insert(
+                    scroll.name.clone(),
+                    ScrollDefinition {
+                        spells: base_spells,
+                        spells_by_args,
+                    },
+                );
             }
 
             scrolls_map
@@ -342,6 +367,30 @@ impl ConfigFs {
 
                     // Add the spells of the parent scroll
                     collected_spells.extend_from_slice(&parent_scroll.spells);
+                }
+            }
+        }
+    }
+
+    /// Recursively resolve overload spells (`spellsByArgs`) for a given scroll, including extended scrolls.
+    fn resolve_spells_by_args(
+        scroll: &ConfigFsScrollJSON,
+        scrolls_vec: &[ConfigFsScrollJSON],
+        collected: &mut HashMap<String, Vec<String>>,
+    ) {
+        if let Some(extends) = &scroll.extends {
+            for ext_name in extends {
+                if let Some(parent_scroll) = scrolls_vec.iter().find(|s| &s.name == ext_name) {
+                    Self::resolve_spells_by_args(parent_scroll, scrolls_vec, collected);
+
+                    if let Some(parent_map) = &parent_scroll.spells_by_args {
+                        for (k, v) in parent_map {
+                            collected
+                                .entry(k.clone())
+                                .or_default()
+                                .extend(v.iter().cloned());
+                        }
+                    }
                 }
             }
         }
@@ -458,14 +507,15 @@ impl ConfigFs {
     }
 
     fn scrolls_to_json(
-        config_scrolls: Option<HashMap<String, Vec<String>>>,
+        config_scrolls: Option<HashMap<String, ScrollDefinition>>,
     ) -> Option<Vec<ConfigFsScrollJSON>> {
         config_scrolls.map(|scrolls| {
             let mut scrolls_vec = Vec::new();
-            for (name, spells) in scrolls {
+            for (name, def) in scrolls {
                 scrolls_vec.push(ConfigFsScrollJSON {
                     name,
-                    spells,
+                    spells: def.spells,
+                    spells_by_args: def.spells_by_args,
                     extends: None,
                 });
             }
@@ -595,8 +645,8 @@ impl ConfigFs {
     /// Returns a `GrimoireCSSError` if reading or parsing any external scroll file fails.
     fn load_external_scrolls(
         current_dir: &Path,
-        existing_scrolls: Option<HashMap<String, Vec<String>>>,
-    ) -> Result<Option<HashMap<String, Vec<String>>>, GrimoireCssError> {
+        existing_scrolls: Option<HashMap<String, ScrollDefinition>>,
+    ) -> Result<Option<HashMap<String, ScrollDefinition>>, GrimoireCssError> {
         // Get the config directory path
         let config_dir = Filesystem::get_or_create_grimoire_path(current_dir)?.join("config");
 
@@ -642,9 +692,35 @@ impl ConfigFs {
                                                             })
                                                             .collect();
 
+                                                        // Optional spellsByArgs
+                                                        let spells_by_args = scroll
+                                                            .get("spellsByArgs")
+                                                            .and_then(|s| s.as_object())
+                                                            .and_then(|obj| {
+                                                                let mut map: HashMap<String, Vec<String>> =
+                                                                    HashMap::new();
+                                                                for (k, v) in obj {
+                                                                    if let Some(arr) = v.as_array() {
+                                                                        let spells: Vec<String> = arr
+                                                                            .iter()
+                                                                            .filter_map(|s| {
+                                                                                s.as_str().map(|s| s.to_string())
+                                                                            })
+                                                                            .collect();
+                                                                        map.insert(k.clone(), spells);
+                                                                    }
+                                                                }
+                                                                if map.is_empty() { None } else { Some(map) }
+                                                            });
+
                                                         // Insert new scroll
-                                                        all_scrolls
-                                                            .insert(name.to_string(), spells);
+                                                        all_scrolls.insert(
+                                                            name.to_string(),
+                                                            ScrollDefinition {
+                                                                spells,
+                                                                spells_by_args,
+                                                            },
+                                                        );
                                                         existing_scroll_names
                                                             .insert(name.to_string());
                                                     }
@@ -965,7 +1041,7 @@ mod tests {
         let scrolls = result.unwrap();
         assert_eq!(scrolls.len(), 1);
         assert!(scrolls.contains_key("tw-btn"));
-        assert_eq!(scrolls.get("tw-btn").unwrap().len(), 4);
+        assert_eq!(scrolls.get("tw-btn").unwrap().spells.len(), 4);
     }
 
     #[test]
@@ -1027,8 +1103,8 @@ mod tests {
         assert_eq!(scrolls.len(), 2);
         assert!(scrolls.contains_key("tw-btn"));
         assert!(scrolls.contains_key("bs-card"));
-        assert_eq!(scrolls.get("tw-btn").unwrap().len(), 4);
-        assert_eq!(scrolls.get("bs-card").unwrap().len(), 3);
+        assert_eq!(scrolls.get("tw-btn").unwrap().spells.len(), 4);
+        assert_eq!(scrolls.get("bs-card").unwrap().spells.len(), 3);
     }
 
     #[test]
@@ -1085,11 +1161,14 @@ mod tests {
         let mut existing_scrolls = HashMap::new();
         existing_scrolls.insert(
             "main-btn".to_string(),
-            vec![
-                "p=10px".to_string(),
-                "fw=bold".to_string(),
-                "c=black".to_string(),
-            ],
+            ScrollDefinition {
+                spells: vec![
+                    "p=10px".to_string(),
+                    "fw=bold".to_string(),
+                    "c=black".to_string(),
+                ],
+                spells_by_args: None,
+            },
         );
 
         // Load and merge external scrolls
@@ -1101,11 +1180,11 @@ mod tests {
 
         // Check that main-btn has combined spells from both sources
         assert!(scrolls.contains_key("main-btn"));
-        assert_eq!(scrolls.get("main-btn").unwrap().len(), 3);
+        assert_eq!(scrolls.get("main-btn").unwrap().spells.len(), 3);
 
         // Check that extra-btn was added
         assert!(scrolls.contains_key("extra-btn"));
-        assert_eq!(scrolls.get("extra-btn").unwrap().len(), 2);
+        assert_eq!(scrolls.get("extra-btn").unwrap().spells.len(), 2);
     }
 
     #[test]
