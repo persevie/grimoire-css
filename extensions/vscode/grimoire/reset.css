@@ -1,0 +1,20 @@
+:root {
+  --grimoire-brand-5: #6d28d9;
+  color-scheme: light dark;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-sideBar-foreground);
+  padding: 8px 10px;
+  margin: 0;
+  overflow: auto;
+  height: 100%;
+  background: var(--vscode-sideBar-background);
+  min-height: 0;
+  font-size: var(--vscode-font-size);
+}
