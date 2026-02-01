@@ -15,6 +15,8 @@ use std::{
 /// Represents the main configuration structure for GrimoireCSS.
 #[derive(Debug, Clone)]
 pub struct ConfigFs {
+    /// The Grimoire CSS version that last wrote/validated this config.
+    pub grimoire_css_version: Option<String>,
     pub variables: Option<Vec<(String, String)>>,
     pub scrolls: Option<HashMap<String, ScrollDefinition>>,
     pub projects: Vec<ConfigFsProject>,
@@ -70,6 +72,7 @@ pub struct ConfigFsProject {
 struct ConfigFsJSON {
     #[serde(rename = "$schema")]
     pub schema: Option<String>,
+    pub version: Option<String>,
     /// Optional framework-level variables used during compilation.
     pub variables: Option<HashMap<String, String>>,
     /// Optional shared configuration settings used across multiple projects.
@@ -148,6 +151,7 @@ impl Default for ConfigFs {
         }];
 
         Self {
+            grimoire_css_version: Some(env!("CARGO_PKG_VERSION").to_string()),
             scrolls: None,
             shared: None,
             critical: None,
@@ -261,6 +265,7 @@ impl ConfigFs {
         let scrolls = Self::scrolls_from_json(json_config.scrolls);
 
         ConfigFs {
+            grimoire_css_version: json_config.version,
             variables,
             scrolls,
             projects,
@@ -446,6 +451,7 @@ impl ConfigFs {
 
         ConfigFsJSON {
             schema: Some("https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json".to_string()),
+            version: self.grimoire_css_version.clone(),
             variables: variables_hash_map,
             scrolls: Self::scrolls_to_json(self.scrolls.clone()),
             projects: Self::projects_to_json(self.projects.clone()),
@@ -453,6 +459,37 @@ impl ConfigFs {
             critical: Self::critical_to_json(self.critical.as_ref()),
             lock: self.lock,
         }
+    }
+
+    /// Updates only the `version` field in the on-disk config JSON.
+    ///
+    /// This avoids rewriting the full config via [`ConfigFs::save`], which could inline
+    /// externally-loaded scroll/variable files.
+    pub fn update_config_version_only(
+        current_dir: &Path,
+        grimoire_css_version: &str,
+    ) -> Result<(), GrimoireCssError> {
+        let config_path = Filesystem::get_config_path(current_dir)?;
+        let content = fs::read_to_string(&config_path)?;
+        let mut json_value: serde_json::Value = serde_json::from_str(&content)?;
+
+        if let serde_json::Value::Object(map) = &mut json_value {
+            map.insert(
+                "version".to_string(),
+                serde_json::Value::String(grimoire_css_version.to_string()),
+            );
+
+            // Ensure schema exists in new/legacy configs.
+            map.entry("$schema".to_string()).or_insert_with(|| {
+                serde_json::Value::String(
+                    "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json".to_string(),
+                )
+            });
+        }
+
+        let updated = serde_json::to_string_pretty(&json_value)?;
+        fs::write(&config_path, updated)?;
+        Ok(())
     }
 
     /// Converts the internal list of shared configurations into JSON.
@@ -953,6 +990,7 @@ mod tests {
     fn test_get_common_spells_set() {
         let json = ConfigFsJSON {
             schema: None,
+            version: None,
             variables: None,
             scrolls: None,
             projects: vec![],

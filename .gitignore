@@ -5,13 +5,21 @@
 target
 **/*.rs.bk
 .idea
-.vscode/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
 *.code-workspace
 .DS_Store
 Thumbs.db
 *.bak
 *.bk
 *.patch
+
+# vscode extension
+extensions/vscode/node_modules
+extensions/vscode/dist
+extensions/vscode/.vscode-test
+extensions/vscode/*.vsix
 
 # benchmark
 benchmark/input
@@ -20,3 +28,7 @@ benchmark/tailwind_css_output
 benchmark/node_modules
 
 test_app
+
+# repro artifacts
+repro/**/.browserslistrc
+repro/**/*.css

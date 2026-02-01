@@ -1,0 +1,36 @@
+name: Extension (VS Code) Quality
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+      - 'rc/**'
+    paths:
+      - 'extensions/vscode/**'
+
+jobs:
+  lint_and_build:
+    name: Lint and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'extensions/vscode/package-lock.json'
+
+      - name: Install
+        working-directory: extensions/vscode
+        run: npm ci
+
+      - name: Lint (Biome)
+        working-directory: extensions/vscode
+        run: npm run lint
+
+      - name: Compile (tsc)
+        working-directory: extensions/vscode
+        run: npm run compile
