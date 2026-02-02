@@ -1,7 +1,7 @@
 {
   "name": "grimoirecss-vscode",
-  "displayName": "GrimoireCSS",
-  "description": "VS Code extension for GrimoireCSS (Analyzer + LSP)",
+  "displayName": "Grimoire CSS Toolkit",
+  "description": "Grimoire CSS Toolkit: LSP-powered navigation, diagnostics, and project tools.",
   "version": "1.0.0",
   "publisher": "persevie",
   "license": "MIT",

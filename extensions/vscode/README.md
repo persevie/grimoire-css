@@ -1,10 +1,10 @@
-# Grimoire CSS LSP Client
+# Grimoire CSS Toolkit
 
 <div align="center">
 <img height="128" alt="Grimoire CSS logo" src="../../assets/grimoire-css-logo.svg">
 </div>
 
-VS Code extension for **Grimoire CSS** projects.
+VS Code toolkit for **Grimoire CSS** projects.
 
 Navigate Scrolls/Variables/Functions/Animations, jump to definitions and references, see lint/DRY insights, and use a structured Config view — all powered by the Grimoire CSS Analyzer + LSP.
 
