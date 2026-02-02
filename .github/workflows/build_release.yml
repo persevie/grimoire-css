@@ -252,6 +252,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify release notes file exists
+        shell: bash
+        run: |
+          TAG='${{ needs.determine_release.outputs.NEW_TAG }}'
+          NOTES_FILE="releases/${TAG}.md"
+          if [[ ! -f "$NOTES_FILE" ]]; then
+            echo "Missing release notes: $NOTES_FILE" >&2
+            echo "Add $NOTES_FILE (narrative release notes) before releasing." >&2
+            exit 1
+          fi
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -269,7 +280,7 @@ jobs:
         with:
           tag_name: ${{ needs.determine_release.outputs.NEW_TAG }}
           files: ./artifacts/**/*
-          body: "Release of Grimoire CSS version ${{ needs.determine_release.outputs.NEW_TAG }}"
+          body_path: releases/${{ needs.determine_release.outputs.NEW_TAG }}.md
           draft: false
           prerelease: false
         env:

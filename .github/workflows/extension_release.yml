@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'extensions/vscode/**'
+      - "extensions/vscode/**"
 
 permissions:
   contents: write
@@ -57,9 +57,9 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'extensions/vscode/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "extensions/vscode/package-lock.json"
 
       - name: Install
         working-directory: extensions/vscode
@@ -122,3 +122,24 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install vsce
+        run: npm i -g @vscode/vsce
+
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        shell: bash
+        run: |
+          if [[ -z "$VSCE_PAT" ]]; then
+            echo "VSCE_PAT is not set; skipping VS Code Marketplace publish."
+            exit 0
+          fi
+          VSIX_PATH=$(ls -1 ./vsix/*.vsix | head -n 1)
+          echo "Publishing $VSIX_PATH"
+          vsce publish --packagePath "$VSIX_PATH" -p "$VSCE_PAT"
