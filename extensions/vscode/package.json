@@ -2,6 +2,7 @@
   "name": "grimoirecss-vscode",
   "displayName": "Grimoire CSS Toolkit",
   "description": "Grimoire CSS Toolkit: LSP-powered navigation, diagnostics, and project tools.",
+  "icon": "resources/marketplace-icon.png",
   "version": "1.0.0",
   "publisher": "persevie",
   "license": "MIT",
