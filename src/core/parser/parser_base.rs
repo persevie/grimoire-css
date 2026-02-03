@@ -25,6 +25,16 @@ pub struct Parser {
     curly_class_regex: Regex,
 }
 
+/// Analyzer-only: one occurrence of a `class` / `className` attribute and the tokens inside it.
+#[cfg(feature = "analyzer")]
+#[derive(Debug, Clone)]
+pub struct RegularClassGroup {
+    /// Byte span of the attribute value content (inside quotes/backticks), within the original file.
+    #[cfg(feature = "lsp")]
+    pub value_span: (usize, usize),
+    pub tokens: Vec<(String, (usize, usize))>,
+}
+
 impl Parser {
     /// Creates a new `Parser` instance with predefined regular expressions for extracting class names
     /// and templated spells.
@@ -265,6 +275,190 @@ Offending spell: '{class_string}'"
             seen_class_names,
             CollectionType::CurlyClass,
         )?;
+
+        Ok(())
+    }
+
+    /// Analyzer-only variant of [`collect_candidates`] that preserves duplicate occurrences.
+    ///
+    /// This is useful for tooling (IDE extension, reference finder, frequency stats).
+    /// It is compiled only when the `analyzer` feature is enabled to avoid impacting
+    /// default build/init performance.
+    #[cfg(feature = "analyzer")]
+    pub fn collect_candidates_all(
+        &self,
+        content: &str,
+        class_names: &mut Vec<(String, (usize, usize))>,
+    ) -> Result<(), GrimoireCssError> {
+        Self::collect_classes_allow_dupes(
+            content,
+            &self.class_name_regex,
+            true,
+            class_names,
+            CollectionType::RegularClass,
+        )?;
+
+        Self::collect_classes_allow_dupes(
+            content,
+            &self.class_regex,
+            true,
+            class_names,
+            CollectionType::RegularClass,
+        )?;
+
+        Self::collect_classes_allow_dupes(
+            content,
+            &self.tepmplated_spell_regex,
+            false,
+            class_names,
+            CollectionType::TemplatedSpell,
+        )?;
+
+        Self::collect_classes_allow_dupes(
+            content,
+            &self.curly_class_name_regex,
+            true,
+            class_names,
+            CollectionType::CurlyClass,
+        )?;
+
+        Self::collect_classes_allow_dupes(
+            content,
+            &self.curly_class_regex,
+            true,
+            class_names,
+            CollectionType::CurlyClass,
+        )?;
+
+        Ok(())
+    }
+
+    /// Analyzer-only: collect grouped tokens from regular `class` and `className` attributes.
+    ///
+    /// This intentionally does **not** include:
+    /// - `g!...;` templated spells (no class boundary semantics)
+    /// - curly `class={...}` / `className={...}` (too dynamic; boundaries are fuzzy)
+    #[cfg(feature = "analyzer")]
+    pub fn collect_regular_class_groups(
+        &self,
+        content: &str,
+        groups: &mut Vec<RegularClassGroup>,
+    ) -> Result<(), GrimoireCssError> {
+        Self::collect_regular_groups_impl(content, &self.class_name_regex, groups)?;
+        Self::collect_regular_groups_impl(content, &self.class_regex, groups)?;
+        Ok(())
+    }
+
+    #[cfg(feature = "analyzer")]
+    fn collect_regular_groups_impl(
+        content: &str,
+        regex: &Regex,
+        groups: &mut Vec<RegularClassGroup>,
+    ) -> Result<(), GrimoireCssError> {
+        for cap in regex.captures_iter(content) {
+            let match_obj = cap.get(2).or_else(|| cap.get(3)).or_else(|| cap.get(4));
+            let Some(m) = match_obj else {
+                continue;
+            };
+
+            let full_value = m.as_str();
+            let base_offset = m.start();
+            #[cfg(feature = "lsp")]
+            let value_span = (m.start(), m.end() - m.start());
+
+            let mut tokens: Vec<(String, (usize, usize))> = Vec::new();
+            for part in full_value.split_whitespace() {
+                if part.is_empty() {
+                    continue;
+                }
+
+                let part_start = part.as_ptr() as usize - full_value.as_ptr() as usize;
+                let start = base_offset + part_start;
+                let length = part.len();
+
+                tokens.push((part.to_string(), (start, length)));
+            }
+
+            if !tokens.is_empty() {
+                groups.push(RegularClassGroup {
+                    #[cfg(feature = "lsp")]
+                    value_span,
+                    tokens,
+                });
+            }
+        }
+
+        Ok(())
+    }
+
+    #[cfg(feature = "analyzer")]
+    fn collect_classes_allow_dupes(
+        content: &str,
+        regex: &Regex,
+        split_by_whitespace: bool,
+        class_names: &mut Vec<(String, (usize, usize))>,
+        collection_type: CollectionType,
+    ) -> Result<(), GrimoireCssError> {
+        for cap in regex.captures_iter(content) {
+            let match_obj = match collection_type {
+                CollectionType::TemplatedSpell => cap.get(1),
+                CollectionType::CurlyClass => cap.get(1),
+                CollectionType::RegularClass => {
+                    cap.get(2).or_else(|| cap.get(3)).or_else(|| cap.get(4))
+                }
+            };
+
+            if let Some(m) = match_obj {
+                let full_value = m.as_str();
+                let base_offset = m.start();
+
+                if split_by_whitespace {
+                    for part in full_value.split_whitespace() {
+                        if part.is_empty() {
+                            continue;
+                        }
+
+                        // Calculate the offset of the part within the full content.
+                        let part_start = part.as_ptr() as usize - full_value.as_ptr() as usize;
+                        let start = base_offset + part_start;
+                        let length = part.len();
+
+                        let mut class_string = part.to_string();
+                        if matches!(collection_type, CollectionType::CurlyClass) {
+                            class_string = Self::clean_unpaired_brackets(&class_string);
+                        }
+
+                        if !class_string.is_empty() {
+                            class_names.push((class_string, (start, length)));
+                        }
+                    }
+                } else {
+                    let start = base_offset;
+                    let length = full_value.len();
+                    let class_string = full_value.to_string();
+
+                    if class_string.contains(' ') {
+                        return Err(GrimoireCssError::CompileError {
+                            message: "Spaces are not allowed inside a single spell token."
+                                .to_string(),
+                            span: (start, length),
+                            label: "Error in this spell".to_string(),
+                            help: Some(format!(
+                                "You likely wrote a value with spaces inside a class attribute (HTML treats spaces as class separators).\n\
+Fix: replace spaces with '_' inside the value, e.g.:\n\
+    h=calc(100vh - 50px)  ->  h=calc(100vh_-_50px)\n\n\
+Offending spell: '{class_string}'"
+                            )),
+                            source_file: None,
+                        });
+                    }
+
+                    if !class_string.is_empty() {
+                        class_names.push((class_string, (start, length)));
+                    }
+                }
+            }
+        }
 
         Ok(())
     }

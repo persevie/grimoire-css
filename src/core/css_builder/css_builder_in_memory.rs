@@ -94,6 +94,7 @@ impl<'a> CssBuilderInMemory<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::ScrollDefinition;
     use crate::core::config::config_in_memory::ConfigInMemoryEntry;
     use std::collections::HashMap;
 
@@ -150,10 +151,13 @@ mod tests {
 
     #[test]
     fn test_builder_with_templated_scroll_invocation() {
-        let mut scrolls_map: HashMap<String, Vec<String>> = HashMap::new();
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
         scrolls_map.insert(
             "complex-card".to_string(),
-            vec!["h=$".to_string(), "c=$".to_string(), "w=$".to_string()],
+            ScrollDefinition {
+                spells: vec!["h=$".to_string(), "c=$".to_string(), "w=$".to_string()],
+                spells_by_args: None,
+            },
         );
 
         let config = ConfigInMemory {
@@ -186,10 +190,13 @@ mod tests {
 
     #[test]
     fn test_builder_with_templated_scroll_invocation_with_prefixes() {
-        let mut scrolls_map: HashMap<String, Vec<String>> = HashMap::new();
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
         scrolls_map.insert(
             "complex-card".to_string(),
-            vec!["h=$".to_string(), "c=$".to_string(), "w=$".to_string()],
+            ScrollDefinition {
+                spells: vec!["h=$".to_string(), "c=$".to_string(), "w=$".to_string()],
+                spells_by_args: None,
+            },
         );
 
         let config = ConfigInMemory {

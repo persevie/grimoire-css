@@ -31,6 +31,43 @@ static SPELL_COLOR_FUNCTIONS: &[(&str, SpellColorFunc)] = &[
     ("g-fade-out", handle_fade_out),
 ];
 
+fn expected_usage(func_name: &str) -> &'static str {
+    match func_name {
+        "g-grayscale" => "g-grayscale(color)",
+        "g-complement" => "g-complement(color)",
+        "g-invert" => "g-invert(color_[weight])",
+        "g-mix" => "g-mix(color1_color2_weight)",
+        "g-adjust-hue" => "g-adjust-hue(color_degrees)",
+        "g-adjust-color" => {
+            "g-adjust-color(color_[red_delta_green_delta_blue_delta_hue_delta_sat_delta_light_delta_alpha_delta])"
+        }
+        "g-change-color" => "g-change-color(color_[red_green_blue_hue_sat_light_alpha])",
+        "g-scale-color" => {
+            "g-scale-color(color_[red_scale_green_scale_blue_scale_saturation_scale_lightness_scale_alpha_scale])"
+        }
+        "g-rgba" => "g-rgba(color_alpha)",
+        "g-lighten" => "g-lighten(color_amount)",
+        "g-darken" => "g-darken(color_amount)",
+        "g-saturate" => "g-saturate(color_amount)",
+        "g-desaturate" => "g-desaturate(color_amount)",
+        "g-opacify" => "g-opacify(color_amount)",
+        "g-fade-in" => "g-fade-in(color_amount)",
+        "g-transparentize" => "g-transparentize(color_amount)",
+        "g-fade-out" => "g-fade-out(color_amount)",
+        _ => "(see docs)",
+    }
+}
+
+#[cfg(feature = "lsp")]
+pub fn list_spell_color_functions() -> Vec<(&'static str, &'static str)> {
+    let mut out: Vec<(&'static str, &'static str)> = SPELL_COLOR_FUNCTIONS
+        .iter()
+        .map(|(name, _)| (*name, expected_usage(name)))
+        .collect();
+    out.sort_by(|a, b| a.0.cmp(b.0));
+    out
+}
+
 /// Attempts to parse the input string (e.g. `g-lighten(#ff0000 10)`) as a spell color function call.
 /// If parsing succeeds, it invokes the corresponding color handler and returns a hex representation
 /// of the resulting color.
@@ -73,30 +110,7 @@ pub fn try_handle_color_function(
         return Ok(Some(result_color.to_hex_string()));
     }
 
-    let expected_usage = match func_name {
-        "g-grayscale" => "g-grayscale(color)",
-        "g-complement" => "g-complement(color)",
-        "g-invert" => "g-invert(color [weight])",
-        "g-mix" => "g-mix(color1 color2 weight)",
-        "g-adjust-hue" => "g-adjust-hue(color degrees)",
-        "g-adjust-color" => {
-            "g-adjust-color(color [red_delta green_delta blue_delta hue_delta sat_delta light_delta alpha_delta])"
-        }
-        "g-change-color" => "g-change-color(color [red green blue hue sat light alpha])",
-        "g-scale-color" => {
-            "g-scale-color(color [red_scale green_scale blue_scale saturation_scale lightness_scale alpha_scale])"
-        }
-        "g-rgba" => "g-rgba(color alpha)",
-        "g-lighten" => "g-lighten(color amount)",
-        "g-darken" => "g-darken(color amount)",
-        "g-saturate" => "g-saturate(color amount)",
-        "g-desaturate" => "g-desaturate(color amount)",
-        "g-opacify" => "g-opacify(color amount)",
-        "g-fade-in" => "g-fade-in(color amount)",
-        "g-transparentize" => "g-transparentize(color amount)",
-        "g-fade-out" => "g-fade-out(color amount)",
-        _ => "(see docs)",
-    };
+    let expected_usage = expected_usage(func_name);
 
     Err(crate::core::GrimoireCssError::InvalidInput(format!(
         "Invalid arguments for Grimoire color function '{func_name}'.\nExpected: {expected_usage}\nGot: '{adapted_target}'"

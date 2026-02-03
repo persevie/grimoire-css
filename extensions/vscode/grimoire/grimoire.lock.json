@@ -1,0 +1,9 @@
+{
+  "paths": [
+    "/Users/dmtrshat/dev/my/grimoire-css/extensions/vscode/./resources/webview/details.css",
+    "/Users/dmtrshat/dev/my/grimoire-css/extensions/vscode/./resources/webview/config.css",
+    "/Users/dmtrshat/dev/my/grimoire-css/extensions/vscode/./resources/webview/explorer.css",
+    "./resources/webview/reset.css",
+    "/Users/dmtrshat/dev/my/grimoire-css/extensions/vscode/./resources/webview/actions.css"
+  ]
+}

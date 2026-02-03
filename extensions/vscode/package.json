@@ -1,0 +1,289 @@
+{
+  "name": "grimoirecss-vscode",
+  "displayName": "Grimoire CSS Toolkit",
+  "description": "Grimoire CSS Toolkit: LSP-powered navigation, diagnostics, and project tools.",
+  "icon": "resources/marketplace-icon.png",
+  "version": "1.0.0",
+  "publisher": "persevie",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/persevie/grimoire-css"
+  },
+  "bugs": {
+    "url": "https://github.com/persevie/grimoire-css/issues"
+  },
+  "homepage": "https://github.com/persevie/grimoire-css",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:grimoire/config/grimoire.config.json",
+    "onView:grimoirecss.tools",
+    "onView:grimoirecss.explorer",
+    "onView:grimoirecss.details",
+    "onView:grimoirecss.diagnostics",
+    "onView:grimoirecss.dry",
+    "onView:grimoirecss.config",
+    "onCommand:persevie.grimoirecss-vscode.refresh",
+    "onCommand:persevie.grimoirecss-vscode.check",
+    "onCommand:persevie.grimoirecss-vscode.checkDry",
+    "onCommand:persevie.grimoirecss-vscode.checkLint",
+    "onCommand:persevie.grimoirecss-vscode.showDetails",
+    "onCommand:persevie.grimoirecss-vscode.explainToken",
+    "onCommand:persevie.grimoirecss-vscode.findRefs",
+    "onCommand:persevie.grimoirecss-vscode.stats",
+    "onCommand:persevie.grimoirecss-vscode.dryCreateScroll",
+    "onCommand:persevie.grimoirecss-vscode.openConfig",
+    "onCommand:persevie.grimoirecss-vscode.restartLsp",
+    "onCommand:persevie.grimoirecss-vscode.toggleEditorHighlights",
+    "onCommand:persevie.grimoirecss-vscode.openSettings",
+    "onCommand:persevie.grimoirecss-vscode.build",
+    "onCommand:persevie.grimoirecss-vscode.init",
+    "onCommand:persevie.grimoirecss-vscode.shorten"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "persevie.grimoirecss-vscode.refresh",
+        "title": "GrimoireCSS: Refresh",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.check",
+        "title": "GrimoireCSS: Check (Lint + DRY)"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.checkDry",
+        "title": "Check",
+        "category": "GrimoireCSS"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.checkLint",
+        "title": "Check",
+        "category": "GrimoireCSS"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.showDetails",
+        "title": "GrimoireCSS: Show Details..."
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.explainToken",
+        "title": "GrimoireCSS: Explain Token..."
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.findRefs",
+        "title": "GrimoireCSS: Find Refs..."
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.stats",
+        "title": "GrimoireCSS: Stats..."
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.openConfig",
+        "title": "GrimoireCSS: Open Config"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.restartLsp",
+        "title": "GrimoireCSS: Restart LSP"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.toggleEditorHighlights",
+        "title": "GrimoireCSS: Toggle Editor Highlights"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.openSettings",
+        "title": "GrimoireCSS: Open Settings",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.build",
+        "title": "GrimoireCSS: Build",
+        "icon": "$(tools)"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.init",
+        "title": "GrimoireCSS: Init",
+        "icon": "$(repo-create)"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.shorten",
+        "title": "GrimoireCSS: Shorten",
+        "icon": "$(link)"
+      },
+      {
+        "command": "persevie.grimoirecss-vscode.dryCreateScroll",
+        "title": "GrimoireCSS: Create Scroll from DRY Candidate"
+      }
+    ],
+    "configuration": {
+      "title": "GrimoireCSS",
+      "properties": {
+        "grimoireCss.editorHighlights.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Highlight GrimoireCSS spells/scrolls in the editor (decorations)."
+        },
+        "grimoireCss.editorHighlights.color": {
+          "type": "string",
+          "default": "#639",
+          "description": "Highlight color for GrimoireCSS entities (hex, e.g. #639 or #663399)."
+        },
+        "grimoireCss.editorHighlights.style": {
+          "type": "string",
+          "enum": [
+            "background",
+            "backgroundSoft",
+            "backgroundStrong",
+            "wholeLineBackground",
+            "underlineSolid",
+            "underlineDotted",
+            "underlineDashed",
+            "underlineWavy",
+            "outline",
+            "border",
+            "borderBottomSolid",
+            "borderBottomDotted",
+            "leftBar",
+            "prefixTag",
+            "suffixTag"
+          ],
+          "default": "background",
+          "description": "Highlight style preset for GrimoireCSS entities."
+        },
+        "grimoireCss.editorHighlights.overviewRuler": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show markers in the overview ruler for highlighted entities."
+        },
+        "grimoireCss.lsp.path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Absolute path to grimoire_css_lsp executable. If set, takes precedence over auto-discovery."
+        },
+        "grimoireCss.lsp.prefer": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "local",
+            "downloaded"
+          ],
+          "default": "auto",
+          "description": "Which LSP to prefer when multiple are available."
+        },
+        "grimoireCss.lsp.autoDownload": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow the extension to download the latest released LSP into global storage if needed."
+        },
+        "grimoireCss.trace": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Controls extension logging verbosity."
+        },
+        "grimoireCss.timeouts.executeCommandMs": {
+          "type": "number",
+          "default": 15000,
+          "minimum": 1000,
+          "description": "Timeout for workspace/executeCommand calls."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "grimoirecss",
+          "title": "GrimoireCSS",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "grimoirecss": [
+        {
+          "id": "grimoirecss.explorer",
+          "name": "Explorer",
+          "type": "webview"
+        },
+        {
+          "id": "grimoirecss.details",
+          "name": "Details",
+          "type": "webview"
+        },
+        {
+          "id": "grimoirecss.diagnostics",
+          "name": "Diagnostics"
+        },
+        {
+          "id": "grimoirecss.dry",
+          "name": "DRY"
+        },
+        {
+          "id": "grimoirecss.config",
+          "name": "Config",
+          "type": "webview"
+        },
+        {
+          "id": "grimoirecss.tools",
+          "name": "Tools",
+          "type": "webview"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "persevie.grimoirecss-vscode.checkDry",
+          "when": "view == grimoirecss.dry",
+          "group": "navigation"
+        },
+        {
+          "command": "persevie.grimoirecss-vscode.checkLint",
+          "when": "view == grimoirecss.diagnostics",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "persevie.grimoirecss-vscode.dryCreateScroll",
+          "when": "view == grimoirecss.dry && viewItem == dryCandidate",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write",
+    "format": "biome format . --write",
+    "format:check": "biome format .",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@types/node": "^20.11.30",
+    "@types/semver": "^7.7.1",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "semver": "^7.6.3",
+    "shiki": "^1.0.0",
+    "vscode-languageclient": "^9.0.1"
+  }
+}

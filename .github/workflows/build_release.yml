@@ -52,7 +52,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: 1.93.0
           components: clippy,rustfmt
 
       - name: Print Rust toolchain versions
@@ -113,21 +113,29 @@ jobs:
             target: x86_64-unknown-linux-gnu
             artifact_name: grimoire_css-linux-x86_64
             artifact_path: target/x86_64-unknown-linux-gnu/release/grimoire_css
+            lsp_asset_name: grimoire_css_lsp-linux-x64
+            lsp_artifact_path: target/x86_64-unknown-linux-gnu/release/grimoire_css_lsp
           - name: macos_x86_64
             runs-on: macos-latest
             target: x86_64-apple-darwin
             artifact_name: grimoire_css-macos-x86_64
             artifact_path: target/x86_64-apple-darwin/release/grimoire_css
+            lsp_asset_name: grimoire_css_lsp-darwin-x64
+            lsp_artifact_path: target/x86_64-apple-darwin/release/grimoire_css_lsp
           - name: macos_arm64
             runs-on: macos-latest
             target: aarch64-apple-darwin
             artifact_name: grimoire_css-macos-arm64
             artifact_path: target/aarch64-apple-darwin/release/grimoire_css
+            lsp_asset_name: grimoire_css_lsp-darwin-arm64
+            lsp_artifact_path: target/aarch64-apple-darwin/release/grimoire_css_lsp
           - name: windows_x86_64
             runs-on: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: grimoire_css-windows-x86_64.exe
             artifact_path: target/x86_64-pc-windows-msvc/release/grimoire_css.exe
+            lsp_asset_name: grimoire_css_lsp-win32-x64.exe
+            lsp_artifact_path: target/x86_64-pc-windows-msvc/release/grimoire_css_lsp.exe
 
     steps:
       - name: Checkout Code
@@ -139,7 +147,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: 1.93.0
           target: ${{ matrix.target }}
           components: clippy,rustfmt
 
@@ -174,18 +182,19 @@ jobs:
             ${{ runner.os }}-build-${{ matrix.target }}-
 
       - name: Build project
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }} --features lsp --bin grimoire_css --bin grimoire_css_lsp
 
       - name: Prepare artifact
         run: |
           mkdir -p artifacts
           cp "${{ matrix.artifact_path }}" "artifacts/${{ matrix.artifact_name }}"
+          cp "${{ matrix.lsp_artifact_path }}" "artifacts/${{ matrix.lsp_asset_name }}"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: artifacts/${{ matrix.artifact_name }}
+          name: ${{ matrix.name }}
+          path: artifacts/
 
   publish:
     name: Publish to crates.io
@@ -200,7 +209,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: 1.93.0
           components: clippy,rustfmt
 
       - name: Print Rust toolchain versions
@@ -243,6 +252,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify release notes file exists
+        shell: bash
+        run: |
+          TAG='${{ needs.determine_release.outputs.NEW_TAG }}'
+          NOTES_FILE="releases/${TAG}.md"
+          if [[ ! -f "$NOTES_FILE" ]]; then
+            echo "Missing release notes: $NOTES_FILE" >&2
+            echo "Add $NOTES_FILE (narrative release notes) before releasing." >&2
+            exit 1
+          fi
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -260,7 +280,7 @@ jobs:
         with:
           tag_name: ${{ needs.determine_release.outputs.NEW_TAG }}
           files: ./artifacts/**/*
-          body: "Release of Grimoire CSS version ${{ needs.determine_release.outputs.NEW_TAG }}"
+          body_path: releases/${{ needs.determine_release.outputs.NEW_TAG }}.md
           draft: false
           prerelease: false
         env:

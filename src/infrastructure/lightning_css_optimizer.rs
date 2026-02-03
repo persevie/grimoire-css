@@ -20,10 +20,14 @@ use crate::{
 /// settings defined in `.browserslistrc`. Creates a default configuration if none exists.
 pub struct LightningCssOptimizer {
     targets: Targets,
+    printer_minify: bool,
 }
 
 impl LightningCssOptimizer {
-    fn from_content(browserslist_content: &str) -> Result<Self, GrimoireCssError> {
+    fn from_content(
+        browserslist_content: &str,
+        printer_minify: bool,
+    ) -> Result<Self, GrimoireCssError> {
         let browsers = Browsers::from_browserslist(browserslist_content.lines()).map_err(|e| {
             GrimoireCssError::InvalidInput(format!("Failed to parse browserslist: {e}"))
         })?;
@@ -34,6 +38,7 @@ impl LightningCssOptimizer {
                 include: Default::default(),
                 exclude: Default::default(),
             },
+            printer_minify,
         })
     }
 
@@ -50,11 +55,18 @@ impl LightningCssOptimizer {
         let content = fs::read_to_string(&browserslist_config_path)
             .expect("Failed to read '.browserslistrc' file");
 
-        Self::from_content(&content)
+        Self::from_content(&content, true)
     }
 
     pub fn new_from(browserslist_content: &str) -> Result<Self, GrimoireCssError> {
-        Self::from_content(browserslist_content)
+        Self::from_content(browserslist_content, true)
+    }
+
+    pub fn new_from_with_printer_minify(
+        browserslist_content: &str,
+        printer_minify: bool,
+    ) -> Result<Self, GrimoireCssError> {
+        Self::from_content(browserslist_content, printer_minify)
     }
 }
 
@@ -90,7 +102,7 @@ impl CssOptimizer for LightningCssOptimizer {
         // Generate the final CSS as a string.
         stylesheet
             .to_css(lightningcss::printer::PrinterOptions {
-                minify: true,
+                minify: self.printer_minify,
                 ..Default::default()
             })
             .map(|res| res.code)

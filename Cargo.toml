@@ -1,10 +1,11 @@
 [package]
 name = "grimoire_css"
-version = "1.7.1"
+version = "1.8.0"
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.93.0"
 authors = ["Dmitrii Shatokhin <dmtrshatokhin@gmail.com>"]
 description = "A magical CSS engine for all environments"
+autobins = false
 license = "MIT"
 keywords = ["css", "css-compiler", "styling", "web", "system"]
 categories = ["web-programming", "development-tools"]
@@ -45,9 +46,28 @@ regex = "1.12.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0.17"
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "io-std", "io-util", "process", "time", "sync"], optional = true }
+tower-lsp = { version = "0.20.0", optional = true }
+ureq = { version = "2.12.1", default-features = false, features = ["tls"], optional = true }
 
 [features]
+default = ["analyzer"]
 heap-profile = ["dhat"]
+analyzer = []
+lsp = ["analyzer", "dep:tokio", "dep:tower-lsp", "dep:ureq"]
+
+[[bin]]
+name = "grimoire_css"
+path = "src/main.rs"
+
+[[bin]]
+name = "grimoire_css_lsp"
+path = "src/bin/grimoire_css_lsp.rs"
+required-features = ["lsp"]
+
+[[bin]]
+name = "grim"
+path = "src/bin/grim.rs"
 
 [dev-dependencies]
 tempfile = "3.24.0"

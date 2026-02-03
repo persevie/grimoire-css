@@ -1,0 +1,425 @@
+{
+  "$schema": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json",
+  "lock": true,
+  "projects": [
+    {
+      "inputPaths": ["./src/views/actionsView.ts"],
+      "outputDirPath": "./resources/webview",
+      "projectName": "actions",
+      "singleOutputFileName": "actions.css"
+    },
+    {
+      "inputPaths": ["./src/views/configView.ts"],
+      "outputDirPath": "./resources/webview",
+      "projectName": "config",
+      "singleOutputFileName": "config.css"
+    },
+    {
+      "inputPaths": ["./src/views/detailsView.ts"],
+      "outputDirPath": "./resources/webview",
+      "projectName": "details",
+      "singleOutputFileName": "details.css"
+    },
+    {
+      "inputPaths": ["./src/views/explorerView.ts"],
+      "outputDirPath": "./resources/webview",
+      "projectName": "explorer",
+      "singleOutputFileName": "explorer.css"
+    }
+  ],
+  "scrolls": [
+    {
+      "name": "row-base",
+      "spells": ["flex-wrap=wrap", "display=flex", "gap=6px"]
+    },
+    {
+      "extends": ["row-base"],
+      "name": "row",
+      "spells": [
+        "padding=6px_8px",
+        "cursor=pointer",
+        "border-radius=6px",
+        "{:hover}background=color-mix(in_srgb,_var(--vscode-editor-foreground)_8%,_transparent)"
+      ]
+    },
+    {
+      "name": "note",
+      "spells": ["opacity=0.75", "font-size=12px", "margin=8px_0_0_0"]
+    },
+    {
+      "name": "btn",
+      "spells": [
+        "cursor=pointer",
+        "border=1px_solid_var(--vscode-button-border,_var(--vscode-panel-border))",
+        "appearance=none",
+        "gap=8px",
+        "padding=6px_10px",
+        "display=inline-flex",
+        "line-height=1",
+        "border-radius=8px",
+        "{:hover}filter=brightness(1.05)",
+        "align-items=center",
+        "color=var(--vscode-foreground)",
+        "background=transparent",
+        "cursor=pointer",
+        "border=1px_solid_var(--vscode-panel-border)",
+        "border-radius=6px",
+        "{:hover}background=color-mix(in_srgb,_var(--vscode-editor-foreground)_8%,_transparent)",
+        "padding=6px_10px",
+        "{[data-btn-type='primary']}background=var(--vscode-button-background)",
+        "{[data-btn-type='primary']}color=var(--vscode-button-foreground)",
+        "{[data-btn-type='danger']}border-color=color-mix(in_srgb,_var(--vscode-errorForeground)_55%,_var(--vscode-panel-border))"
+      ]
+    },
+    {
+      "name": "sep",
+      "spells": ["height=8px"]
+    },
+    {
+      "name": "ico",
+      "spells": [
+        "mask=var(--icon)_no-repeat_center_/_contain",
+        "background=currentColor",
+        "width=var(--vscode-editor-font-size)",
+        "height=var(--vscode-editor-font-size)",
+        "display=inline-block"
+      ]
+    },
+    {
+      "name": "details",
+      "spells": [
+        "border-radius=6px",
+        "margin=6px_0",
+        "border=1px_solid_var(--vscode-panel-border)",
+        "padding=6px_8px"
+      ]
+    },
+    {
+      "name": "h2",
+      "spells": ["margin=0_0_8px_0"]
+    },
+    {
+      "name": "summary",
+      "spells": ["cursor=pointer", "padding=8px_10px"]
+    },
+    {
+      "name": "muted",
+      "spells": ["opacity=0.7"]
+    },
+    {
+      "name": "mono",
+      "spells": [
+        "font-family=var(--vscode-editor-font-family)",
+        "font-size=var(--vscode-editor-font-size)",
+        "overflow-wrap=anywhere",
+        "word-break=break-all"
+      ]
+    },
+    {
+      "name": "a",
+      "spells": [
+        "color=var(--vscode-textLink-foreground)",
+        "{:hover}text-decoration=underline",
+        "text-decoration=none"
+      ]
+    },
+    {
+      "name": "k",
+      "spells": ["opacity=0.8"]
+    },
+    {
+      "name": "h3",
+      "spells": ["margin=16px_0_8px_0"]
+    },
+    {
+      "name": "pad",
+      "spells": ["padding=10px"]
+    },
+    {
+      "name": "list",
+      "spells": ["padding-left=18px", "margin=0", "{_li}margin=4px_0"]
+    },
+    {
+      "name": "action-base",
+      "spells": [
+        "display=inline-block",
+        "text-decoration=none",
+        "border=1px_solid_var(--vscode-panel-border)",
+        "border-radius=999px"
+      ]
+    },
+    {
+      "name": "action-sm",
+      "extends": ["action-base"],
+      "spells": ["padding=1px_8px", "font-size=12px"]
+    },
+    {
+      "name": "action",
+      "extends": ["action-base"],
+      "spells": ["padding=2px_8px"]
+    },
+    {
+      "name": "stats",
+      "spells": [
+        "border-radius=6px",
+        "grid-template-columns=1fr",
+        "display=grid",
+        "border=1px_solid_var(--vscode-panel-border)",
+        "padding=8px",
+        "gap=4px"
+      ]
+    },
+    {
+      "name": "token",
+      "spells": [
+        "font-weight=600",
+        "text-decoration=underline",
+        "text-underline-offset=2px",
+        "font-style=italic"
+      ]
+    },
+    {
+      "name": "titlebar",
+      "spells": [
+        "justify-content=space-between",
+        "align-items=center",
+        "display=flex",
+        "gap=10px",
+        "margin=0_0_8px_0"
+      ]
+    },
+    {
+      "name": "kv-copy",
+      "spells": [
+        "align-items=start",
+        "grid-template-columns=max-content_auto_max-content"
+      ]
+    },
+    {
+      "name": "kv",
+      "spells": [
+        "border-radius=6px",
+        "padding=8px",
+        "grid-template-columns=max-content_auto",
+        "word-break=break-word",
+        "gap=10px",
+        "border=1px_solid_var(--vscode-panel-border)",
+        "display=grid",
+        "min-width=0",
+        "overflow-wrap=anywhere"
+      ]
+    },
+    {
+      "name": "code-shiki",
+      "spells": [
+        "{_pre}background-image=none_!important",
+        "{_pre}overflow=auto",
+        "{_code}font-size=var(--vscode-editor-font-size)",
+        "{_code}white-space=pre",
+        "{_code}line-height=1.45",
+        "display=block",
+        "{_pre}border-radius=6px",
+        "{_pre}margin=0",
+        "{_pre}background-color=transparent_!important",
+        "background-color=transparent_!important",
+        "{_span}background=transparent_!important",
+        "{_pre}padding=10px",
+        "{_code}font-family=var(--vscode-editor-font-family)",
+        "{_pre}background=transparent_!important",
+        "{_code}font-weight=var(--grimoire-editor-font-weight,_normal)",
+        "{_span}background-color=transparent_!important",
+        "background=transparent_!important"
+      ]
+    },
+    {
+      "name": "id",
+      "spells": [
+        "text-underline-offset=2px",
+        "font-weight=600",
+        "text-decoration=underline"
+      ]
+    },
+    {
+      "name": "warn",
+      "spells": ["color=var(--vscode-notificationsWarningIcon-foreground)"]
+    },
+    {
+      "name": "pseudo-element",
+      "spells": ["text-underline-offset=2px", "text-decoration=underline"]
+    },
+    {
+      "name": "list",
+      "spells": ["padding-left=18px", "margin=0", "{_li}margin=4px_0"]
+    },
+    {
+      "name": "line",
+      "spells": [
+        "display=block",
+        "background=transparent_!important",
+        "background-color=transparent_!important"
+      ]
+    },
+    {
+      "name": "preview-area",
+      "spells": [
+        "align-items=center",
+        "overflow=hidden",
+        "position=relative",
+        "background=color-mix(in_srgb,_var(--vscode-editor-foreground)_4%,_transparent)",
+        "justify-content=center",
+        "padding=24px",
+        "border-radius=8px",
+        "border=1px_solid_var(--vscode-panel-border)",
+        "display=flex"
+      ]
+    },
+    {
+      "name": "error",
+      "spells": ["color=var(--vscode-errorForeground)"]
+    },
+    {
+      "name": "code",
+      "spells": [
+        "border=1px_solid_var(--vscode-panel-border)",
+        "margin=0",
+        "background=transparent",
+        "overflow=auto",
+        "border-radius=6px"
+      ]
+    },
+    {
+      "name": "actions",
+      "spells": ["margin=0_0_8px_0"]
+    },
+    {
+      "name": "pseudo-class",
+      "spells": ["font-style=italic"]
+    },
+    {
+      "name": "code-plain",
+      "spells": [
+        "{_code}line-height=1.45",
+        "{_code}font-family=var(--vscode-editor-font-family)",
+        "border-radius=6px",
+        "padding=10px",
+        "{_code}font-weight=var(--grimoire-editor-font-weight,_normal)",
+        "{_code}font-size=var(--vscode-editor-font-size)",
+        "{_code}display=block",
+        "{_code}white-space=pre"
+      ]
+    },
+    {
+      "name": "v",
+      "spells": [
+        "word-break=break-word",
+        "font-weight=600",
+        "min-width=0",
+        "overflow-wrap=anywhere"
+      ]
+    },
+    {
+      "name": "preview-element",
+      "spells": [
+        "width=clamp(60px,_20vw,_120px)",
+        "animation-iteration-count=infinite",
+        "background=var(--grimoire-brand-5)",
+        "transform-origin=center",
+        "height=clamp(60px,_20vw,_120px)",
+        "animation-duration=1s",
+        "border-radius=8px",
+        "animation-timing-function=ease",
+        "animation-fill-mode=both",
+        "will-change=transform,_opacity"
+      ]
+    },
+    {
+      "name": "header-r",
+      "spells": [
+        "align-items=center",
+        "display=flex",
+        "gap=10px",
+        "white-space=nowrap"
+      ]
+    },
+    {
+      "name": "meta",
+      "spells": [
+        "font-size=12px",
+        "margin-top=2px",
+        "opacity=0.8",
+        "overflow-wrap=anywhere",
+        "word-break=break-all"
+      ]
+    },
+    {
+      "name": "group",
+      "spells": [
+        "border-radius=8px",
+        "margin=0_0_10px_0",
+        "border=1px_solid_var(--vscode-panel-border)",
+        "{_summary}cursor=pointer",
+        "{_summary}padding=8px_10px",
+        "{>_div}padding=0_10px_10px_10px",
+        "{_summary}font-weight=600"
+      ]
+    },
+    {
+      "name": "app",
+      "spells": ["height=100vh", "display=grid", "grid-template-rows=auto_1fr"]
+    },
+    {
+      "name": "search",
+      "spells": [
+        "color=var(--vscode-input-foreground)",
+        "outline=none",
+        "width=100%",
+        "background=var(--vscode-input-background)",
+        "padding=8px_10px",
+        "border-radius=6px",
+        "border=1px_solid_var(--vscode-input-border)"
+      ]
+    },
+    {
+      "name": "header",
+      "spells": [
+        "display=grid",
+        "top=0",
+        "z-index=10",
+        "padding=10px",
+        "align-items=center",
+        "gap=10px",
+        "color=var(--vscode-sideBar-foreground)",
+        "background=var(--vscode-sideBar-background)",
+        "grid-template-columns=1fr_auto",
+        "position=sticky"
+      ]
+    },
+    {
+      "name": "name",
+      "spells": [
+        "word-break=break-word",
+        "overflow-wrap=anywhere",
+        "font-weight=600"
+      ]
+    },
+    {
+      "name": "rows",
+      "spells": [
+        "display=grid",
+        "grid-auto-flow=rows",
+        "grid-auto-rows=max-content",
+        "grid-row-gap=10px"
+      ]
+    },
+    {
+      "name": "v-mono",
+      "spells": ["mono", "v"]
+    }
+  ],
+  "shared": [
+    {
+      "outputPath": "./resources/webview/reset.css",
+      "styles": ["./grimoire/reset.css"]
+    }
+  ]
+}

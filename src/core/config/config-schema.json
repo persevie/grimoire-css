@@ -10,6 +10,11 @@
       "format": "uri",
       "default": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json"
     },
+    "version": {
+      "type": "string",
+      "description": "Grimoire CSS version that last wrote/validated this config (semver)",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
+    },
     "variables": {
       "type": "object",
       "description": "Optional framework-level variables used during compilation",
@@ -73,6 +78,19 @@
           "items": {
             "type": "string"
           }
+        },
+        "spellsByArgs": {
+          "type": "object",
+          "description": "Optional overloads selected by argument count (keys: '0', '1', ...)",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
         },
         "extends": {
           "type": "array",
