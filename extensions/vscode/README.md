@@ -1,7 +1,7 @@
 # Grimoire CSS Toolkit
 
 <div align="center">
-<img height="128" alt="Grimoire CSS logo" src="../../assets/grimoire-css-logo.svg">
+<img height="128" alt="Grimoire CSS logo" src="resources/marketplace-icon.png">
 </div>
 
 VS Code toolkit for **Grimoire CSS** projects.
