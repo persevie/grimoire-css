@@ -7,6 +7,11 @@ use super::{
 };
 use crate::core::{CompiledCssInMemory, ConfigInMemory, CssOptimizer, GrimoireCssError};
 
+#[derive(Debug, Clone, Copy, Default)]
+pub struct CliOptions {
+    pub force_version_update: bool,
+}
+
 /// Processes the provided mode and delegates handling to the appropriate functionality.
 ///
 /// This function acts as the entry point for various operational modes such as `init` and `build`.
@@ -27,12 +32,28 @@ pub fn process_mode_and_handle<O: CssOptimizer>(
     current_dir: &Path,
     css_optimizer: &O,
 ) -> Result<(), GrimoireCssError> {
+    process_mode_and_handle_with_options(mode, current_dir, css_optimizer, CliOptions::default())
+}
+
+pub fn process_mode_and_handle_with_options<O: CssOptimizer>(
+    mode: &str,
+    current_dir: &Path,
+    css_optimizer: &O,
+    options: CliOptions,
+) -> Result<(), GrimoireCssError> {
     match mode {
         "init" => {
             init(current_dir, mode)?;
         }
         "build" => {
-            build(current_dir, css_optimizer, mode)?;
+            build(
+                current_dir,
+                css_optimizer,
+                mode,
+                super::build::BuildOptions {
+                    force_version_update: options.force_version_update,
+                },
+            )?;
         }
         "shorten" => {
             shorten(current_dir)?;

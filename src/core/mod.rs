@@ -31,3 +31,20 @@ pub use grimoire_css_error::*;
 pub use source_file::*;
 // Exception: This external dependency was part of the Grimoire CSS and is now included as a separate crate, but should still be part of the main module and available for use.
 pub use grimoire_css_color_toolkit_lib::*;
+
+#[cfg(feature = "lsp")]
+pub fn list_builtin_animation_names() -> Vec<String> {
+    let mut names: Vec<String> = animations::ANIMATIONS.keys().cloned().collect();
+    names.sort();
+    names
+}
+
+#[cfg(feature = "lsp")]
+pub fn get_builtin_animation_css(name: &str) -> Option<String> {
+    animations::ANIMATIONS.get(name).cloned()
+}
+
+#[cfg(feature = "lsp")]
+pub fn list_spell_color_functions() -> Vec<(&'static str, &'static str)> {
+    css_generator::color_functions::list_spell_color_functions()
+}

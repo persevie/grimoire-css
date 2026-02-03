@@ -21,13 +21,26 @@ use std::path::Path;
 /// * `Err(GrimoireCSSError)` - If there is an error during loading or saving the configuration.
 pub fn init(current_dir: &Path, mode: &str) -> Result<ConfigFs, GrimoireCssError> {
     match ConfigFs::load(current_dir) {
-        Ok(config) => {
+        Ok(mut config) => {
             if mode == "init" {
+                let current_version = env!("CARGO_PKG_VERSION");
+                let needs_update = match config.grimoire_css_version.as_deref() {
+                    Some(v) => v != current_version,
+                    None => true,
+                };
+
+                if needs_update {
+                    ConfigFs::update_config_version_only(current_dir, current_version)?;
+                    config.grimoire_css_version = Some(current_version.to_string());
+                }
+
                 add_message(format!(
-                    "Configuration file already exists at {}.",
-                    current_dir.display()
+                    "Configuration is present at {} (version={}).",
+                    current_dir.display(),
+                    current_version
                 ));
             }
+
             Ok(config)
         }
         Err(err) => match err {

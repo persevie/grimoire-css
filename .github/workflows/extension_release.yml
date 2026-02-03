@@ -1,0 +1,145 @@
+name: Extension (VS Code) Build and Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "extensions/vscode/**"
+
+permissions:
+  contents: write
+
+jobs:
+  determine_release:
+    name: Determine if extension release is needed
+    runs-on: ubuntu-latest
+    outputs:
+      SHOULD_RELEASE: ${{ steps.release_check.outputs.SHOULD_RELEASE }}
+      NEW_TAG: ${{ steps.release_check.outputs.NEW_TAG }}
+      EXT_VERSION: ${{ steps.release_check.outputs.EXT_VERSION }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine if release is needed
+        id: release_check
+        shell: bash
+        run: |
+          git fetch --tags
+          EXT_VERSION=$(node -p "require('./extensions/vscode/package.json').version")
+          echo "Extension version: $EXT_VERSION"
+          TAG="vscode-v$EXT_VERSION"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists. No release needed."
+            echo "SHOULD_RELEASE=false" >> $GITHUB_OUTPUT
+          else
+            echo "No existing tag for version $EXT_VERSION. Release is needed."
+            echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
+            echo "NEW_TAG=$TAG" >> $GITHUB_OUTPUT
+            echo "EXT_VERSION=$EXT_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Build VSIX
+    runs-on: ubuntu-latest
+    needs: determine_release
+    if: needs.determine_release.outputs.SHOULD_RELEASE == 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "extensions/vscode/package-lock.json"
+
+      - name: Install
+        working-directory: extensions/vscode
+        run: npm ci
+
+      - name: Lint (Biome)
+        working-directory: extensions/vscode
+        run: npm run lint
+
+      - name: Compile (tsc)
+        working-directory: extensions/vscode
+        run: npm run compile
+
+      - name: Install vsce
+        run: npm i -g @vscode/vsce
+
+      - name: Package VSIX
+        working-directory: extensions/vscode
+        run: |
+          vsce package -o "grimoirecss-vscode-${{ needs.determine_release.outputs.EXT_VERSION }}.vsix"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: extensions/vscode/*.vsix
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [determine_release, build]
+    if: needs.determine_release.outputs.SHOULD_RELEASE == 'true'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vsix
+          path: ./vsix
+
+      - name: Create and push tag
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git tag -a "${{ needs.determine_release.outputs.NEW_TAG }}" -m "VS Code extension release ${{ needs.determine_release.outputs.NEW_TAG }}"
+          git push origin "${{ needs.determine_release.outputs.NEW_TAG }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.determine_release.outputs.NEW_TAG }}
+          files: ./vsix/*.vsix
+          body: "Release of GrimoireCSS VS Code extension v${{ needs.determine_release.outputs.EXT_VERSION }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install vsce
+        run: npm i -g @vscode/vsce
+
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        shell: bash
+        run: |
+          if [[ -z "$VSCE_PAT" ]]; then
+            echo "VSCE_PAT is not set; skipping VS Code Marketplace publish."
+            exit 0
+          fi
+          VSIX_PATH=$(ls -1 ./vsix/*.vsix | head -n 1)
+          echo "Publishing $VSIX_PATH"
+          vsce publish --packagePath "$VSIX_PATH" -p "$VSCE_PAT"

@@ -5,6 +5,7 @@
 //! based on the selected mode or action.
 
 mod build;
+pub(crate) mod fi;
 pub mod handler;
 mod init;
 mod shorten;

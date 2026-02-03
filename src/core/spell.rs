@@ -30,7 +30,8 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use super::{
-    GrimoireCssError, component::get_css_property, source_file::SourceFile, spell_value_validator,
+    GrimoireCssError, ScrollDefinition, component::get_css_property, source_file::SourceFile,
+    spell_value_validator,
 };
 
 #[derive(Debug, Clone)]
@@ -110,9 +111,28 @@ impl Spell {
     pub fn new(
         raw_spell: &str,
         shared_spells: &HashSet<String>,
-        scrolls: &Option<HashMap<String, Vec<String>>>,
+        scrolls: &Option<HashMap<String, ScrollDefinition>>,
         span: (usize, usize),
         source: Option<Arc<SourceFile>>,
+    ) -> Result<Option<Self>, GrimoireCssError> {
+        let mut expansion_stack: Vec<String> = Vec::new();
+        Self::new_impl(
+            raw_spell,
+            shared_spells,
+            scrolls,
+            span,
+            source,
+            &mut expansion_stack,
+        )
+    }
+
+    fn new_impl(
+        raw_spell: &str,
+        shared_spells: &HashSet<String>,
+        scrolls: &Option<HashMap<String, ScrollDefinition>>,
+        span: (usize, usize),
+        source: Option<Arc<SourceFile>>,
+        expansion_stack: &mut Vec<String>,
     ) -> Result<Option<Self>, GrimoireCssError> {
         let with_template = Self::check_for_template(raw_spell);
         let raw_spell_cleaned = if with_template {
@@ -130,11 +150,20 @@ impl Spell {
             .collect();
 
         // Template spell: keep outer spell and parse inner spells.
+        // Note: templates can either be a list of property spells (e.g. g!color=red--display=flex;)
+        // or a scroll invocation with args (e.g. g!box=10px_20px;).
         if with_template && !raw_spell_split.is_empty() {
             let mut scroll_spells: Vec<Spell> = Vec::new();
 
-            for rs in raw_spell_split {
-                if let Some(spell) = Spell::new(rs, shared_spells, scrolls, span, source.clone())? {
+            for rs in &raw_spell_split {
+                if let Some(spell) = Spell::new_impl(
+                    rs,
+                    shared_spells,
+                    scrolls,
+                    span,
+                    source.clone(),
+                    expansion_stack,
+                )? {
                     let mut spell = spell;
 
                     // If a template part is a scroll invocation (e.g. complex-card=120px_red_100px),
@@ -172,12 +201,13 @@ impl Spell {
 
                             for inner in inner_scroll_spells {
                                 let combined = format!("{prefix}{}", inner.raw_spell);
-                                if let Some(reparsed) = Spell::new(
+                                if let Some(reparsed) = Spell::new_impl(
                                     &combined,
                                     shared_spells,
                                     scrolls,
                                     span,
                                     source.clone(),
+                                    expansion_stack,
                                 )? {
                                     scroll_spells.push(reparsed);
                                 }
@@ -297,15 +327,16 @@ Use '_' inside spell values to represent spaces."
 
             let component = spell.component();
 
-            if let Some(raw_scroll_spells) = Self::check_raw_scroll_spells(component, scrolls) {
+            if let Some(scroll_def) = Self::check_raw_scroll_spells(component, scrolls) {
                 spell.scroll_spells = Self::parse_scroll(
                     component,
-                    raw_scroll_spells,
+                    scroll_def,
                     spell.component_target(),
                     shared_spells,
                     scrolls,
                     span,
                     source,
+                    expansion_stack,
                 )?;
             } else if !component.starts_with("--") && get_css_property(component).is_none() {
                 let message = format!("Unknown component or scroll: '{component}'");
@@ -330,7 +361,7 @@ Use '_' inside spell values to represent spaces."
 
         // scroll (no '=')
         if after_effects_start <= raw.len()
-            && let Some(raw_scroll_spells) =
+            && let Some(scroll_def) =
                 Self::check_raw_scroll_spells(&raw[after_effects_start..], scrolls)
         {
             let component_range = after_effects_start..raw.len();
@@ -354,12 +385,13 @@ Use '_' inside spell values to represent spaces."
             let component = spell.component();
             spell.scroll_spells = Self::parse_scroll(
                 component,
-                raw_scroll_spells,
+                scroll_def,
                 "",
                 shared_spells,
                 scrolls,
                 span,
                 source,
+                expansion_stack,
             )?;
 
             return Ok(Some(spell));
@@ -374,68 +406,32 @@ Use '_' inside spell values to represent spaces."
 
     fn check_raw_scroll_spells<'a>(
         scroll_name: &str,
-        scrolls: &'a Option<HashMap<String, Vec<String>>>,
-    ) -> Option<&'a Vec<String>> {
+        scrolls: &'a Option<HashMap<String, ScrollDefinition>>,
+    ) -> Option<&'a ScrollDefinition> {
         scrolls.as_ref()?.get(scroll_name)
     }
 
     #[allow(clippy::too_many_arguments)]
     fn parse_scroll(
         scroll_name: &str,
-        raw_scroll_spells: &[String],
+        scroll_def: &ScrollDefinition,
         component_target: &str,
         shared_spells: &HashSet<String>,
-        scrolls: &Option<HashMap<String, Vec<String>>>,
+        scrolls: &Option<HashMap<String, ScrollDefinition>>,
         span: (usize, usize),
         source: Option<Arc<SourceFile>>,
+        expansion_stack: &mut Vec<String>,
     ) -> Result<Option<Vec<Spell>>, GrimoireCssError> {
-        if raw_scroll_spells.is_empty() {
-            return Ok(None);
-        }
-
-        let scroll_variables: Vec<&str> = component_target.split('_').collect();
-        let count_of_variables = if component_target.is_empty() {
-            0
+        let key = if component_target.is_empty() {
+            scroll_name.to_string()
         } else {
-            scroll_variables.len()
+            format!("{scroll_name}={component_target}")
         };
-        let mut count_of_used_variables = 0;
 
-        let mut spells = Vec::with_capacity(raw_scroll_spells.len());
-
-        for raw_spell in raw_scroll_spells.iter() {
-            if raw_spell.contains("=$") {
-                if count_of_used_variables > scroll_variables.len().saturating_sub(1) {
-                    break;
-                }
-
-                let variabled_raw_spell = raw_spell.replace(
-                    "=$",
-                    format!("={}", scroll_variables[count_of_used_variables]).as_str(),
-                );
-
-                if let Ok(Some(spell)) = Spell::new(
-                    &variabled_raw_spell,
-                    shared_spells,
-                    scrolls,
-                    span,
-                    source.clone(),
-                ) {
-                    spells.push(spell);
-                }
-
-                count_of_used_variables += 1;
-            } else if let Ok(Some(spell)) =
-                Spell::new(raw_spell, shared_spells, scrolls, span, source.clone())
-            {
-                spells.push(spell);
-            }
-        }
-
-        if count_of_used_variables != count_of_variables {
-            let message = format!(
-                "Variable count mismatch for scroll '{scroll_name}'. Provided {count_of_variables} arguments, but scroll definition uses {count_of_used_variables}",
-            );
+        if let Some(start) = expansion_stack.iter().position(|k| k == &key) {
+            let mut cycle = expansion_stack[start..].to_vec();
+            cycle.push(key.clone());
+            let message = format!("Cycle detected in scroll expansion: {}", cycle.join(" -> "));
 
             if let Some(src) = &source {
                 return Err(GrimoireCssError::InvalidSpellFormat {
@@ -443,28 +439,329 @@ Use '_' inside spell values to represent spaces."
                     span,
                     label: "Error in this spell".to_string(),
                     help: Some(
-                        "Pass exactly N arguments separated by '_' (underscores).\n\
-Example: complex-card=arg1_arg2_arg3"
+                        "Fix the scroll definitions so they don't reference each other in a cycle."
                             .to_string(),
                     ),
                     source_file: Some(src.clone()),
                 });
+            }
+
+            return Err(GrimoireCssError::InvalidInput(message));
+        }
+
+        expansion_stack.push(key);
+        let result: Result<Option<Vec<Spell>>, GrimoireCssError> = (|| {
+            let scroll_variables: Vec<&str> = if component_target.is_empty() {
+                Vec::new()
             } else {
-                return Err(GrimoireCssError::InvalidInput(message));
+                component_target.split('_').collect()
+            };
+            let count_of_variables = scroll_variables.len();
+
+            // Select overload by argument count if present.
+            let overload_key = count_of_variables.to_string();
+            let overload_spells_opt = scroll_def
+                .spells_by_args
+                .as_ref()
+                .and_then(|m| m.get(&overload_key));
+
+            // If spellsByArgs exists but no matching arity is defined:
+            // - for 0 args: treat it as "no overload" and compile base spells only
+            // - for N>0: keep strictness (likely a user mistake / unsupported arity)
+            if count_of_variables > 0
+                && let Some(map) = &scroll_def.spells_by_args
+                && !map.is_empty()
+                && overload_spells_opt.is_none()
+            {
+                let mut available: Vec<_> = map.keys().cloned().collect();
+                available.sort();
+                let message = format!(
+                    "No overload for scroll '{scroll_name}' with {count_of_variables} arguments"
+                );
+
+                if let Some(src) = &source {
+                    return Err(GrimoireCssError::InvalidSpellFormat {
+                        message,
+                        span,
+                        label: "Error in this spell".to_string(),
+                        help: Some(format!(
+                            "Define spellsByArgs['{count_of_variables}'] for this scroll, or pass one of the supported arities: {}",
+                            available.join(", ")
+                        )),
+                        source_file: Some(src.clone()),
+                    });
+                } else {
+                    return Err(GrimoireCssError::InvalidInput(message));
+                }
+            }
+
+            // Build selected spells: base + overload.
+            let mut selected: Vec<&String> = scroll_def.spells.iter().collect();
+            if let Some(overload_spells) = overload_spells_opt {
+                selected.extend(overload_spells.iter());
+            }
+
+            if selected.is_empty() {
+                return Ok(None);
+            }
+
+            // Keep strictness: the provided arg count must match what the selected spells require.
+            let expected_arity = Self::infer_expected_scroll_arity(&selected);
+            if expected_arity != count_of_variables {
+                let message = format!(
+                    "Variable count mismatch for scroll '{scroll_name}'. Provided {count_of_variables} arguments, but scroll definition expects {expected_arity}",
+                );
+
+                if let Some(src) = &source {
+                    return Err(GrimoireCssError::InvalidSpellFormat {
+                        message,
+                        span,
+                        label: "Error in this spell".to_string(),
+                        help: Some(
+                            "Pass exactly N arguments separated by '_' (underscores).\n\
+Example: complex-card=arg1_arg2_arg3"
+                                .to_string(),
+                        ),
+                        source_file: Some(src.clone()),
+                    });
+                } else {
+                    return Err(GrimoireCssError::InvalidInput(message));
+                }
+            }
+
+            let mut sequential_index: usize = 0;
+            let mut spells = Vec::with_capacity(selected.len());
+
+            for raw_spell in selected {
+                if let Some((placeholder_pos, digits_len)) = Self::find_placeholder(raw_spell) {
+                    let explicit_index = if digits_len == 0 {
+                        None
+                    } else {
+                        raw_spell[placeholder_pos + 2..placeholder_pos + 2 + digits_len]
+                            .parse::<usize>()
+                            .ok()
+                    };
+
+                    let arg_index_0_based = if let Some(one_based) = explicit_index {
+                        if one_based == 0 {
+                            let message = format!(
+                                "Invalid placeholder '$0' in scroll '{scroll_name}' (arguments are 1-based: $1, $2, ...)"
+                            );
+                            if let Some(src) = &source {
+                                return Err(GrimoireCssError::InvalidSpellFormat {
+                                    message,
+                                    span,
+                                    label: "Error in this spell".to_string(),
+                                    help: Some("Use $1 for the first argument.".to_string()),
+                                    source_file: Some(src.clone()),
+                                });
+                            }
+                            return Err(GrimoireCssError::InvalidInput(message));
+                        }
+                        one_based - 1
+                    } else {
+                        let idx = sequential_index;
+                        sequential_index += 1;
+                        idx
+                    };
+
+                    if arg_index_0_based >= scroll_variables.len() {
+                        let message = format!(
+                            "Scroll '{scroll_name}' references argument {} but only {count_of_variables} were provided",
+                            arg_index_0_based + 1
+                        );
+                        if let Some(src) = &source {
+                            return Err(GrimoireCssError::InvalidSpellFormat {
+                                message,
+                                span,
+                                label: "Error in this spell".to_string(),
+                                help: Some(
+                                    "Pass enough arguments separated by '_' (underscores), or fix the scroll definition placeholders."
+                                        .to_string(),
+                                ),
+                                source_file: Some(src.clone()),
+                            });
+                        }
+                        return Err(GrimoireCssError::InvalidInput(message));
+                    }
+
+                    let replacement = scroll_variables[arg_index_0_based];
+                    let mut variabled_raw_spell = String::new();
+                    variabled_raw_spell.push_str(&raw_spell[..placeholder_pos]);
+                    variabled_raw_spell.push('=');
+                    variabled_raw_spell.push_str(replacement);
+                    variabled_raw_spell.push_str(&raw_spell[placeholder_pos + 2 + digits_len..]);
+
+                    if let Some(spell) = Spell::new_impl(
+                        &variabled_raw_spell,
+                        shared_spells,
+                        scrolls,
+                        span,
+                        source.clone(),
+                        expansion_stack,
+                    )? {
+                        Self::push_flattened_spell(
+                            spell,
+                            &mut spells,
+                            shared_spells,
+                            scrolls,
+                            span,
+                            source.clone(),
+                            expansion_stack,
+                        )?;
+                    }
+                } else if let Some(spell) = Spell::new_impl(
+                    raw_spell,
+                    shared_spells,
+                    scrolls,
+                    span,
+                    source.clone(),
+                    expansion_stack,
+                )? {
+                    Self::push_flattened_spell(
+                        spell,
+                        &mut spells,
+                        shared_spells,
+                        scrolls,
+                        span,
+                        source.clone(),
+                        expansion_stack,
+                    )?;
+                }
+            }
+
+            if spells.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(spells))
+            }
+        })();
+
+        // Pop our key before returning.
+        expansion_stack.pop();
+        result
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn push_flattened_spell(
+        mut spell: Spell,
+        out: &mut Vec<Spell>,
+        shared_spells: &HashSet<String>,
+        scrolls: &Option<HashMap<String, ScrollDefinition>>,
+        span: (usize, usize),
+        source: Option<Arc<SourceFile>>,
+        expansion_stack: &mut Vec<String>,
+    ) -> Result<(), GrimoireCssError> {
+        let area = spell.area().to_string();
+        let focus = spell.focus().to_string();
+        let effects = spell.effects().to_string();
+
+        if let Some(inner_scroll_spells) = spell.scroll_spells.take() {
+            let has_prefix = !area.is_empty() || !focus.is_empty() || !effects.is_empty();
+
+            if has_prefix {
+                let mut prefix = String::new();
+
+                if !area.is_empty() {
+                    prefix.push_str(&area);
+                    prefix.push_str("__");
+                }
+
+                if !focus.is_empty() {
+                    prefix.push('{');
+                    prefix.push_str(&focus);
+                    prefix.push('}');
+                }
+
+                if !effects.is_empty() {
+                    prefix.push_str(&effects);
+                    prefix.push(':');
+                }
+
+                for inner in inner_scroll_spells {
+                    let combined = format!("{prefix}{}", inner.raw_spell);
+                    if let Some(reparsed) = Spell::new_impl(
+                        &combined,
+                        shared_spells,
+                        scrolls,
+                        span,
+                        source.clone(),
+                        expansion_stack,
+                    )? {
+                        Self::push_flattened_spell(
+                            reparsed,
+                            out,
+                            shared_spells,
+                            scrolls,
+                            span,
+                            source.clone(),
+                            expansion_stack,
+                        )?;
+                    }
+                }
+            } else {
+                for inner in inner_scroll_spells {
+                    Self::push_flattened_spell(
+                        inner,
+                        out,
+                        shared_spells,
+                        scrolls,
+                        span,
+                        source.clone(),
+                        expansion_stack,
+                    )?;
+                }
+            }
+
+            return Ok(());
+        }
+
+        out.push(spell);
+        Ok(())
+    }
+
+    /// Finds the first placeholder occurrence in a spell value.
+    ///
+    /// Supported patterns are `=$` (sequential) and `=$N` (explicit 1-based index).
+    /// Returns `(pos_of_"=$"_start, digits_len_after_$)`.
+    fn find_placeholder(raw_spell: &str) -> Option<(usize, usize)> {
+        let pos = raw_spell.find("=$")?;
+        let mut digits_len = 0usize;
+        for ch in raw_spell[pos + 2..].chars() {
+            if ch.is_ascii_digit() {
+                digits_len += 1;
+            } else {
+                break;
+            }
+        }
+        Some((pos, digits_len))
+    }
+
+    /// Infer expected arity from placeholders in the selected scroll spells.
+    ///
+    /// - Each `=$` consumes one sequential argument.
+    /// - Each `=$N` requires at least `N` arguments.
+    fn infer_expected_scroll_arity(spells: &[&String]) -> usize {
+        let mut sequential = 0usize;
+        let mut max_explicit = 0usize;
+
+        for s in spells {
+            if let Some((pos, digits_len)) = Self::find_placeholder(s) {
+                if digits_len == 0 {
+                    sequential += 1;
+                } else if let Ok(n) = s[pos + 2..pos + 2 + digits_len].parse::<usize>() {
+                    max_explicit = max_explicit.max(n);
+                }
             }
         }
 
-        if spells.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(spells))
-        }
+        sequential.max(max_explicit)
     }
 
     pub fn generate_spells_from_classes(
         css_classes: Vec<(String, (usize, usize))>,
         shared_spells: &HashSet<String>,
-        scrolls: &Option<HashMap<String, Vec<String>>>,
+        scrolls: &Option<HashMap<String, ScrollDefinition>>,
         source: Option<Arc<SourceFile>>,
     ) -> Result<Vec<Spell>, GrimoireCssError> {
         let mut spells = Vec::with_capacity(css_classes.len());
@@ -483,6 +780,7 @@ Example: complex-card=arg1_arg2_arg3"
 
 #[cfg(test)]
 mod tests {
+    use crate::core::ScrollDefinition;
     use crate::core::source_file::SourceFile;
     use crate::core::spell::Spell;
     use std::collections::{HashMap, HashSet};
@@ -491,7 +789,7 @@ mod tests {
     #[test]
     fn test_multiple_raw_spells_in_template() {
         let shared_spells = HashSet::new();
-        let scrolls: Option<HashMap<String, Vec<String>>> = None;
+        let scrolls: Option<HashMap<String, ScrollDefinition>> = None;
         let raw = "g!color=red--display=flex;";
         let spell = Spell::new(raw, &shared_spells, &scrolls, (0, 0), None)
             .expect("parse ok")
@@ -509,10 +807,13 @@ mod tests {
     #[test]
     fn test_scroll_can_be_used_inside_template_attribute() {
         let shared_spells = HashSet::new();
-        let mut scrolls_map: HashMap<String, Vec<String>> = HashMap::new();
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
         scrolls_map.insert(
             "complex-card".to_string(),
-            vec!["h=$".to_string(), "c=$".to_string(), "w=$".to_string()],
+            ScrollDefinition {
+                spells: vec!["h=$".to_string(), "c=$".to_string(), "w=$".to_string()],
+                spells_by_args: None,
+            },
         );
         let scrolls = Some(scrolls_map);
 
@@ -537,7 +838,7 @@ mod tests {
     #[test]
     fn test_non_grimoire_plain_class_is_ignored() {
         let shared_spells = HashSet::new();
-        let scrolls: Option<HashMap<String, Vec<String>>> = None;
+        let scrolls: Option<HashMap<String, ScrollDefinition>> = None;
 
         // Plain CSS class (no '=') must not be treated as a spell.
         let spell = Spell::new(
@@ -554,5 +855,234 @@ mod tests {
         .expect("parsing must not fail");
 
         assert!(spell.is_none());
+    }
+
+    #[test]
+    fn test_scroll_spells_by_args_overload_and_explicit_indices() {
+        let shared_spells = HashSet::new();
+
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
+        scrolls_map.insert(
+            "box".to_string(),
+            ScrollDefinition {
+                spells: vec![
+                    "height=var(--box-height)".to_string(),
+                    "width=var(--box-width)".to_string(),
+                ],
+                spells_by_args: Some(HashMap::from([
+                    (
+                        "0".to_string(),
+                        vec![
+                            "padding-top=100%".to_string(),
+                            "padding-right=100%".to_string(),
+                            "padding-bottom=100%".to_string(),
+                            "padding-left=100%".to_string(),
+                        ],
+                    ),
+                    (
+                        "2".to_string(),
+                        vec![
+                            "padding-top=$1".to_string(),
+                            "padding-bottom=$1".to_string(),
+                            "padding-left=$2".to_string(),
+                            "padding-right=$2".to_string(),
+                        ],
+                    ),
+                ])),
+            },
+        );
+
+        let scrolls = Some(scrolls_map);
+
+        let raw = "g!box=10px_20px;";
+        let spell = Spell::new(raw, &shared_spells, &scrolls, (0, 0), None)
+            .expect("parse ok")
+            .expect("not None");
+        let spells = spell.scroll_spells.as_ref().expect("template spells");
+        let raw_spells: Vec<String> = spells.iter().map(|s| s.raw_spell.clone()).collect();
+
+        assert!(raw_spells.contains(&"height=var(--box-height)".to_string()));
+        assert!(raw_spells.contains(&"width=var(--box-width)".to_string()));
+        assert!(raw_spells.contains(&"padding-top=10px".to_string()));
+        assert!(raw_spells.contains(&"padding-bottom=10px".to_string()));
+        assert!(raw_spells.contains(&"padding-left=20px".to_string()));
+        assert!(raw_spells.contains(&"padding-right=20px".to_string()));
+
+        // 0-args overload via scroll invocation without '=' (inside template)
+        let raw0 = "g!box;";
+        let spell0 = Spell::new(raw0, &shared_spells, &scrolls, (0, 0), None)
+            .expect("parse ok")
+            .expect("not None");
+        let spells0 = spell0.scroll_spells.as_ref().expect("template spells");
+        let raw_spells0: Vec<String> = spells0.iter().map(|s| s.raw_spell.clone()).collect();
+        assert!(raw_spells0.contains(&"padding-top=100%".to_string()));
+    }
+
+    #[test]
+    fn test_scroll_spells_by_args_missing_zero_overload_compiles_base_spells() {
+        let shared_spells = HashSet::new();
+
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
+        scrolls_map.insert(
+            "box".to_string(),
+            ScrollDefinition {
+                spells: vec![
+                    "height=var(--box-height)".to_string(),
+                    "width=var(--box-width)".to_string(),
+                ],
+                spells_by_args: Some(HashMap::from([(
+                    "1".to_string(),
+                    vec!["padding-top=$1".to_string()],
+                )])),
+            },
+        );
+
+        let scrolls = Some(scrolls_map);
+
+        // 0-args invocation must not error even without spellsByArgs["0"].
+        let raw0 = "g!box;";
+        let spell0 = Spell::new(raw0, &shared_spells, &scrolls, (0, 0), None)
+            .expect("parse ok")
+            .expect("not None");
+        let spells0 = spell0.scroll_spells.as_ref().expect("template spells");
+        let raw_spells0: Vec<String> = spells0.iter().map(|s| s.raw_spell.clone()).collect();
+
+        assert!(raw_spells0.contains(&"height=var(--box-height)".to_string()));
+        assert!(raw_spells0.contains(&"width=var(--box-width)".to_string()));
+        assert!(!raw_spells0.iter().any(|s| s.starts_with("padding-")));
+    }
+
+    #[test]
+    fn test_nested_scroll_invocation_inside_scroll_spells_is_flattened() {
+        let shared_spells = HashSet::new();
+
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
+        scrolls_map.insert(
+            "box".to_string(),
+            ScrollDefinition {
+                spells: vec![],
+                spells_by_args: Some(HashMap::from([(
+                    "2".to_string(),
+                    vec![
+                        "padding-top=$1".to_string(),
+                        "padding-bottom=$1".to_string(),
+                        "padding-left=$2".to_string(),
+                        "padding-right=$2".to_string(),
+                    ],
+                )])),
+            },
+        );
+        scrolls_map.insert(
+            "wrap".to_string(),
+            ScrollDefinition {
+                spells: vec!["box=10px_20px".to_string()],
+                spells_by_args: None,
+            },
+        );
+        let scrolls = Some(scrolls_map);
+
+        let spell = Spell::new("wrap", &shared_spells, &scrolls, (0, 0), None)
+            .expect("parse ok")
+            .expect("not None");
+        let spells = spell.scroll_spells.as_ref().expect("scroll spells");
+        let raw_spells: Vec<String> = spells.iter().map(|s| s.raw_spell.clone()).collect();
+
+        assert!(raw_spells.contains(&"padding-top=10px".to_string()));
+        assert!(raw_spells.contains(&"padding-bottom=10px".to_string()));
+        assert!(raw_spells.contains(&"padding-left=20px".to_string()));
+        assert!(raw_spells.contains(&"padding-right=20px".to_string()));
+    }
+
+    #[test]
+    fn test_nested_scroll_invocation_preserves_effects_prefix() {
+        let shared_spells = HashSet::new();
+
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
+        scrolls_map.insert(
+            "box".to_string(),
+            ScrollDefinition {
+                spells: vec![],
+                spells_by_args: Some(HashMap::from([(
+                    "1".to_string(),
+                    vec!["padding-top=$1".to_string()],
+                )])),
+            },
+        );
+        scrolls_map.insert(
+            "hoverWrap".to_string(),
+            ScrollDefinition {
+                spells: vec!["hover:box=4px".to_string()],
+                spells_by_args: None,
+            },
+        );
+        let scrolls = Some(scrolls_map);
+
+        let spell = Spell::new("hoverWrap", &shared_spells, &scrolls, (0, 0), None)
+            .expect("parse ok")
+            .expect("not None");
+        let spells = spell.scroll_spells.as_ref().expect("scroll spells");
+        assert_eq!(spells.len(), 1);
+        assert_eq!(spells[0].effects(), "hover");
+        assert_eq!(spells[0].component(), "padding-top");
+        assert_eq!(spells[0].component_target(), "4px");
+    }
+
+    #[test]
+    fn test_nested_scroll_invocation_inside_template_token_in_scroll_spells() {
+        let shared_spells = HashSet::new();
+
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
+        scrolls_map.insert(
+            "box".to_string(),
+            ScrollDefinition {
+                spells: vec![],
+                spells_by_args: Some(HashMap::from([(
+                    "2".to_string(),
+                    vec!["padding-top=$1".to_string(), "padding-left=$2".to_string()],
+                )])),
+            },
+        );
+        scrolls_map.insert(
+            "templateWrap".to_string(),
+            ScrollDefinition {
+                spells: vec!["g!box=10px_20px;".to_string()],
+                spells_by_args: None,
+            },
+        );
+        let scrolls = Some(scrolls_map);
+
+        let spell = Spell::new("templateWrap", &shared_spells, &scrolls, (0, 0), None)
+            .expect("parse ok")
+            .expect("not None");
+        let spells = spell.scroll_spells.as_ref().expect("scroll spells");
+        let raw_spells: Vec<String> = spells.iter().map(|s| s.raw_spell.clone()).collect();
+        assert!(raw_spells.contains(&"padding-top=10px".to_string()));
+        assert!(raw_spells.contains(&"padding-left=20px".to_string()));
+    }
+
+    #[test]
+    fn test_scroll_cycle_detection_errors() {
+        let shared_spells = HashSet::new();
+
+        let mut scrolls_map: HashMap<String, ScrollDefinition> = HashMap::new();
+        scrolls_map.insert(
+            "a".to_string(),
+            ScrollDefinition {
+                spells: vec!["b".to_string()],
+                spells_by_args: None,
+            },
+        );
+        scrolls_map.insert(
+            "b".to_string(),
+            ScrollDefinition {
+                spells: vec!["a".to_string()],
+                spells_by_args: None,
+            },
+        );
+        let scrolls = Some(scrolls_map);
+
+        let err = Spell::new("a", &shared_spells, &scrolls, (0, 0), None).unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.to_lowercase().contains("cycle"));
     }
 }

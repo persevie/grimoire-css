@@ -1,0 +1,49 @@
+name: Sync GitHub Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name, e.g. v1.7.1"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate release notes file
+        shell: bash
+        run: |
+          TAG='${{ inputs.tag }}'
+          NOTES_FILE="releases/${TAG}.md"
+          if [[ ! -f "$NOTES_FILE" ]]; then
+            echo "Missing release notes: $NOTES_FILE" >&2
+            exit 1
+          fi
+
+      - name: Sync GitHub Release body from file
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          TAG='${{ inputs.tag }}'
+          NOTES_FILE="releases/${TAG}.md"
+
+          # Ensure the release exists (fail with a clear message if not).
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release for tag $TAG not found." >&2
+            echo "Create the release first (or ensure the tag exists in the repo)." >&2
+            exit 1
+          fi
+
+          gh release edit "$TAG" --notes-file "$NOTES_FILE"
+          echo "Updated GitHub Release notes for $TAG from $NOTES_FILE"

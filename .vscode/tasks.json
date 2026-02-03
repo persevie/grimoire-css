@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "GrimoireCSS: dev prep (build lsp + compile)",
+      "dependsOn": [
+        "cargo: build grimoire_css_lsp (debug)",
+        "GrimoireCSS: compile"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "GrimoireCSS: compile",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "compile"],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/vscode"
+      },
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "cargo: build grimoire_css_lsp (debug)",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["build", "--features", "lsp", "--bin", "grimoire_css_lsp"],
+      "problemMatcher": ["$rustc"],
+      "group": "build"
+    }
+  ]
+}

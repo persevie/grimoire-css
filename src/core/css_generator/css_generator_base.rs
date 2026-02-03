@@ -1195,7 +1195,8 @@ mod tests {
         let generator = CssGenerator::new(&config.variables, &config.custom_animations).unwrap();
 
         let shared_spells = std::collections::HashSet::new();
-        let scrolls: Option<std::collections::HashMap<String, Vec<String>>> = None;
+        let scrolls: Option<std::collections::HashMap<String, crate::core::ScrollDefinition>> =
+            None;
 
         let spell = Spell::new("bg-c=pink", &shared_spells, &scrolls, (0, 0), None)
             .unwrap()
