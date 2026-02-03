@@ -10,7 +10,7 @@ on:
 
 jobs:
   lint_and_build:
-    name: Lint and build
+    name: PR / Lint and build extension
     runs-on: ubuntu-latest
 
     steps:
