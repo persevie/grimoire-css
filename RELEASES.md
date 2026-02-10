@@ -6,6 +6,26 @@ This document combines all release notes in chronological order, providing a com
 
 ---
 
+# v1.8.1
+
+Small patch release focused on parser robustness, plus some CLI and VS Code extension reliability polish.
+
+### Added
+
+- CLI utilities: `--help` / `-h` / `help` and `--version` / `-V`.
+- Help output improvements: mention both `grimoire_css` and `grim`, and print help when no mode is provided.
+
+### Changed
+
+- VS Code extension build: bundle the extension with `esbuild` for packaging.
+
+### Fixed
+
+- Parser: operator-like tokens inside `class={...}` template literals (e.g. `===`, `foo==bar`) are no longer misinterpreted as spells.
+- VS Code extension: do not block activation on LSP startup; add timeouts for LSP start and network downloads to avoid hangs.
+
+---
+
 # v1.8.0 Runebridge
 
 Grimoire CSS expands both its **core composition model** and its **tooling surface** with **Runebridge**. This release improves scroll composition by adding argument-driven spell selection (`spellByArgs`) and enabling parameterized scroll invocations inside `scrolls[].spells` (e.g. `box=12px`). On top of that, it introduces a Rust **Analyzer**, a feature-gated **LSP server** (stdio), and a first-party **VS Code extension**.

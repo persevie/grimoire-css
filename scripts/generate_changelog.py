@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 
@@ -98,10 +99,12 @@ def main() -> int:
 
     parts: list[str] = [HEADER, "\n", "## [Unreleased]\n\n", "(no unreleased changes recorded)\n\n"]
 
+    generated_date = date.today().isoformat()
+
     for (major, minor, patch), entry_path in entry_files:
         version_str = f"v{major}.{minor}.{patch}"
-        date = try_git_tag_date(repo_root, version_str)
-        date_str = date if date is not None else "Unreleased"
+        tag_date = try_git_tag_date(repo_root, version_str)
+        date_str = tag_date if tag_date is not None else generated_date
 
         entry_md = entry_path.read_text(encoding="utf-8")
         validate_entry_format(version_str, entry_md)

@@ -2,5 +2,17 @@
 **/*.map
 src/**
 node_modules/**
+
+dist/**
+!dist/extension.js
+
+.DS_Store
+.vscode/**
 .vscode/**
 .git/**
+
+biome.json
+.biomeignore
+tsconfig.json
+esbuild.mjs
+package-lock.json

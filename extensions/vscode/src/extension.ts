@@ -126,15 +126,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   }
 
   for (const folder of folders) {
-    try {
-      await lsp.ensureStarted(folder);
-    } catch (err) {
+    void lsp.ensureStarted(folder).catch((err) => {
       const msg = err instanceof Error ? err.message : String(err);
       logger.info(`Failed to start LSP for ${folder.name}: ${msg}`);
       void vscode.window.showErrorMessage(
         `GrimoireCSS: failed to start LSP for ${folder.name}: ${msg}`
       );
-    }
+    });
   }
 
   // Apply editor highlights immediately after startup.

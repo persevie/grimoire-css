@@ -1,3 +1,4 @@
+import * as shiki from 'shiki';
 import * as vscode from 'vscode';
 import type { EntityDetailsResult, LspLocation } from '../lsp/commands';
 import type { LspManager } from '../lsp/lspManager';
@@ -448,10 +449,6 @@ function escapeStyleTagContents(s: string): string {
 
 let shikiHighlighterPromise: Promise<unknown> | undefined;
 
-const dynamicImport = new Function('specifier', 'return import(specifier)') as unknown as (
-  specifier: string
-) => Promise<unknown>;
-
 async function highlightCssWithShiki(
   text: string,
   mode: 'light' | 'dark'
@@ -476,24 +473,24 @@ async function highlightCssWithShiki(
 async function getShikiHighlighter(): Promise<unknown | undefined> {
   if (!shikiHighlighterPromise) {
     shikiHighlighterPromise = (async () => {
-      const shiki = await dynamicImport('shiki');
+      const shikiModule: unknown = shiki;
 
-      if (hasCreateHighlighter(shiki)) {
-        return await shiki.createHighlighter({
+      if (hasCreateHighlighter(shikiModule)) {
+        return await shikiModule.createHighlighter({
           themes: ['github-dark', 'github-light'],
           langs: ['css'],
         });
       }
 
-      if (hasGetHighlighter(shiki)) {
+      if (hasGetHighlighter(shikiModule)) {
         try {
-          return await shiki.getHighlighter({
+          return await shikiModule.getHighlighter({
             themes: ['github-dark', 'github-light'],
             langs: ['css'],
           });
         } catch {
           // Older API: single theme argument.
-          return await shiki.getHighlighter({
+          return await shikiModule.getHighlighter({
             theme: 'github-dark',
             langs: ['css'],
           });
