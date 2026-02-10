@@ -1,7 +1,7 @@
 # Grimoire CSS Toolkit
 
 <div align="center">
-<img height="128" alt="Grimoire CSS logo" src="resources/marketplace-icon.png">
+<img height="128" alt="Grimoire CSS logo" src="https://raw.githubusercontent.com/persevie/grimoire-css/refs/heads/main/extensions/vscode/resources/marketplace-icon.png">
 </div>
 
 VS Code toolkit for **Grimoire CSS** projects.
@@ -10,9 +10,9 @@ Navigate Scrolls/Variables/Functions/Animations, jump to definitions and referen
 
 > This extension activates automatically when your workspace contains `grimoire/config/grimoire.config.json`.
 
-![Demo](../resources/overview.webp)
+![Demo](https://raw.githubusercontent.com/persevie/grimoire-css/refs/heads/main/extensions/resources/overview.webp)
 
-![DRY and navigation overview](../resources/dry_navigation.webp)
+![DRY and navigation overview](https://raw.githubusercontent.com/persevie/grimoire-css/refs/heads/main/extensions/resources/dry_navigation.webp)
 
 ---
 

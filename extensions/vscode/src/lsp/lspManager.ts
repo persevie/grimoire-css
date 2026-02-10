@@ -107,7 +107,11 @@ export class LspManager implements vscode.Disposable {
     this.logger.info(`Starting LSP for ${folder.name} using ${serverPath}`);
     this.context.subscriptions.push(client);
 
-    await client.start();
+    await withTimeout(
+      client.start(),
+      30_000,
+      `Timed out starting grimoire_css_lsp for ${folder.name}. Check network/LSP logs or set grimoireCss.lsp.path.`
+    );
 
     this.states.set(key, {
       folder,
@@ -485,6 +489,19 @@ export class LspManager implements vscode.Disposable {
   }
 }
 
+async function withTimeout<T>(p: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: NodeJS.Timeout | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([p, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 async function isExecutable(p: string): Promise<boolean> {
   try {
     await access(p, fsConstants.X_OK);
@@ -554,11 +571,15 @@ type GithubRelease = {
 async function fetchLatestRelease(): Promise<GithubRelease | undefined> {
   try {
     const url = 'https://api.github.com/repos/persevie/grimoire-css/releases/latest';
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'grimoirecss-vscode',
+    const res = await fetchWithTimeout(
+      url,
+      {
+        headers: {
+          'User-Agent': 'grimoirecss-vscode',
+        },
       },
-    });
+      15_000
+    );
     if (!res.ok) return undefined;
     const json = (await res.json()) as GithubRelease;
     if (!json?.tag_name) return undefined;
@@ -581,15 +602,40 @@ function platformArchKey(): string {
 }
 
 async function downloadFile(url: string, dest: vscode.Uri): Promise<void> {
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'grimoirecss-vscode',
+  const res = await fetchWithTimeout(
+    url,
+    {
+      headers: {
+        'User-Agent': 'grimoirecss-vscode',
+      },
     },
-  });
+    60_000
+  );
   if (!res.ok) throw new Error(`Download failed: ${res.status} ${res.statusText}`);
 
   const buffer = Buffer.from(await res.arrayBuffer());
   await vscode.workspace.fs.writeFile(dest, buffer);
+}
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  if (typeof fetch !== 'function') {
+    throw new Error('fetch() is not available in this VS Code runtime');
+  }
+
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(id);
+  }
 }
 
 async function materializeExecutable(

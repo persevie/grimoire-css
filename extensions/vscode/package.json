@@ -3,7 +3,7 @@
   "displayName": "Grimoire CSS Toolkit",
   "description": "Grimoire CSS Toolkit: LSP-powered navigation, diagnostics, and project tools.",
   "icon": "resources/marketplace-icon.png",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "publisher": "persevie",
   "license": "MIT",
   "repository": {
@@ -265,7 +265,9 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p .",
+    "typecheck": "tsc -p . --noEmit",
+    "bundle": "node ./esbuild.mjs",
+    "compile": "npm run typecheck && npm run bundle",
     "watch": "tsc -watch -p .",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
@@ -279,6 +281,7 @@
     "@types/node": "^20.11.30",
     "@types/semver": "^7.7.1",
     "@types/vscode": "^1.90.0",
+    "esbuild": "^0.25.0",
     "typescript": "^5.6.3"
   },
   "dependencies": {
