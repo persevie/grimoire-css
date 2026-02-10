@@ -811,15 +811,21 @@ mod tests {
         let shared_spells: HashSet<String> = HashSet::new();
         let scrolls: Option<HashMap<String, ScrollDefinition>> = None;
 
-        assert!(Spell::new("===", &shared_spells, &scrolls, (0, 3), None)
-            .unwrap()
-            .is_none());
-        assert!(Spell::new("a<=b", &shared_spells, &scrolls, (0, 4), None)
-            .unwrap()
-            .is_none());
-        assert!(Spell::new("foo==bar", &shared_spells, &scrolls, (0, 7), None)
-            .unwrap()
-            .is_none());
+        assert!(
+            Spell::new("===", &shared_spells, &scrolls, (0, 3), None)
+                .unwrap()
+                .is_none()
+        );
+        assert!(
+            Spell::new("a<=b", &shared_spells, &scrolls, (0, 4), None)
+                .unwrap()
+                .is_none()
+        );
+        assert!(
+            Spell::new("foo==bar", &shared_spells, &scrolls, (0, 7), None)
+                .unwrap()
+                .is_none()
+        );
     }
 
     #[test]
