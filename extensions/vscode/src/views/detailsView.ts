@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
 import * as shiki from 'shiki';
+import * as vscode from 'vscode';
 import type { EntityDetailsResult, LspLocation } from '../lsp/commands';
 import type { LspManager } from '../lsp/lspManager';
 import { openVirtualText } from '../preview/virtualDocuments';
