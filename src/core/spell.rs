@@ -72,6 +72,16 @@ impl Hash for Spell {
 }
 
 impl Spell {
+    fn is_plausible_component_name(name: &str) -> bool {
+        if name.is_empty() {
+            return false;
+        }
+
+        // Reject JS/TS operator tokens that may appear in `class={...}`.
+        name.chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    }
+
     pub fn area(&self) -> &str {
         self.parts
             .as_ref()
@@ -272,7 +282,17 @@ impl Spell {
             let component_range = after_effects_start..(after_effects_start + eq_rel);
             let component_target_range = (after_effects_start + eq_rel + 1)..raw.len();
 
-            let component_target = &raw[component_target_range.clone()];
+            let component_candidate = &raw[component_range.clone()];
+            if !Self::is_plausible_component_name(component_candidate) {
+                return Ok(None);
+            }
+
+            let component_target_candidate = &raw[component_target_range.clone()];
+            if component_target_candidate.starts_with('=') {
+                return Ok(None);
+            }
+
+            let component_target = component_target_candidate;
             if let Some(err) = spell_value_validator::validate_component_target(component_target) {
                 let message = match err {
                     spell_value_validator::SpellValueValidationError::UnexpectedClosingParen => {
@@ -785,6 +805,22 @@ mod tests {
     use crate::core::spell::Spell;
     use std::collections::{HashMap, HashSet};
     use std::sync::Arc;
+
+    #[test]
+    fn test_operator_tokens_are_not_spells() {
+        let shared_spells: HashSet<String> = HashSet::new();
+        let scrolls: Option<HashMap<String, ScrollDefinition>> = None;
+
+        assert!(Spell::new("===", &shared_spells, &scrolls, (0, 3), None)
+            .unwrap()
+            .is_none());
+        assert!(Spell::new("a<=b", &shared_spells, &scrolls, (0, 4), None)
+            .unwrap()
+            .is_none());
+        assert!(Spell::new("foo==bar", &shared_spells, &scrolls, (0, 7), None)
+            .unwrap()
+            .is_none());
+    }
 
     #[test]
     fn test_multiple_raw_spells_in_template() {
