@@ -12,7 +12,25 @@ Do not edit it manually — edit the corresponding file in `releases/` and re-ru
 
 (no unreleased changes recorded)
 
-## [v1.8.0] - Unreleased
+## [v1.8.1] - 2026-02-10
+
+> Full release notes: [releases/v1.8.1.md](./releases/v1.8.1.md)
+
+### Added
+
+- CLI utilities: `--help` / `-h` / `help` and `--version` / `-V`.
+- Help output improvements: mention both `grimoire_css` and `grim`, and print help when no mode is provided.
+
+### Changed
+
+- VS Code extension build: bundle the extension with `esbuild` for packaging.
+
+### Fixed
+
+- Parser: operator-like tokens inside `class={...}` template literals (e.g. `===`, `foo==bar`) are no longer misinterpreted as spells.
+- VS Code extension: do not block activation on LSP startup; add timeouts for LSP start and network downloads to avoid hangs.
+
+## [v1.8.0] - 2026-02-03
 
 > Full release notes: [releases/v1.8.0.md](./releases/v1.8.0.md)
 

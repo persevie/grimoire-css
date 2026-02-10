@@ -156,6 +156,31 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
         .and_then(|n| n.to_str())
         .unwrap_or("grimoire_css");
 
+    let help_text = || {
+        let usage = ["grimoire_css", "grim"]
+            .into_iter()
+            .map(|n| format!("  {n} <mode> [mode args]"))
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        format!(
+            "Usage:\n{usage}\n\nModes:\n  build\n  init\n  shorten\n  fi\n\nUtilities:\n  -h, --help       Print help\n  -V, --version    Print version\n"
+        )
+    };
+
+    if args.get(1).is_some_and(|a| a == "--version" || a == "-V") {
+        println!("{bin_name} {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
+
+    if args
+        .get(1)
+        .is_some_and(|a| a == "--help" || a == "-h" || a == "help")
+    {
+        println!("{}", help_text());
+        return Ok(());
+    }
+
     // Special-case: `fi` supports clean JSON output (no banners/spinners).
     if args.get(1).is_some_and(|m| m == "fi") {
         return commands::fi::run_fi_cli(args);
@@ -173,13 +198,15 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
         let message = format!(
             "{}  {} ",
             style(" Cursed! ").white().on_red().bright(),
-            format_args!("Follow: {bin_name} <mode> ('build', 'init', 'shorten', 'fi')")
+            format_args!("No mode provided")
         );
 
         println!();
         println!("{GRIMM_CURSED}");
         println!();
         println!("{message}");
+        println!();
+        println!("{}", help_text());
 
         return Err(GrimoireCssError::InvalidInput(message));
     }
