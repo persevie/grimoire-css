@@ -5,18 +5,27 @@
   "type": "object",
   "properties": {
     "$schema": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Reference to the JSON schema",
       "format": "uri",
       "default": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json"
     },
     "version": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "Grimoire CSS version that last wrote/validated this config (semver)",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
     },
     "variables": {
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "description": "Optional framework-level variables used during compilation",
       "patternProperties": {
         "^[a-zA-Z0-9_-]+$": {
@@ -27,7 +36,10 @@
       "additionalProperties": false
     },
     "scrolls": {
-      "type": "array",
+      "type": [
+        "array",
+        "null"
+      ],
       "description": "Optional scrolls configuration containing external or combined CSS rules",
       "items": {
         "$ref": "#/definitions/ScrollJSON"
@@ -41,21 +53,30 @@
       }
     },
     "shared": {
-      "type": "array",
+      "type": [
+        "array",
+        "null"
+      ],
       "description": "Optional shared configuration settings used across multiple projects",
       "items": {
         "$ref": "#/definitions/GrimoireConfigSharedJSON"
       }
     },
     "critical": {
-      "type": "array",
+      "type": [
+        "array",
+        "null"
+      ],
       "description": "Optional critical styles configuration for inlining into HTML files",
       "items": {
         "$ref": "#/definitions/GrimoireConfigCriticalJSON"
       }
     },
     "lock": {
-      "type": "boolean",
+      "type": [
+        "boolean",
+        "null"
+      ],
       "description": "Optional flag indicating whether the GrimoireCSS configuration is locked"
     }
   },
@@ -80,7 +101,10 @@
           }
         },
         "spellsByArgs": {
-          "type": "object",
+          "type": [
+            "object",
+            "null"
+          ],
           "description": "Optional overloads selected by argument count (keys: '0', '1', ...)",
           "patternProperties": {
             "^[0-9]+$": {
@@ -93,7 +117,10 @@
           "additionalProperties": false
         },
         "extends": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "description": "Optional list of other scrolls this one extends",
           "items": {
             "type": "string"
@@ -153,14 +180,20 @@
           "description": "Output path for the shared configuration"
         },
         "styles": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "description": "Optional list of styles used in the shared configuration",
           "items": {
             "type": "string"
           }
         },
         "cssCustomProperties": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "description": "Optional list of CSS custom properties",
           "items": {
             "$ref": "#/definitions/CSSCustomPropertiesItemJSON"
@@ -185,14 +218,20 @@
           }
         },
         "styles": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "description": "Optional list of styles to be inlined",
           "items": {
             "type": "string"
           }
         },
         "cssCustomProperties": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "description": "Optional list of CSS custom properties used in critical styles",
           "items": {
             "$ref": "#/definitions/CSSCustomPropertiesItemJSON"

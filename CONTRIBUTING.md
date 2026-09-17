@@ -148,6 +148,14 @@ We encourage contributors to propose new features, fixes, or chores, even if the
   - Resolve any issues or bugs discovered during testing.
   - Update documentation and version numbers as needed.
 
+- **Prepare release documents before opening the final PR**:
+  - Write the full release notes in `releases/v{version}.md` and the concise Added/Changed/Fixed entries in `releases/changelog/v{version}.md`.
+  - Edit README content in `content/about.md` and its included `content/` blocks.
+  - Run `bash scripts/pre_publish.sh` to regenerate README, its table of contents and the animation list. Install `doctoc` or provide Node.js/npm for the script's `npx` fallback.
+  - Run `bash scripts/generate_docs.sh` to regenerate CHANGELOG and RELEASES, then commit the generated files with their sources.
+  - Start each new changelog entry with `Release date: Unreleased`. Before merging the final release PR, replace it with `Release date: YYYY-MM-DD` using the confirmed release date, regenerate the documents, and commit them. Update the date if publication is postponed. Explicit dates never depend on tags or the day the generator runs; older entries without this field keep their tag-based dates.
+  - Verify the release documents with `python3 scripts/generate_changelog.py --check-release v{version}`. The release workflow runs this check before building or publishing and rejects an unconfirmed date or stale CHANGELOG. It does not change files or create a follow-up documentation PR.
+
 #### 4. Finalizing a Release
 
 - **Merge into `main` via Pull Request**:
@@ -158,8 +166,8 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 
 - **Automated Tagging and Publishing**:
 
-  - When a release candidate branch is merged into `main`, our GitHub Actions workflow automatically creates a tag (e.g., `v1.2.0`) based on the `rc/{version}` branch name.
-  - The CI/CD pipeline then builds, releases, and publishes the new version.
+  - A push to `main` starts the release workflow. It reads the version from `Cargo.toml` and skips publication if the corresponding `v{version}` tag already exists.
+  - For a new version, the workflow checks the release notes, runs quality and coverage checks, builds the binaries, publishes to crates.io, and then creates the tag and GitHub Release.
   - **Note**: Do not manually create or push tags; the CI/CD pipeline handles tagging.
 
 - **Delete the Release Candidate Branch**:
@@ -194,8 +202,8 @@ We encourage contributors to propose new features, fixes, or chores, even if the
 
 - **Automated Tagging and Publishing**:
 
-  - When the hotfix PR is merged into `main`, the CI/CD pipeline automatically increments the patch version and creates a new tag (e.g., from `v1.2.0` to `v1.2.1`).
-  - The pipeline then builds, releases, and publishes the hotfix.
+  - Update `Cargo.toml`, `Cargo.lock` and the release documents before merging. The PR version check expects the next patch version for a `hotfix/*` branch; it does not change files.
+  - After merge, the release workflow publishes the version already recorded in `Cargo.toml`.
   - **Note**: Do not manually create or push tags; the CI/CD pipeline handles tagging.
 
 - **Updating Other Branches**:
@@ -230,7 +238,7 @@ We encourage contributors to propose new features, fixes, or chores, even if the
   - Upon approval, merge the PR into `main`.
 
 - **Note**:
-  - Merging `chore/**` branches into `main` will **not** trigger tagging or a new release.
+  - Release detection depends on the version in `Cargo.toml` and the presence of its tag, not the source branch name. A chore with an already tagged version does not publish a release.
 
 #### 7. Updating Feature, Refactor, and Fix Branches
 
@@ -248,17 +256,16 @@ Our CI/CD pipeline automates the tagging and publishing process:
 
 - **Automated Tagging**:
 
-  - When a release candidate (`rc/{version}`) or hotfix (`hotfix/**`) branch is merged into `main`, the GitHub Actions workflow automatically creates a tag:
-    - For releases: `v{version}` (e.g., `v1.2.0`)
-    - For hotfixes: Increments the patch version (e.g., from `v1.2.0` to `v1.2.1`)
+  - Every push to `main` checks the version in `Cargo.toml`. If its `v{version}` tag exists, publication is skipped. Otherwise the workflow requires both release-note files and runs the release checks.
+  - PRs from `rc/{version}` must have that exact version in `Cargo.toml`, without a `v` prefix in the branch name. Version checks never bump versions automatically.
   - **Important**: Do not manually create or push tags; the CI/CD pipeline handles tagging.
 
 - **Build and Release**:
 
-  - The pipeline builds the project for multiple platforms and creates a GitHub release with the compiled artifacts.
+  - The pipeline builds CLI, LSP and MCP binaries for Linux x64, macOS x64/arm64 and Windows x64. Quality and coverage checks must pass before publication.
 
 - **Publishing**:
-  - The release is automatically published to [crates.io](https://crates.io) and other package managers as appropriate.
+  - The crate is published to [crates.io](https://crates.io) first. The workflow then pushes the version tag and creates a GitHub Release with the binaries and `releases/v{version}.md` as its description. The VS Code extension has a separate release workflow.
 
 ### Repository Security and Permissions
 

@@ -1,6 +1,7 @@
 name: Quality
 
 on:
+  workflow_call:
   pull_request:
     branches:
       - 'main'
@@ -8,8 +9,30 @@ on:
 
 jobs:
   lint_and_test:
-    name: PR / Lint and test
-    runs-on: ubuntu-latest
+    name: Rust / ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: default
+            os: ubuntu-latest
+            flags: ''
+          - name: minimal
+            os: ubuntu-latest
+            flags: --no-default-features
+          - name: mcp
+            os: ubuntu-latest
+            flags: --features mcp
+          - name: all-linux
+            os: ubuntu-latest
+            flags: --all-features
+          - name: all-macos
+            os: macos-latest
+            flags: --all-features
+          - name: all-windows
+            os: windows-latest
+            flags: --all-features
 
     steps:
       - uses: actions/checkout@v4
@@ -49,18 +72,30 @@ jobs:
         uses: actions/cache@v4
         with:
           path: target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.name }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-build-
-
-      - name: Install grcov
-        run: cargo install grcov
+            ${{ runner.os }}-${{ matrix.name }}-cargo-build-
 
       - name: Check formatting with rustfmt
-        run: cargo fmt -- --check
+        run: cargo fmt --all -- --check
 
       - name: Run clippy
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --locked --all-targets ${{ matrix.flags }} -- -D warnings
 
       - name: Run tests
-        run: cargo test
+        run: cargo test --locked ${{ matrix.flags }}
+
+      - name: Test documentation generator
+        if: matrix.name == 'default'
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
+
+  quality_result:
+    name: PR / Lint and test
+    needs: lint_and_test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all Rust checks to pass
+        env:
+          RESULT: ${{ needs.lint_and_test.result }}
+        run: test "$RESULT" = success

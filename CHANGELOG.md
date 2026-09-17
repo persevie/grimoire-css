@@ -5,12 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-This file is auto-generated from per-version release notes in `releases/`.
-Do not edit it manually — edit the corresponding file in `releases/` and re-run the generator.
+This file is auto-generated from per-version entries in `releases/changelog/`.
+Do not edit it manually — edit the corresponding entry and run `bash scripts/generate_docs.sh`.
+Release dates are set in the per-version entries. Older entries without an explicit date use their Git tag date.
 
 ## [Unreleased]
 
-(no unreleased changes recorded)
+(no unversioned changes recorded)
+
+## [v1.9.0] - 2026-09-17
+
+> Full release notes: [releases/v1.9.0.md](./releases/v1.9.0.md)
+
+### Added
+
+- Optional MCP stdio server with 19 project tools and four documentation/schema resources.
+- Spell/config validation, project verification, and CSS migration/import for MCP clients.
+- Canonical typed Transmutator APIs and a `transmute` command in the main CLI.
+- MCP binaries in GitHub releases for Linux x64, macOS x64/arm64 and Windows x64.
+
+### Changed
+
+- CI covers default, minimal, MCP and combined features; publication requires successful quality and coverage checks.
+- Release notes are checked before publication, and release operations use the Cargo lockfile.
+
+### Fixed
+
+- Literal CSS dollars, empty custom properties, component/Scroll conflict checks, and validation against the remaining definitions when replacing an import.
+- Literal underscores and the cascade position of repeated declarations during CSS migration; names the engine cannot invoke as Scrolls are rejected before import.
+- CSS identifier whitespace is preserved; file migration rejects source-relative URLs before writing.
+- CSS string data and escaped line continuations survive migration in values and attribute selectors.
+- Exact-token compilation for quoted spell values, quote-aware prefix parsing, and errors for unterminated strings.
+- Potential cross-Scroll cascade dependencies are rejected before migration/import publication, with diagnostics and a `shared.styles` fallback.
+- Selector relationships, media conditions and comment token boundaries during CSS migration.
+- Silent partial conversion of unsupported CSS rules, now rejected explicitly.
+- Stack overflow on cyclic Scroll inheritance and missing import rollback on browserslist I/O failure.
+- External config discovery in roots containing glob characters and filesystem side effects in read-only analysis.
+- All-feature Clippy failure in the LSP test layout.
 
 ## [v1.8.1] - 2026-02-10
 

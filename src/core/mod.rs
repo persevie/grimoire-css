@@ -7,6 +7,7 @@
 
 mod animations;
 mod build_info;
+mod css_comments;
 mod css_generator;
 mod file_tracker;
 mod filesystem;
@@ -25,6 +26,7 @@ pub mod spell_value_validator;
 pub use compiled_css::*;
 pub use config::*;
 pub use css_builder::*;
+pub(crate) use css_generator::CssGenerator;
 pub use css_optimizer::*;
 pub use filesystem::*;
 pub use grimoire_css_error::*;

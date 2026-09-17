@@ -30,8 +30,8 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
 use super::{
-    GrimoireCssError, ScrollDefinition, component::get_css_property, source_file::SourceFile,
-    spell_value_validator,
+    GrimoireCssError, ScrollDefinition, component::get_css_property,
+    css_comments::chars_without_comments, source_file::SourceFile, spell_value_validator,
 };
 
 #[derive(Debug, Clone)]
@@ -72,6 +72,41 @@ impl Hash for Spell {
 }
 
 impl Spell {
+    fn find_prefix_delimiter(raw: &str, delimiter: &str) -> Option<usize> {
+        let mut quote = None;
+        let mut escaped = false;
+        let mut depth = 0usize;
+        for (offset, ch) in chars_without_comments(raw) {
+            if escaped {
+                escaped = false;
+                continue;
+            }
+            if ch == '\\' {
+                escaped = true;
+                continue;
+            }
+            if let Some(end) = quote {
+                if ch == end {
+                    quote = None;
+                }
+                continue;
+            }
+            if matches!(ch, '\'' | '"') {
+                quote = Some(ch);
+                continue;
+            }
+            if depth == 0 && raw[offset..].starts_with(delimiter) {
+                return Some(offset);
+            }
+            match ch {
+                '(' | '[' => depth += 1,
+                ')' | ']' => depth = depth.saturating_sub(1),
+                _ => {}
+            }
+        }
+        None
+    }
+
     fn is_plausible_component_name(name: &str) -> bool {
         if name.is_empty() {
             return false;
@@ -249,14 +284,18 @@ impl Spell {
         let mut effects_range = 0..0;
 
         let mut rest_start = 0usize;
-        if let Some(pos) = raw.find("__") {
+        if let Some(pos) = Self::find_prefix_delimiter(&raw, "__")
+            && ["=", "{"].iter().all(|delimiter| {
+                Self::find_prefix_delimiter(&raw, delimiter).is_none_or(|boundary| pos < boundary)
+            })
+        {
             area_range = 0..pos;
             rest_start = pos + 2;
         }
 
         let mut after_focus_start = rest_start;
-        if rest_start < raw.len()
-            && let Some(close_rel) = raw[rest_start..].find('}')
+        if raw[rest_start..].starts_with('{')
+            && let Some(close_rel) = Self::find_prefix_delimiter(&raw[rest_start..], "}")
         {
             let focus_part_start = if raw.as_bytes().get(rest_start) == Some(&b'{') {
                 rest_start + 1
@@ -269,7 +308,9 @@ impl Spell {
 
         let mut after_effects_start = after_focus_start;
         if after_focus_start < raw.len()
-            && let Some(colon_rel) = raw[after_focus_start..].find(':')
+            && let Some(colon_rel) = Self::find_prefix_delimiter(&raw[after_focus_start..], ":")
+            && Self::find_prefix_delimiter(&raw[after_focus_start..], "=")
+                .is_none_or(|equals| colon_rel < equals)
         {
             effects_range = after_focus_start..(after_focus_start + colon_rel);
             after_effects_start = after_focus_start + colon_rel + 1;
@@ -295,6 +336,9 @@ impl Spell {
             let component_target = component_target_candidate;
             if let Some(err) = spell_value_validator::validate_component_target(component_target) {
                 let message = match err {
+                    spell_value_validator::SpellValueValidationError::UnclosedString => {
+                        format!("Invalid value '{component_target}': unclosed quoted string")
+                    }
                     spell_value_validator::SpellValueValidationError::UnexpectedClosingParen => {
                         format!(
                             "Invalid value '{component_target}': unexpected ')'.\n\n\

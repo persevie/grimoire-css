@@ -28,16 +28,35 @@ impl FileTracker {
         let prev_lock_path =
             Filesystem::get_or_create_grimoire_path(cwd)?.join("grimoire.lock.json");
 
+        let root = fs::canonicalize(cwd)?;
+        let lock_path = |path: &Path| {
+            // Preserve the filename so cleanup removes a symlink, not its target.
+            let normalized = match (path.parent(), path.file_name()) {
+                (Some(parent), Some(name)) => fs::canonicalize(parent)
+                    .map(|parent| parent.join(name))
+                    .unwrap_or_else(|_| path.to_path_buf()),
+                _ => path.to_path_buf(),
+            };
+            let path = normalized.as_path();
+            path.strip_prefix(&root)
+                .unwrap_or(path)
+                .to_string_lossy()
+                .into_owned()
+        };
         let current_files_set: HashSet<String> = builded_files
             .into_iter()
-            .map(|path| path.to_string_lossy().into_owned())
-            .collect();
+            .map(|path| std::path::absolute(path).map(|path| lock_path(&path)))
+            .collect::<Result<_, _>>()?;
 
         if prev_lock_path.exists() {
             let content = fs::read_to_string(&prev_lock_path)?;
             let lock_json: GrimoireLock = serde_json::from_str(&content)?;
 
-            let prev_files_set: HashSet<String> = lock_json.paths.into_iter().collect();
+            let prev_files_set: HashSet<String> = lock_json
+                .paths
+                .into_iter()
+                .map(|path| lock_path(&root.join(path)))
+                .collect();
             let files_to_delete = prev_files_set.difference(&current_files_set);
 
             for file in files_to_delete {

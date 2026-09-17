@@ -256,7 +256,7 @@ impl<'a> CssBuilderFs<'a> {
 
                 if !composed_css.is_empty() {
                     compiled_shared_css.push((
-                        PathBuf::from(&shared_item.output_path),
+                        self.current_dir.join(&shared_item.output_path),
                         self.css_builder.optimize_css(&composed_css)?,
                     ));
                 }
@@ -383,8 +383,9 @@ impl<'a> CssBuilderFs<'a> {
                 continue;
             }
 
-            if Path::new(item).is_file() {
-                match fs::read_to_string(item) {
+            let path = self.current_dir.join(item);
+            if path.is_file() {
+                match fs::read_to_string(&path) {
                     Ok(contents) => files_content.push(contents),
                     Err(err) => {
                         return Err(GrimoireCssError::InvalidInput(format!(

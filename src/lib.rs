@@ -18,8 +18,13 @@ mod infrastructure;
 #[cfg(feature = "analyzer")]
 pub mod analyzer;
 
+pub mod transmutator;
+
 #[cfg(feature = "lsp")]
 pub mod lsp;
+
+#[cfg(feature = "mcp")]
+pub mod mcp;
 
 use commands::{handle_in_memory, process_mode_and_handle, process_mode_and_handle_with_options};
 use console::style;
@@ -80,6 +85,34 @@ pub fn start(mode: &str) -> Result<(), GrimoireCssError> {
     let css_optimizer = LightningCssOptimizer::new(&current_dir)?;
 
     process_mode_and_handle(mode, &current_dir, &css_optimizer)
+}
+
+/// Builds the project rooted at `root`.
+pub fn build(root: &Path) -> Result<(), GrimoireCssError> {
+    build_with_options(root, false)
+}
+
+/// Builds the project, optionally updating a mismatched configuration version.
+pub fn build_with_options(root: &Path, force_version_update: bool) -> Result<(), GrimoireCssError> {
+    let css_optimizer = LightningCssOptimizer::new(root)?;
+    process_mode_and_handle_with_options(
+        "build",
+        root,
+        &css_optimizer,
+        commands::CliOptions {
+            force_version_update,
+        },
+    )
+}
+
+/// Initializes the project rooted at `root`.
+pub fn init(root: &Path) -> Result<(), GrimoireCssError> {
+    commands::init_project(root, "init").map(|_| ())
+}
+
+/// Shortens spells in the project rooted at `root`.
+pub fn shorten(root: &Path) -> Result<(), GrimoireCssError> {
+    commands::shorten_project(root)
 }
 
 pub fn start_in_memory(
@@ -164,7 +197,7 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
             .join("\n");
 
         format!(
-            "Usage:\n{usage}\n\nModes:\n  build\n  init\n  shorten\n  fi\n\nUtilities:\n  -h, --help       Print help\n  -V, --version    Print version\n"
+            "Usage:\n{usage}\n\nModes:\n  build\n  init\n  shorten\n  transmute\n  fi\n\nUtilities:\n  -h, --help       Print help\n  -V, --version    Print version\n"
         )
     };
 
@@ -181,9 +214,8 @@ pub fn start_as_cli(args: Vec<String>) -> Result<(), GrimoireCssError> {
         return Ok(());
     }
 
-    // Special-case: `fi` supports clean JSON output (no banners/spinners).
-    if args.get(1).is_some_and(|m| m == "fi") {
-        return commands::fi::run_fi_cli(args);
+    if let Some(result) = commands::process_machine_readable_mode(&args) {
+        return result;
     }
 
     println!();

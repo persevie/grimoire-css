@@ -20,6 +20,13 @@ pub fn read_messages() -> Vec<String> {
     MESSAGE_BUFFER.with(|buffer| buffer.borrow().clone())
 }
 
+#[cfg(feature = "mcp")]
+pub(crate) fn discard_messages() {
+    MESSAGE_BUFFER.with(|buffer| {
+        *buffer.borrow_mut() = Vec::with_capacity(12);
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

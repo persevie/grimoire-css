@@ -8,7 +8,8 @@ use std::path::Path;
 ///
 /// This function attempts to load the configuration from the given directory. If the configuration file
 /// already exists, it is loaded and returned. If the file is missing or the loading process encounters
-/// an error other than a parsing failure, a new configuration is created and saved to the directory.
+/// an error other than a parsing or input-validation failure, a new configuration is created and saved
+/// to the directory. Parsing and validation errors are returned without replacing the existing file.
 ///
 /// # Arguments
 ///
@@ -44,6 +45,7 @@ pub fn init(current_dir: &Path, mode: &str) -> Result<ConfigFs, GrimoireCssError
             Ok(config)
         }
         Err(err) => match err {
+            GrimoireCssError::InvalidInput(_) => Err(err),
             GrimoireCssError::Serde(_) => {
                 let err_msg = format!("Failed to parse config. {err}");
                 Err(GrimoireCssError::InvalidInput(err_msg))

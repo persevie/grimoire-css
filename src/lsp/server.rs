@@ -545,107 +545,6 @@ fn spawn_update_check(client: Client) {
     });
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{extract_token_at_byte_offset, lsp_execute_commands};
-    use crate::config::ConfigFs;
-    use tempfile::tempdir;
-
-    #[test]
-    fn advertised_execute_commands_are_canonical() {
-        let cmds = lsp_execute_commands();
-        assert!(cmds.contains(&"grimoirecss.explain".to_string()));
-        assert!(cmds.contains(&"grimoirecss.refs".to_string()));
-        assert!(cmds.contains(&"grimoirecss.stats".to_string()));
-        assert!(cmds.contains(&"grimoirecss.explorerIndex".to_string()));
-        assert!(!cmds.contains(&"grimoirecss.refsCssVariable".to_string()));
-    }
-
-    #[test]
-    fn token_extraction_includes_template_semicolon() {
-        let content = r#"<div class=\"g!md3-btn;\"></div>"#;
-        let offset = content.find("md3-btn").unwrap() + 2;
-        let (token, _start, _len) = extract_token_at_byte_offset(content, offset).unwrap();
-        assert_eq!(token, "g!md3-btn;");
-    }
-
-    #[test]
-    fn dry_create_scroll_partitions_by_scroll_membership_and_preserves_prefix_semantics() {
-        let dir = tempdir().unwrap();
-        let cfg_dir = dir.path().join("grimoire").join("config");
-        std::fs::create_dir_all(&cfg_dir).unwrap();
-
-        // Minimal config containing a scroll with spellsByArgs.
-        let config_json = r#"{
-    "$schema": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json",
-    "variables": null,
-    "scrolls": [
-        {
-            "name": "box",
-            "spells": [
-                "height=var(--box-height,_100px)",
-                "width=var(--box-width,_100px)"
-            ],
-            "spellsByArgs": {
-                "1": [
-                    "padding-top=$1",
-                    "padding-right=$1",
-                    "padding-bottom=$1",
-                    "padding-left=$1"
-                ],
-                "2": [
-                    "padding-top=$1",
-                    "padding-bottom=$1",
-                    "padding-left=$2",
-                    "padding-right=$2"
-                ]
-            }
-        }
-    ],
-    "projects": [
-        {
-            "projectName": "test",
-            "inputPaths": ["index.html"],
-            "outputDirPath": ".",
-            "singleOutputFileName": "out.css"
-        }
-    ],
-    "shared": null,
-    "critical": null,
-    "lock": null
-}"#;
-
-        let cfg_path = cfg_dir.join("grimoire.config.json");
-        std::fs::write(&cfg_path, config_json).unwrap();
-        let cfg = ConfigFs::load(dir.path()).unwrap();
-
-        // 1) Plain scroll name stays in `spells`.
-        let (extends, spells) =
-            super::partition_dry_candidate_tokens_for_new_scroll(&cfg, &["box".to_string()])
-                .unwrap();
-        assert!(extends.is_empty());
-        assert_eq!(spells, vec!["box".to_string()]);
-
-        // 2) Scroll with args stays in `spells` (invocation preserved).
-        let (extends, spells) = super::partition_dry_candidate_tokens_for_new_scroll(
-            &cfg,
-            &["box=10px_20px".to_string()],
-        )
-        .unwrap();
-        assert!(extends.is_empty());
-        assert_eq!(spells, vec!["box=10px_20px".to_string()]);
-
-        // 3) Scroll with effects stays in `spells` (invocation preserved).
-        let (extends, spells) = super::partition_dry_candidate_tokens_for_new_scroll(
-            &cfg,
-            &["hover:box=4px".to_string()],
-        )
-        .unwrap();
-        assert!(extends.is_empty());
-        assert_eq!(spells, vec!["hover:box=4px".to_string()]);
-    }
-}
-
 #[tower_lsp::async_trait]
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> JsonRpcResult<InitializeResult> {
@@ -3472,4 +3371,101 @@ pub async fn serve_stdio() {
     });
 
     Server::new(stdin, stdout, socket).serve(service).await;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{extract_token_at_byte_offset, lsp_execute_commands};
+    use crate::config::ConfigFs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn advertised_execute_commands_are_canonical() {
+        let cmds = lsp_execute_commands();
+        assert!(cmds.contains(&"grimoirecss.explain".to_string()));
+        assert!(cmds.contains(&"grimoirecss.refs".to_string()));
+        assert!(cmds.contains(&"grimoirecss.stats".to_string()));
+        assert!(cmds.contains(&"grimoirecss.explorerIndex".to_string()));
+        assert!(!cmds.contains(&"grimoirecss.refsCssVariable".to_string()));
+    }
+
+    #[test]
+    fn token_extraction_includes_template_semicolon() {
+        let content = r#"<div class=\"g!md3-btn;\"></div>"#;
+        let offset = content.find("md3-btn").unwrap() + 2;
+        let (token, _start, _len) = extract_token_at_byte_offset(content, offset).unwrap();
+        assert_eq!(token, "g!md3-btn;");
+    }
+
+    #[test]
+    fn dry_create_scroll_partitions_by_scroll_membership_and_preserves_prefix_semantics() {
+        let dir = tempdir().unwrap();
+        let cfg_dir = dir.path().join("grimoire").join("config");
+        std::fs::create_dir_all(&cfg_dir).unwrap();
+
+        let config_json = r#"{
+    "$schema": "https://raw.githubusercontent.com/persevie/grimoire-css/main/src/core/config/config-schema.json",
+    "variables": null,
+    "scrolls": [
+        {
+            "name": "box",
+            "spells": [
+                "height=var(--box-height,_100px)",
+                "width=var(--box-width,_100px)"
+            ],
+            "spellsByArgs": {
+                "1": [
+                    "padding-top=$1",
+                    "padding-right=$1",
+                    "padding-bottom=$1",
+                    "padding-left=$1"
+                ],
+                "2": [
+                    "padding-top=$1",
+                    "padding-bottom=$1",
+                    "padding-left=$2",
+                    "padding-right=$2"
+                ]
+            }
+        }
+    ],
+    "projects": [
+        {
+            "projectName": "test",
+            "inputPaths": ["index.html"],
+            "outputDirPath": ".",
+            "singleOutputFileName": "out.css"
+        }
+    ],
+    "shared": null,
+    "critical": null,
+    "lock": null
+}"#;
+
+        let cfg_path = cfg_dir.join("grimoire.config.json");
+        std::fs::write(&cfg_path, config_json).unwrap();
+        let cfg = ConfigFs::load(dir.path()).unwrap();
+
+        let (extends, spells) =
+            super::partition_dry_candidate_tokens_for_new_scroll(&cfg, &["box".to_string()])
+                .unwrap();
+        assert!(extends.is_empty());
+        assert_eq!(spells, vec!["box".to_string()]);
+
+        let (extends, spells) = super::partition_dry_candidate_tokens_for_new_scroll(
+            &cfg,
+            &["box=10px_20px".to_string()],
+        )
+        .unwrap();
+        assert!(extends.is_empty());
+        assert_eq!(spells, vec!["box=10px_20px".to_string()]);
+
+        let (extends, spells) = super::partition_dry_candidate_tokens_for_new_scroll(
+            &cfg,
+            &["hover:box=4px".to_string()],
+        )
+        .unwrap();
+        assert!(extends.is_empty());
+        assert_eq!(spells, vec!["hover:box=4px".to_string()]);
+    }
 }

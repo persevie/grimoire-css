@@ -9,5 +9,8 @@ pub(crate) mod fi;
 pub mod handler;
 mod init;
 mod shorten;
+pub(crate) mod transmute;
 
 pub use handler::*;
+pub(crate) use init::init as init_project;
+pub(crate) use shorten::shorten as shorten_project;
