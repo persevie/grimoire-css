@@ -46,14 +46,12 @@ impl LightningCssOptimizer {
         let browserslist_config_path = current_dir.join(".browserslistrc");
 
         if !browserslist_config_path.exists() {
-            fs::write(&browserslist_config_path, "defaults")
-                .expect("Failed to create '.browserslistrc' with defaults");
+            fs::write(&browserslist_config_path, "defaults")?;
 
             add_message("Created missing '.browserslistrc' file with 'defaults'".to_string());
         }
 
-        let content = fs::read_to_string(&browserslist_config_path)
-            .expect("Failed to read '.browserslistrc' file");
+        let content = fs::read_to_string(&browserslist_config_path)?;
 
         Self::from_content(&content, true)
     }
@@ -62,6 +60,7 @@ impl LightningCssOptimizer {
         Self::from_content(browserslist_content, true)
     }
 
+    #[cfg(feature = "analyzer")]
     pub fn new_from_with_printer_minify(
         browserslist_content: &str,
         printer_minify: bool,

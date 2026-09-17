@@ -7,6 +7,7 @@ use tokio::{
     process::Command,
     time::{Duration, timeout},
 };
+use tower_lsp::lsp_types::Url;
 
 fn write_repo_for_lsp() -> tempfile::TempDir {
     let dir = tempdir().expect("tempdir");
@@ -18,10 +19,13 @@ fn write_repo_for_lsp() -> tempfile::TempDir {
     std::fs::create_dir_all(dir.path().join("grimoire/config")).unwrap();
     std::fs::write(
         dir.path().join("grimoire/config/grimoire.config.json"),
-        format!(
-            "{{\n  \"projects\": [{{\n    \"projectName\": \"main\",\n    \"inputPaths\": [\"{}\"]\n  }}]\n}}",
-            html.to_string_lossy()
-        ),
+        serde_json::to_vec(&serde_json::json!({
+            "projects": [{
+                "projectName": "main",
+                "inputPaths": [html]
+            }]
+        }))
+        .unwrap(),
     )
     .unwrap();
 
@@ -101,7 +105,7 @@ async fn lsp_stdio_initialize_advertises_canonical_commands() {
     let mut stdin = child.stdin.take().unwrap();
     let mut stdout = child.stdout.take().unwrap();
 
-    let root_uri = format!("file://{}", repo.path().to_string_lossy());
+    let root_uri = Url::from_directory_path(repo.path()).expect("workspace URI");
 
     let init = serde_json::json!({
         "jsonrpc": "2.0",
@@ -148,7 +152,7 @@ async fn lsp_stdio_execute_command_refs_and_stats_work() {
     let mut stdin = child.stdin.take().unwrap();
     let mut stdout = child.stdout.take().unwrap();
 
-    let root_uri = format!("file://{}", repo.path().to_string_lossy());
+    let root_uri = Url::from_directory_path(repo.path()).expect("workspace URI");
 
     let init = serde_json::json!({
         "jsonrpc": "2.0",
@@ -214,7 +218,7 @@ async fn lsp_stdio_execute_command_unknown_returns_error() {
     let mut stdin = child.stdin.take().unwrap();
     let mut stdout = child.stdout.take().unwrap();
 
-    let root_uri = format!("file://{}", repo.path().to_string_lossy());
+    let root_uri = Url::from_directory_path(repo.path()).expect("workspace URI");
 
     let init = serde_json::json!({
         "jsonrpc": "2.0",
@@ -270,7 +274,7 @@ async fn lsp_stdio_execute_command_explain_missing_token_is_invalid_params() {
     let mut stdin = child.stdin.take().unwrap();
     let mut stdout = child.stdout.take().unwrap();
 
-    let root_uri = format!("file://{}", repo.path().to_string_lossy());
+    let root_uri = Url::from_directory_path(repo.path()).expect("workspace URI");
 
     let init = serde_json::json!({
         "jsonrpc": "2.0",
@@ -326,7 +330,7 @@ async fn lsp_stdio_execute_command_refs_missing_query_is_invalid_params() {
     let mut stdin = child.stdin.take().unwrap();
     let mut stdout = child.stdout.take().unwrap();
 
-    let root_uri = format!("file://{}", repo.path().to_string_lossy());
+    let root_uri = Url::from_directory_path(repo.path()).expect("workspace URI");
 
     let init = serde_json::json!({
         "jsonrpc": "2.0",
@@ -382,7 +386,7 @@ async fn lsp_stdio_execute_command_stats_unknown_token_returns_hint_object() {
     let mut stdin = child.stdin.take().unwrap();
     let mut stdout = child.stdout.take().unwrap();
 
-    let root_uri = format!("file://{}", repo.path().to_string_lossy());
+    let root_uri = Url::from_directory_path(repo.path()).expect("workspace URI");
 
     let init = serde_json::json!({
         "jsonrpc": "2.0",
@@ -502,7 +506,7 @@ async fn lsp_stdio_execute_command_missing_config_is_internal_error() {
     let mut stdin = child.stdin.take().unwrap();
     let mut stdout = child.stdout.take().unwrap();
 
-    let root_uri = format!("file://{}", repo.path().to_string_lossy());
+    let root_uri = Url::from_directory_path(repo.path()).expect("workspace URI");
 
     let init = serde_json::json!({
         "jsonrpc": "2.0",

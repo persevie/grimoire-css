@@ -68,6 +68,13 @@
 - [Usage and Distribution](#usage-and-distribution)
   - [Working Modes](#working-modes)
   - [Installation](#installation)
+- [MCP Server](#mcp-server)
+  - [Installation and connection](#installation-and-connection)
+  - [First session](#first-session)
+  - [Troubleshooting](#troubleshooting)
+  - [Validation and output](#validation-and-output)
+  - [Resources](#resources)
+  - [Tools](#tools)
 - [The Arcane Circle](#the-arcane-circle)
   - [The First Member](#the-first-member)
 - [Release Information](#release-information)
@@ -87,7 +94,7 @@
 5. **Spell and Scroll Systems.** Turn CSS into your personal styling language — no arbitrary class names, no hidden abstractions. Write clear <code class="code">property=value</code> Spells, complete with <code class="code">area\_\_</code>, <code class="code">&#123;focus&#125;</code> and <code class="code">effect:</code> modifiers for breakpoints, selectors and pseudo-classes. Bundle them into Scrolls — named, parameterized, inheritable style modules for consistent systems at any scale.
 6. **Color Toolkit.** A powerful module compliant with CSS Color Module Level 4, enabling precise and high-performance color manipulations. Grimoire CSS also serves as a standalone color toolkit, with its color features available via a public API.
 7. **Configuration.** Grimoire CSS uses a single JSON configuration file per repository. Its format is straightforward yet robust, supporting monorepos with hundreds of projects or individual configurations — variables, scrolls, generation modes, shared and critical CSS, external files — all out of the box.
-8. **Effortless Migration.** The **Transmutator** available as a CLI tool or Web UI, simplifies converting any CSS to the Spell format. Migrate entire projects to Grimoire CSS without changing your component class names, benefiting from the engine's power immediately, even with a gradual transition.
+8. **Gradual Migration.** The **Transmutator** converts supported class-based CSS rules to Scrolls. Compatible class names can stay in your components. Unsupported names, rules, and source-order dependencies are reported explicitly; keep those styles in CSS files connected through `shared.styles` while migrating incrementally.
 
 # A Spell System
 
@@ -1427,11 +1434,13 @@ These performance advantages translate into:
 
 Grimoire CSS comes with a minimal but powerful **CLI** (Command Line Interface) that’s designed for simplicity and efficiency. Whether you’re integrating it into your build process or running it manually, the CLI gets the job done without unnecessary complexity.
 
-There are only 3 commands you need to know:
+There are only 5 commands you need to know:
 
 - **`init`**: Initializes your Grimoire CSS configuration, either by loading an existing config or generating a new one if none is found. This is your starting point.
 - **`build`**: Kicks off the build process, parsing all your input files and generating the compiled CSS. If you haven’t already run `init`, the `build` command will handle that for you automatically.
 - **`shorten`**: Automatically converts all full-length component names in your spells (as defined in your config) to their corresponding shorthand forms. This helps keep your code concise and consistent. Run this command to refactor your files, making your spell syntax as brief as possible without losing clarity or functionality.
+- **`transmute`**: Converts existing CSS content or root-relative files into deterministic external Scroll JSON using the same canonical API available to Rust and MCP clients.
+- **`fi`**: Provides machine-readable project inspection and analysis, including spell explanations, config summaries, indexes, lint and dry reports, references, statistics, variables, and Scrolls.
 
 **Optional parallel project builds**
 
@@ -1454,27 +1463,73 @@ Here’s a refined version of the remaining parts, keeping the technical depth a
 
 # Easy Migration with Transmutator
 
-Migrating to Grimoire CSS is simple thanks to the Grimoire CSS Transmutator. You can use it as a CLI tool or as a Web UI
+The canonical Transmutator is built into Grimoire CSS. It is available through
+the Rust API, the main CLI and the MCP server without installing another
+binary.
 
-- With the CLI, provide paths to your compiled CSS files (or pass raw CSS via a command-line flag).
-- In the Web UI, either write CSS in the editor and view the JSON output in a separate tab or upload your CSS files and download the transmuted JSON.
+- Convert inline CSS: `grimoire_css transmute --content '.button { color: red; }'`.
+- Convert files or globs: `grimoire_css transmute --paths 'src/**/*.css'`.
+- Add `--with-oneliner` when the JSON preview should include oneliners.
+- Add `--output <path>` to write JSON; otherwise machine-readable JSON is printed to stdout.
 
-In both modes, the Transmutator returns JSON that conforms to the external Scrolls convention by default, so you can immediately leverage your existing CSS classes as Grimoire CSS Scrolls.
+The typed Rust entrypoints are `transmutator::transmute_css` and
+`transmutator::transmute_paths`. Both return JSON-compatible data conforming to
+the external Scrolls convention.
 
-You can also run the compiled CSS from Tailwind or any other framework through the Transmutator, include the produced JSON as external scrolls alongside your config, and keep using your existing class names powered by Grimoire CSS.
+Migration supports selectors beginning with a class, including compound classes,
+descendants, child selectors and pseudo selectors, plus media queries and nested
+media queries. Other at-rules (such as `@layer`, `@supports`, `@keyframes` and
+`@import`) and selectors without a leading class are rejected with an error;
+the tool does not silently produce a partial migration. Split unsupported rules
+out of framework-generated CSS before converting the supported rules.
+
+The leading class must be usable as a plain Scroll name. Rename incompatible
+classes such as `a:b`, `a__b` or `123` before migration. Literal underscores in
+selector suffixes and values are preserved; duplicate declarations retain their
+last cascade position within each Scroll.
+
+If different Scrolls may depend on their relative CSS order, migration rejects
+the complete input and identifies the conflicting selectors and declarations.
+The check is conservative about shorthand/logical properties and selector/media
+overlap. Keep order-dependent CSS in an original file connected through
+`shared.styles`, and link the shared output stylesheet at the intended position.
+Ordinary Scroll ordering is unchanged. The check covers the submitted CSS,
+not its order relative to other stylesheets or existing project Scrolls.
+
+File migration rejects relative asset URLs because Scrolls do not retain the
+source stylesheet directory. Use absolute or root-relative URLs before migration;
+local `url(#fragment)` references remain supported. Inline input has no source
+base, so its relative URLs are interpreted at the eventual output location.
+Unicode whitespace and escaped whitespace inside CSS identifiers are preserved.
+
+Literal `$` characters and empty custom properties are preserved. CSS text such
+as `mfs(...)`, `mrs(...)` and `g-invert(...)` is not evaluated as Grimoire
+functions during migration. Animation references retain their names without
+importing Grimoire keyframes; keep the original keyframe stylesheet connected.
+Standard property names are normalized to lowercase; custom-property names
+retain their case. Names that cannot be represented as Spell components, such
+as `--foo\=bar`, `--foo__bar` or `--цвет`, are rejected before writing.
+
+A CSS property that would invoke a Grimoire abbreviation, `g-anim`, or a Scroll
+with the same name is rejected rather than compiled with a different meaning.
+Rename conflicting Scrolls or keep unsupported CSS in `shared.styles`.
+Authored Grimoire variables, functions, abbreviations and breakpoints keep their
+normal behavior.
+
+For example, `.button { color: red; }` produces:
 
 ```json
 {
-  "classes": [
+  "scrolls": [
     {
-      "name": "old-class-name",
-      "spells": ["spell-1", "spell-2"]
+      "name": "button",
+      "spells": ["color=red"]
     }
   ]
 }
 ```
 
-> [Grimoire CSS Transmutator Repo](https://github.com/persevie/grimoire-css-transmutator)
+The separately hosted Web UI is not part of this crate or the MCP server.
 
 # Usage and Distribution
 
@@ -1580,6 +1635,212 @@ or if you are using NPM library:
 ```bash
 grimoire-css-js build
 ```
+
+# MCP Server
+
+The optional `grimoire_css_mcp` executable exposes 19 project tools and four
+resources over local stdio, using MCP revision
+[`2025-11-25`](https://modelcontextprotocol.io/specification/2025-11-25).
+
+## Installation and connection
+
+You need an MCP client that supports local stdio servers and the
+`grimoire_css_mcp` executable. The executable includes the CSS engine; it does
+not require a separate `grimoire_css` CLI, Node.js, an NPM package, or a hosted
+service. Ordinary CSS builds can continue without MCP.
+
+Choose one installation method:
+
+- **Release download, after publication:** select the asset for your operating
+  system and CPU from the [v1.9.0 release](https://github.com/persevie/grimoire-css/releases/tag/v1.9.0).
+  On macOS/Linux, grant the downloaded file execute permission with
+  `chmod +x /absolute/path/to/downloaded-binary`. Use that file's actual name in
+  the client configuration, or rename it to `grimoire_css_mcp`.
+- **Cargo, after publication:** requires Rust 1.93.0 or newer. Run
+  `cargo install grimoire_css --version 1.9.0 --locked --features mcp --bin grimoire_css_mcp`.
+  The executable is placed in Cargo's installation `bin` directory, normally
+  `~/.cargo/bin` (`%USERPROFILE%\.cargo\bin` on Windows).
+- **This checkout, including before publication:** requires Rust 1.93.0 or
+  newer. Build from the repository root:
+
+```bash
+cargo build --locked --release --features mcp --bin grimoire_css_mcp
+```
+
+The local build produces `target/release/grimoire_css_mcp` (`.exe` on Windows).
+Alternatively, install this checkout into Cargo's `bin` directory with
+`cargo install --path . --locked --features mcp --bin grimoire_css_mcp`.
+
+Release asset names are:
+
+| Platform | Asset |
+|---|---|
+| Linux x64 | `grimoire_css_mcp-linux-x64` |
+| macOS Intel | `grimoire_css_mcp-darwin-x64` |
+| macOS Apple Silicon | `grimoire_css_mcp-darwin-arm64` |
+| Windows x64 | `grimoire_css_mcp-win32-x64.exe` |
+
+Configure your client to launch the executable with an absolute project root.
+Clients that accept an `mcpServers` JSON configuration can use the following;
+other clients expose equivalent command and argument fields in their settings:
+
+```json
+{
+  "mcpServers": {
+    "grimoire-css": {
+      "command": "/absolute/path/to/grimoire_css_mcp",
+      "args": ["--root", "/absolute/path/to/project"]
+    }
+  }
+}
+```
+
+On Windows, include `.exe` and escape backslashes in JSON, for example
+`"command": "C:\\Tools\\grimoire_css_mcp.exe"`. The root must be the project
+directory, not the executable's directory or the `grimoire/config` subdirectory.
+Restart or reload the MCP connection after changing its configuration. The
+client starts the process automatically; no separate terminal process, network
+port, or Grimoire API key is needed.
+
+The command uses newline-delimited JSON-RPC over stdio. It writes only MCP
+messages to stdout. The tool schemas contain no root override, so the agent
+cannot switch projects after launch.
+
+Relative configuration paths are resolved against the selected project root,
+independently of the launcher's working directory. This includes project input
+globs, shared CSS output and source files, and critical CSS source and target
+files. Absolute paths retain their usual meaning. The same path resolution is
+used by the CLI and public Rust APIs; the server does not change process cwd.
+
+For a new project, the agent can read `grimoire://documentation` and
+`grimoire://config-schema`, call `grimoire_init`, edit the generated standard
+configuration with its normal workspace tools, validate it through the MCP
+analysis tools, and call the existing `grimoire_build` operation.
+
+If configuration loading rejects cyclic Scroll inheritance, `grimoire_init`,
+`grimoire_build`, and `grimoire_shorten` return a tool error and preserve the
+configuration file byte for byte, matching the CLI and public Rust commands.
+The server remains available for subsequent requests.
+
+## First session
+
+1. Ask the agent to read the component catalog and project configuration with
+   `grimoire_config_summary`. On a new project, ask it to initialize Grimoire CSS
+   with `grimoire_init`, then edit the generated configuration for your inputs
+   and outputs using its workspace tools.
+2. Ask it to explain a proposed Spell with `grimoire_explain`, or validate a list
+   with `grimoire_validate_spells`. For example, the latter accepts
+   `{"tokens":["display=flex","padding=16px"]}`.
+3. After config changes, run `grimoire_validate_config`. When you want to verify
+   and build the project, run `grimoire_check_project`; it writes build outputs.
+4. For migration, preview with `grimoire_transmute_css`, then explicitly request
+   `grimoire_import_css` to install the generated Scrolls. The source classes
+   must be present in configured input files to produce CSS in the build.
+
+An import request for a supported rule can use:
+
+```json
+{
+  "content": ".button { color: red; }",
+  "import_name": "buttons"
+}
+```
+
+This creates `grimoire/config/grimoire.buttons.scrolls.json` after validation,
+then checks and builds the project. Existing imports require explicit
+`"replace": true`. Inspect `structuredContent.data.valid`, not only the absence
+of a protocol error. Domain errors use `isError: true` with
+`structuredContent.error`; a completed validation can return `valid: false`.
+
+You can ask in natural language: “Use Grimoire CSS MCP to inspect my config,
+validate the proposed Spells, and build the project.” The agent makes the tool
+calls; you do not need to send JSON-RPC messages manually.
+
+## Troubleshooting
+
+- **Executable not found:** use an absolute `command` path. A desktop client's
+  PATH may differ from your terminal's PATH. Include `.exe` on Windows.
+- **Permission denied or incompatible executable:** check execute permission on
+  macOS/Linux and choose the asset matching your OS and CPU.
+- **The process appears idle in a terminal:** this is expected for stdio. It
+  waits for MCP requests; let your client launch and communicate with it.
+- **Missing configuration:** verify `--root` and initialize that project. The
+  standard config lives at `<root>/grimoire/config/grimoire.config.json`.
+- **Empty build output:** check configured `inputPaths` and that your HTML/source
+  files contain the Spell or Scroll class. Installing a Scroll definition alone
+  does not add its class to component markup.
+- **Import rejected:** read the conversion or validation diagnostic and the
+  [migration limits](#easy-migration-with-transmutator). Unsupported input is not partially imported.
+
+## Validation and output
+
+The initialize instructions and `grimoire://primer` require agents to:
+
+1. validate every proposed spell with `grimoire_validate_spells`;
+2. validate every created or modified config with `grimoire_validate_config`;
+3. run `grimoire_check_project` after project changes;
+4. avoid claiming completion unless the relevant report has `valid: true`.
+
+`grimoire_check_project` performs schema and engine config validation, checks
+all indexed project spells, requires a clean lint result, and invokes the real
+filesystem build. It can therefore write the configured build outputs.
+
+The resulting guarantees are deliberately precise:
+
+- `grimoire_validate_spells.valid` means every supplied token was accepted and
+  compiled by the real project-aware engine;
+- `grimoire_validate_config.valid` means the main config and every discovered
+  external Scroll/variable file match the official JSON Schema and load through
+  the real config API;
+- `grimoire_check_project.valid` means config and indexed spells are valid,
+  lint has no errors or warnings, and the real build succeeded.
+- `grimoire_transmute_css.valid` means the canonical CSS conversion completed
+  and every generated spell was accepted by the current project-aware engine.
+- `grimoire_import_css.valid` additionally means the external scroll file was
+  installed and the complete project check passed. Failed verification restores
+  the import file; generated build outputs follow normal build semantics.
+
+These checks verify engine acceptance and build success; they do not establish
+visual equivalence to the original stylesheet or a design.
+
+## Resources
+
+| Resource | Content |
+|---|---|
+| `grimoire://primer` | Grimoire syntax and tool usage guide for agents |
+| `grimoire://components` | CSS component names and abbreviations |
+| `grimoire://config-schema` | Project configuration JSON Schema |
+| `grimoire://documentation` | This README, bundled with the executable |
+
+## Tools
+
+| Tool | Operation | Arguments |
+|---|---|---|
+| `grimoire_explain` | Expand a Spell or Scroll and compile its CSS | `token` |
+| `grimoire_config_summary` | Read project configuration | none |
+| `grimoire_index` | Index project Spells and Scrolls | optional positive `top` |
+| `grimoire_lint` | Report project errors and warnings | none |
+| `grimoire_dry` | Find repeated Spell groups | optional positive `min_support` and `min_items` |
+| `grimoire_list_variables` | List Grimoire variables | none |
+| `grimoire_list_scrolls` | List Scroll names | none |
+| `grimoire_refs` | Find references of a specified kind | `kind`, `query` |
+| `grimoire_stats_spells` | Count Spell usage | optional positive `top` |
+| `grimoire_refs_auto` | Find references by variable, Scroll or Spell name | `query` |
+| `grimoire_stats` | Report usage statistics | optional `group`, `token`, `top` |
+| `grimoire_validate_config` | Validate schemas and load the configuration | none |
+| `grimoire_validate_spells` | Parse and compile proposed tokens | `tokens` |
+| `grimoire_check_project` | Validate, lint and build the project | none |
+| `grimoire_transmute_css` | Preview CSS conversion and validate generated Spells | `content`, optional `with_oneliner` |
+| `grimoire_import_css` | Import CSS as Scrolls, then check and build the project | exactly one of `content`/`paths`, `import_name`, optional `replace`/`with_oneliner` |
+| `grimoire_init` | Initialize project configuration | none |
+| `grimoire_build` | Build configured CSS outputs | optional `force_version_update` |
+| `grimoire_shorten` | Rewrite source files with shortened Spells | none |
+
+`grimoire_init`, `grimoire_build`, `grimoire_shorten`, `grimoire_check_project`
+and `grimoire_import_css` can write files. Other tools provide read-only analysis.
+Import rollback covers the imported Scroll file; generated build outputs are not
+transactional. See [CSS migration](#easy-migration-with-transmutator) for supported
+input, cascade checks and the `shared.styles` fallback.
 
 <!-- START CIRCLE -->
 # The Arcane Circle

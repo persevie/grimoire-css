@@ -2,14 +2,30 @@ use std::path::Path;
 
 use super::{
     build::{build, build_in_memory},
+    fi,
     init::init,
     shorten::shorten,
+    transmute,
 };
 use crate::core::{CompiledCssInMemory, ConfigInMemory, CssOptimizer, GrimoireCssError};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct CliOptions {
     pub force_version_update: bool,
+}
+
+/// Runs machine-readable commands before banner, spinner and optimizer setup.
+pub fn process_machine_readable_mode(args: &[String]) -> Option<Result<(), GrimoireCssError>> {
+    match args.get(1).map(String::as_str) {
+        Some("fi") => Some(fi::run_fi_cli(args.to_vec())),
+        Some("transmute") => Some(
+            transmute::run_transmute_cli(args.to_vec()).map_err(|error| {
+                eprintln!("Error: {error}");
+                error
+            }),
+        ),
+        _ => None,
+    }
 }
 
 /// Processes the provided mode and delegates handling to the appropriate functionality.

@@ -9,8 +9,29 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
     fs,
-    path::Path,
+    path::{Path, PathBuf},
 };
+
+/// Lists external config files in sorted order, treating the directory literally.
+pub(crate) fn external_config_files(
+    config_dir: &Path,
+    suffix: &str,
+) -> Result<Vec<PathBuf>, GrimoireCssError> {
+    let mut paths = fs::read_dir(config_dir)?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.is_file()
+                && path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .and_then(|name| name.strip_prefix("grimoire."))
+                    .is_some_and(|name| name.ends_with(suffix))
+        })
+        .collect::<Vec<_>>();
+    paths.sort();
+    Ok(paths)
+}
 
 /// Represents the main configuration structure for GrimoireCSS.
 #[derive(Debug, Clone)]
@@ -176,12 +197,30 @@ impl ConfigFs {
     /// Returns a `GrimoireCSSError` if reading or parsing the file fails.
     pub fn load(current_dir: &Path) -> Result<Self, GrimoireCssError> {
         let config_path = Filesystem::get_config_path(current_dir)?;
-        let content = fs::read_to_string(&config_path)?;
+        Self::load_from_path(current_dir, &config_path, true)
+    }
+
+    /// Loads configuration for read-only analysis without creating or pruning
+    /// project directories.
+    #[cfg(feature = "analyzer")]
+    pub(crate) fn load_read_only(current_dir: &Path) -> Result<Self, GrimoireCssError> {
+        let config_path = current_dir.join("grimoire/config/grimoire.config.json");
+        Self::load_from_path(current_dir, &config_path, false)
+    }
+
+    fn load_from_path(
+        current_dir: &Path,
+        config_path: &Path,
+        prune_empty_animations: bool,
+    ) -> Result<Self, GrimoireCssError> {
+        let content = fs::read_to_string(config_path)?;
         let json_config: ConfigFsJSON = serde_json::from_str(&content)?;
-        let mut config = Self::from_json(json_config);
+        Self::validate_scroll_inheritance(json_config.scrolls.as_deref().unwrap_or_default())?;
+        let mut config = Self::from_json(json_config, &std::path::absolute(current_dir)?);
 
         // Load custom animations
-        config.custom_animations = Self::find_custom_animations(current_dir)?;
+        config.custom_animations =
+            Self::find_custom_animations_with_cleanup(current_dir, prune_empty_animations)?;
 
         // Load external scroll files
         config.scrolls = Self::load_external_scrolls(current_dir, config.scrolls)?;
@@ -248,7 +287,7 @@ impl ConfigFs {
     /// # Returns
     ///
     /// A new `Config` instance.
-    fn from_json(json_config: ConfigFsJSON) -> Self {
+    fn from_json(json_config: ConfigFsJSON, current_dir: &Path) -> Self {
         let shared_spells = Self::get_common_spells_set(&json_config);
 
         let variables = json_config.variables.map(|vars| {
@@ -257,11 +296,11 @@ impl ConfigFs {
             sorted_vars
         });
 
-        let projects = Self::projects_from_json(json_config.projects);
+        let projects = Self::projects_from_json(json_config.projects, current_dir);
 
         // Expand glob patterns in shared and critical configurations
         let shared = Self::shared_from_json(json_config.shared);
-        let critical = Self::critical_from_json(json_config.critical);
+        let critical = Self::critical_from_json(json_config.critical, current_dir);
         let scrolls = Self::scrolls_from_json(json_config.scrolls);
 
         ConfigFs {
@@ -296,12 +335,16 @@ impl ConfigFs {
     /// Converts critical JSON configuration into internal structure.
     fn critical_from_json(
         critical: Option<Vec<ConfigFsCriticalJSON>>,
+        current_dir: &Path,
     ) -> Option<Vec<ConfigFsCritical>> {
         critical.map(|critical_vec| {
             critical_vec
                 .into_iter()
                 .map(|c| ConfigFsCritical {
-                    file_to_inline_paths: Self::expand_glob_patterns(c.file_to_inline_paths),
+                    file_to_inline_paths: Self::expand_glob_patterns(
+                        c.file_to_inline_paths,
+                        current_dir,
+                    ),
                     styles: c.styles,
                     css_custom_properties: Self::convert_css_custom_properties_from_json(
                         c.css_custom_properties,
@@ -309,6 +352,43 @@ impl ConfigFs {
                 })
                 .collect()
         })
+    }
+
+    fn validate_scroll_inheritance(scrolls: &[ConfigFsScrollJSON]) -> Result<(), GrimoireCssError> {
+        let mut by_name = HashMap::new();
+        for scroll in scrolls {
+            by_name.entry(scroll.name.as_str()).or_insert(scroll);
+        }
+        let mut complete = HashSet::new();
+        let mut active = HashSet::new();
+        for scroll in scrolls {
+            let mut pending = vec![(scroll.name.as_str(), false)];
+            while let Some((name, leaving)) = pending.pop() {
+                if leaving {
+                    active.remove(name);
+                    complete.insert(name);
+                    continue;
+                }
+                if complete.contains(name) {
+                    continue;
+                }
+                if !active.insert(name) {
+                    return Err(GrimoireCssError::InvalidInput(format!(
+                        "Cyclic scroll inheritance involving '{name}'"
+                    )));
+                }
+                pending.push((name, true));
+                if let Some(parents) = by_name.get(name).and_then(|scroll| scroll.extends.as_ref())
+                {
+                    for parent in parents.iter().rev() {
+                        if by_name.contains_key(parent.as_str()) {
+                            pending.push((parent.as_str(), false));
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 
     fn scrolls_from_json(
@@ -423,11 +503,14 @@ impl ConfigFs {
     }
 
     /// Converts a list of project JSON configurations to the internal `Project` type.
-    fn projects_from_json(projects: Vec<ConfigFsProjectJSON>) -> Vec<ConfigFsProject> {
+    fn projects_from_json(
+        projects: Vec<ConfigFsProjectJSON>,
+        current_dir: &Path,
+    ) -> Vec<ConfigFsProject> {
         projects
             .into_iter()
             .map(|p| {
-                let input_paths = Self::expand_glob_patterns(p.input_paths);
+                let input_paths = Self::expand_glob_patterns(p.input_paths, current_dir);
                 ConfigFsProject {
                     project_name: p.project_name,
                     input_paths,
@@ -596,11 +679,18 @@ impl ConfigFs {
     /// - The "animations" subdirectory cannot be read.
     /// - There's an issue reading any of the files in the subdirectory.
     /// - File names cannot be converted to valid UTF-8 strings.
+    #[cfg(test)]
     fn find_custom_animations(
         current_dir: &Path,
     ) -> Result<HashMap<String, String>, GrimoireCssError> {
-        let animations_dir =
-            Filesystem::get_or_create_grimoire_path(current_dir)?.join("animations");
+        Self::find_custom_animations_with_cleanup(current_dir, true)
+    }
+
+    fn find_custom_animations_with_cleanup(
+        current_dir: &Path,
+        prune_empty: bool,
+    ) -> Result<HashMap<String, String>, GrimoireCssError> {
+        let animations_dir = current_dir.join("grimoire/animations");
 
         if !animations_dir.exists() {
             return Ok(HashMap::new());
@@ -609,8 +699,10 @@ impl ConfigFs {
         let mut entries = animations_dir.read_dir()?.peekable();
 
         if entries.peek().is_none() {
-            add_message("No custom animations were found in the 'animations' directory. Deleted unnecessary 'animations' directory".to_string());
-            fs::remove_dir(&animations_dir)?;
+            if prune_empty {
+                add_message("No custom animations were found in the 'animations' directory. Deleted unnecessary 'animations' directory".to_string());
+                fs::remove_dir(&animations_dir)?;
+            }
             return Ok(HashMap::new());
         }
 
@@ -645,13 +737,31 @@ impl ConfigFs {
         Ok(map)
     }
 
-    fn expand_glob_patterns(patterns: Vec<String>) -> Vec<String> {
+    fn expand_glob_patterns(patterns: Vec<String>, current_dir: &Path) -> Vec<String> {
         let mut paths = Vec::new();
         for pattern in patterns {
-            match glob(&pattern) {
+            let relative = Path::new(&pattern).is_relative();
+            // The root is a literal directory; only the configured pattern is glob syntax.
+            let rooted_pattern = if relative {
+                format!(
+                    "{}/{}",
+                    glob::Pattern::escape(&current_dir.to_string_lossy()),
+                    pattern
+                )
+            } else {
+                pattern.clone()
+            };
+            match glob(&rooted_pattern) {
                 Ok(glob_paths) => {
                     for path_result in glob_paths.flatten() {
-                        if let Some(path_str) = path_result.to_str() {
+                        let path = if relative {
+                            path_result
+                                .strip_prefix(current_dir)
+                                .unwrap_or(&path_result)
+                        } else {
+                            &path_result
+                        };
+                        if let Some(path_str) = path.to_str() {
                             paths.push(path_str.to_string());
                         }
                     }
@@ -692,15 +802,9 @@ impl ConfigFs {
         let mut existing_scroll_names: HashSet<String> = all_scrolls.keys().cloned().collect();
         let mut external_files_found = false;
 
-        // Use glob pattern to directly find matching files instead of reading entire directory
-        let pattern = config_dir
-            .join("grimoire.*.scrolls.json")
-            .to_string_lossy()
-            .to_string();
-
-        match glob::glob(&pattern) {
+        match external_config_files(&config_dir, ".scrolls.json") {
             Ok(entries) => {
-                for entry in entries.flatten() {
+                for entry in entries {
                     if let Some(file_name) = entry.file_name().and_then(|s| s.to_str()) {
                         // Read and parse the external scroll file
                         match fs::read_to_string(&entry) {
@@ -831,15 +935,9 @@ impl ConfigFs {
             all_variables.iter().map(|(key, _)| key.clone()).collect();
         let mut external_files_found = false;
 
-        // Use glob pattern to directly find matching files
-        let pattern = config_dir
-            .join("grimoire.*.variables.json")
-            .to_string_lossy()
-            .to_string();
-
-        match glob::glob(&pattern) {
+        match external_config_files(&config_dir, ".variables.json") {
             Ok(entries) => {
-                for entry in entries.flatten() {
+                for entry in entries {
                     if let Some(file_name) = entry.file_name().and_then(|s| s.to_str()) {
                         // Read and parse the external variables file
                         match fs::read_to_string(&entry) {
@@ -955,9 +1053,39 @@ mod tests {
         File::create(&file_path).unwrap();
 
         let patterns = vec![format!("{}/**/*.txt", dir.path().to_str().unwrap())];
-        let expanded = ConfigFs::expand_glob_patterns(patterns);
+        let expanded = ConfigFs::expand_glob_patterns(patterns, dir.path());
         assert_eq!(expanded.len(), 1);
         assert!(expanded[0].ends_with("test.txt"));
+    }
+
+    #[test]
+    fn relative_globs_use_the_literal_project_root_and_remain_relative() {
+        let dir = tempdir().unwrap();
+        let root = dir.path().join("project[1]");
+        fs::create_dir_all(root.join("src/nested")).unwrap();
+        fs::write(root.join("src/index.html"), "").unwrap();
+        fs::write(root.join("src/nested/page.html"), "").unwrap();
+        let absolute_file = dir.path().join("external.html");
+        fs::write(&absolute_file, "").unwrap();
+        let paths = ConfigFs::expand_glob_patterns(
+            vec![
+                "src/**/*.html".into(),
+                "missing/**/*.html".into(),
+                "src/nested".into(),
+                absolute_file.to_str().unwrap().into(),
+            ],
+            &root,
+        );
+        let expected = vec![
+            PathBuf::from("src/index.html"),
+            PathBuf::from("src/nested/page.html"),
+            PathBuf::from("src/nested"),
+            absolute_file,
+        ];
+        assert_eq!(
+            paths.into_iter().map(PathBuf::from).collect::<Vec<_>>(),
+            expected
+        );
     }
 
     #[test]

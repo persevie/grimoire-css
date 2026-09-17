@@ -1,7 +1,10 @@
+use super::css_comments::chars_without_comments;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SpellValueValidationError {
     UnexpectedClosingParen,
     UnclosedParen,
+    UnclosedString,
 }
 
 pub fn validate_component_target(component_target: &str) -> Option<SpellValueValidationError> {
@@ -10,14 +13,14 @@ pub fn validate_component_target(component_target: &str) -> Option<SpellValueVal
     let mut in_double_quote = false;
     let mut escape_next = false;
 
-    for ch in component_target.chars() {
+    for (_, ch) in chars_without_comments(component_target) {
         if escape_next {
             escape_next = false;
             continue;
         }
 
         match ch {
-            '\\' if in_single_quote || in_double_quote => {
+            '\\' => {
                 escape_next = true;
             }
             '\'' if !in_double_quote => {
@@ -35,6 +38,10 @@ pub fn validate_component_target(component_target: &str) -> Option<SpellValueVal
             }
             _ => {}
         }
+    }
+
+    if in_single_quote || in_double_quote {
+        return Some(SpellValueValidationError::UnclosedString);
     }
 
     if depth != 0 {

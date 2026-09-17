@@ -32,10 +32,22 @@ jobs:
             echo "Tag v$CURRENT_VERSION already exists. No release needed."
             echo "SHOULD_RELEASE=false" >> $GITHUB_OUTPUT
           else
+            for NOTES_FILE in "releases/v$CURRENT_VERSION.md" "releases/changelog/v$CURRENT_VERSION.md"; do
+              if [[ ! -s "$NOTES_FILE" ]]; then
+                echo "Missing release notes: $NOTES_FILE" >&2
+                exit 1
+              fi
+            done
+            python3 scripts/generate_changelog.py --check-release "v$CURRENT_VERSION"
             echo "No existing tag for version $CURRENT_VERSION. Release is needed."
             echo "SHOULD_RELEASE=true" >> $GITHUB_OUTPUT
             echo "NEW_TAG=v$CURRENT_VERSION" >> $GITHUB_OUTPUT
           fi
+
+  quality:
+    needs: determine_release
+    if: needs.determine_release.outputs.SHOULD_RELEASE == 'true'
+    uses: ./.github/workflows/quality.yml
 
   test_coverage:
     name: Release / Lint and test (coverage)
@@ -114,28 +126,36 @@ jobs:
             artifact_name: grimoire_css-linux-x86_64
             artifact_path: target/x86_64-unknown-linux-gnu/release/grimoire_css
             lsp_asset_name: grimoire_css_lsp-linux-x64
+            mcp_asset_name: grimoire_css_mcp-linux-x64
             lsp_artifact_path: target/x86_64-unknown-linux-gnu/release/grimoire_css_lsp
+            mcp_artifact_path: target/x86_64-unknown-linux-gnu/release/grimoire_css_mcp
           - name: macos_x86_64
             runs-on: macos-latest
             target: x86_64-apple-darwin
             artifact_name: grimoire_css-macos-x86_64
             artifact_path: target/x86_64-apple-darwin/release/grimoire_css
             lsp_asset_name: grimoire_css_lsp-darwin-x64
+            mcp_asset_name: grimoire_css_mcp-darwin-x64
             lsp_artifact_path: target/x86_64-apple-darwin/release/grimoire_css_lsp
+            mcp_artifact_path: target/x86_64-apple-darwin/release/grimoire_css_mcp
           - name: macos_arm64
             runs-on: macos-latest
             target: aarch64-apple-darwin
             artifact_name: grimoire_css-macos-arm64
             artifact_path: target/aarch64-apple-darwin/release/grimoire_css
             lsp_asset_name: grimoire_css_lsp-darwin-arm64
+            mcp_asset_name: grimoire_css_mcp-darwin-arm64
             lsp_artifact_path: target/aarch64-apple-darwin/release/grimoire_css_lsp
+            mcp_artifact_path: target/aarch64-apple-darwin/release/grimoire_css_mcp
           - name: windows_x86_64
             runs-on: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: grimoire_css-windows-x86_64.exe
             artifact_path: target/x86_64-pc-windows-msvc/release/grimoire_css.exe
             lsp_asset_name: grimoire_css_lsp-win32-x64.exe
+            mcp_asset_name: grimoire_css_mcp-win32-x64.exe
             lsp_artifact_path: target/x86_64-pc-windows-msvc/release/grimoire_css_lsp.exe
+            mcp_artifact_path: target/x86_64-pc-windows-msvc/release/grimoire_css_mcp.exe
 
     steps:
       - name: Checkout Code
@@ -182,13 +202,14 @@ jobs:
             ${{ runner.os }}-build-${{ matrix.target }}-
 
       - name: Build project
-        run: cargo build --release --target ${{ matrix.target }} --features lsp --bin grimoire_css --bin grimoire_css_lsp
+        run: cargo build --locked --release --target ${{ matrix.target }} --features lsp,mcp --bin grimoire_css --bin grimoire_css_lsp --bin grimoire_css_mcp
 
       - name: Prepare artifact
         run: |
           mkdir -p artifacts
           cp "${{ matrix.artifact_path }}" "artifacts/${{ matrix.artifact_name }}"
           cp "${{ matrix.lsp_artifact_path }}" "artifacts/${{ matrix.lsp_asset_name }}"
+          cp "${{ matrix.mcp_artifact_path }}" "artifacts/${{ matrix.mcp_asset_name }}"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -199,7 +220,7 @@ jobs:
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
-    needs: [determine_release, build]
+    needs: [determine_release, build, quality, test_coverage]
     if: needs.determine_release.outputs.SHOULD_RELEASE == 'true'
     steps:
       - name: Checkout Code
@@ -239,7 +260,7 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           cargo login ${{ secrets.CARGO_REGISTRY_TOKEN }}
-          cargo publish
+          cargo publish --locked
 
   release:
     name: Release

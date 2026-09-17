@@ -1,5 +1,5 @@
-
 #!/bin/bash
+set -euo pipefail
 # Set environment variables for code coverage
 export CARGO_INCREMENTAL=0
 export RUSTFLAGS="-Cinstrument-coverage"
@@ -10,13 +10,13 @@ export LLVM_PROFILE_FILE="target/debug/%p-%m.profraw"
 cargo clean
 
 # Run tests
-cargo test
+cargo test --locked --features mcp,lsp
 
 # Generate coverage report
 grcov . --binary-path ./target/debug/ -s . -t lcov --ignore-not-existing --ignore "/*" -o lcov.info
 
 # Check if the upload flag is provided for Codecov
-if [[ "$1" == "--upload" ]]; then
+if [[ "${1:-}" == "--upload" ]]; then
     # Upload the report to Codecov
     if [[ -z "$CODECOV_TOKEN" ]]; then
         echo "CODECOV_TOKEN is not set. Please upload the token to GitHub Secrets."
